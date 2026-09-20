@@ -15,9 +15,12 @@
     --border:#33383F; --text:#ECEEF0; --text-dim:#8B9099;
     --accent:#E8543E; --accent-dim:#E8543E33; --good:#6FCF97;
     --feel-easy:#6FCF97; --feel-medium:#F2C94C; --feel-hard:#EB5757;
+    --tag:#6FA8DC; --tag-dim:#6FA8DC29;
+    --brand:#6D3795; --brand-link:#B78FE8; --brand-dim:#6D379533;
   }
   html{ height:100%; -webkit-text-size-adjust:100%; }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  button, button:focus, button:focus-visible{ outline:none; }
   body{
     margin:0; background:var(--bg); color:var(--text);
     font-family:'Inter',sans-serif; min-height:100dvh;
@@ -53,6 +56,14 @@
   }
 
   .row-label{ font-size:.72rem; color:var(--text-dim); margin:0 0 .4rem; letter-spacing:.02em; }
+  .row-label-with-info{ display:flex; align-items:center; justify-content:space-between; margin:0 0 .4rem; }
+  .row-label-with-info span{ font-size:.72rem; color:var(--text-dim); letter-spacing:.02em; }
+  .info-btn{
+    background:none; border:1px solid var(--border); color:var(--text-dim);
+    width:1.35rem; height:1.35rem; border-radius:50%; font-size:.75rem; line-height:1;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0;
+  }
+  .info-btn:active{ color:var(--accent); border-color:var(--accent); }
   .chip-row{
     display:flex; gap:.5rem; overflow-x:auto; padding-bottom:.7rem; margin-bottom:.9rem;
     border-bottom:1px solid var(--border); -webkit-overflow-scrolling:touch;
@@ -70,6 +81,14 @@
   .chip.add{ color:var(--accent); border-style:dashed; }
   .chip:active{ background:var(--surface-hi); }
   .chip.active:active{ background:var(--accent-dim); }
+
+  .chip.tag-chip{
+    min-height:2.2rem; padding:.35rem .85rem; border-radius:999px;
+    background:var(--tag-dim); border-color:transparent; color:var(--tag);
+    font-size:.8rem; font-weight:600;
+  }
+  .chip.tag-chip.active{ background:var(--tag); border-color:var(--tag); color:#14161A; }
+  .chip.tag-chip:active{ filter:brightness(.95); }
 
   .chip-row-wrap{ position:relative; margin-bottom:.9rem; }
   .chip-row-wrap .chip-row{ margin-bottom:0; }
@@ -255,9 +274,30 @@
     border-bottom:1px solid var(--border);
   }
   .settings-row:last-child{ border-bottom:none; }
-  .settings-row .name{ flex:1; font-size:.92rem; }
+  .settings-row .ex-info{ flex:1; min-width:0; display:flex; flex-direction:column; gap:.15rem; }
+  .settings-row .name{ font-size:.92rem; }
   .settings-row .name.hidden-ex{ color:var(--text-dim); text-decoration:line-through; text-decoration-color:var(--border); }
+  .ex-meta{ font-size:.72rem; color:var(--text-dim); line-height:1.3; }
+  .tag-row{ display:flex; flex-wrap:wrap; gap:.3rem; }
+  .tag-pill{
+    display:inline-block; background:var(--tag-dim); color:var(--tag);
+    border-radius:999px; padding:.1rem .55rem; font-size:.68rem; font-weight:600;
+    white-space:nowrap;
+  }
   .reorder-btns{ display:flex; flex-direction:column; gap:1px; }
+
+  .contact-logo-wrap{
+    background:#fff; border-radius:10px; padding:.7rem 1rem;
+    display:flex; align-items:center; justify-content:center; margin-bottom:.9rem;
+  }
+  .contact-logo{ width:100%; max-width:12rem; height:auto; display:block; }
+  .contact-pitch{ font-size:.88rem; color:var(--text); margin:.9rem 0; line-height:1.55; }
+  .contact-team{ display:flex; flex-direction:column; gap:.65rem; margin-bottom:1rem; padding-top:.85rem; border-top:1px solid var(--border); }
+  .contact-person-name{ font-size:.9rem; font-weight:600; }
+  .contact-person-role{ font-size:.8rem; color:var(--text-dim); margin-top:.1rem; }
+  .contact-links{ display:flex; flex-direction:column; gap:.55rem; padding-top:.85rem; border-top:1px solid var(--border); }
+  .contact-links a{ color:var(--brand-link); font-size:.85rem; text-decoration:none; }
+  .contact-links a:active{ text-decoration:underline; }
   .reorder-btns .icon-btn{ padding:0; width:2rem; height:1.35rem; }
   .reorder-btns svg{ width:.9rem; height:.9rem; }
 
@@ -284,6 +324,7 @@
   .template-item:last-child{ border-bottom:none; }
   .template-item-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:.4rem; }
   .template-item-head .name{ font-weight:600; font-size:.95rem; }
+  .template-item-head .name.hidden-ex{ color:var(--text-dim); text-decoration:line-through; text-decoration-color:var(--border); font-weight:600; }
   .template-actions{ display:flex; gap:.3rem; }
   .checklist{ display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.4rem; }
   .check-chip{
@@ -293,14 +334,21 @@
   }
   .check-chip.on{ background:var(--accent-dim); border-color:var(--accent); color:var(--text); }
   .add-template-btn{
-    width:100%; margin-top:.8rem; padding:.6rem; background:none; border:1px dashed var(--border);
+    width:100%; margin:.8rem 0 1rem; padding:.6rem; background:none; border:1px dashed var(--border);
     border-radius:7px; color:var(--accent); cursor:pointer; font-size:.88rem;
   }
   .section-title{ font-size:.72rem; color:var(--text-dim); margin:0 0 .5rem; letter-spacing:.02em; }
-  .settings-version{
-    text-align:center; color:var(--text-dim); font-size:.72rem;
+  .settings-footer{
+    display:flex; align-items:center; justify-content:space-between; gap:.5rem;
     margin-top:1.25rem; padding-top:.9rem; border-top:1px solid var(--border);
+  }
+  .settings-version{
+    color:var(--text-dim); font-size:.72rem;
     font-variant-numeric:tabular-nums;
+  }
+  .footer-link{
+    background:none; border:none; color:var(--accent); font-size:.72rem;
+    cursor:pointer; padding:0; text-decoration:underline; text-decoration-color:var(--accent-dim);
   }
 
   .rest-fab-wrap{
@@ -394,12 +442,15 @@
 
 <!-- Add exercise dialog -->
 <dialog id="addExerciseDialog">
-  <div class="dialog-head"><h3>Add exercise</h3><button class="dialog-close" onclick="document.getElementById('addExerciseDialog').close()">✕</button></div>
+  <div class="dialog-head"><h3 id="exerciseDialogTitle">Add exercise</h3><button class="dialog-close" onclick="document.getElementById('addExerciseDialog').close()">✕</button></div>
   <div class="dialog-body">
     <input type="text" class="plain-input" id="newExerciseName" placeholder="e.g. Romanian Deadlift" maxlength="40">
+    <div class="section-title" style="margin-top:.8rem;">Muscle group tags (optional)</div>
+    <div id="newExerciseTags"></div>
+    <button type="button" class="add-set-btn" onclick="addExerciseTagField()">+ Add another tag</button>
     <div class="form-actions">
       <button class="btn" onclick="document.getElementById('addExerciseDialog').close()">Cancel</button>
-      <button class="btn primary" onclick="confirmAddExercise()">Add</button>
+      <button class="btn primary" id="exerciseDialogConfirmBtn" onclick="confirmAddExercise()">Add</button>
     </div>
   </div>
 </dialog>
@@ -420,7 +471,70 @@
     <div id="tabProgress"></div>
     <div id="tabTimer"></div>
     <div id="tabData"></div>
-    <div class="settings-version" id="settingsVersion"></div>
+    <div class="settings-footer">
+      <button type="button" class="footer-link" onclick="openContact()">Contact</button>
+      <span class="settings-version" id="settingsVersion"></span>
+      <button type="button" class="footer-link" onclick="openChangelog()">Changelog</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Changelog dialog -->
+<dialog id="changelogDialog">
+  <div class="dialog-head"><h3>Changelog</h3><button class="dialog-close" onclick="document.getElementById('changelogDialog').close()">✕</button></div>
+  <div class="dialog-body" id="changelogBody"></div>
+</dialog>
+
+<!-- Backup setup info dialog -->
+<dialog id="infoDialog">
+  <div class="dialog-head"><h3 id="infoDialogTitle">Info</h3><button class="dialog-close" onclick="document.getElementById('infoDialog').close()">✕</button></div>
+  <div class="dialog-body" id="infoDialogBody"></div>
+</dialog>
+
+<!-- Custom alert/confirm dialogs (native browser confirm()/alert() popups are unreliable in some hosting contexts) -->
+<dialog id="customAlertDialog">
+  <div class="dialog-head"><h3>Notice</h3><button class="dialog-close" onclick="document.getElementById('customAlertDialog').close()">✕</button></div>
+  <div class="dialog-body">
+    <p id="customAlertMsg" style="white-space:pre-wrap; font-size:.9rem; line-height:1.6; margin:0 0 .9rem;"></p>
+    <button type="button" class="btn primary" style="width:100%;" id="customAlertOk">OK</button>
+  </div>
+</dialog>
+
+<dialog id="customConfirmDialog">
+  <div class="dialog-head"><h3>Please confirm</h3><button class="dialog-close" onclick="document.getElementById('customConfirmDialog').close()">✕</button></div>
+  <div class="dialog-body">
+    <p id="customConfirmMsg" style="white-space:pre-wrap; font-size:.9rem; line-height:1.6; margin:0 0 .9rem;"></p>
+    <div style="display:flex; gap:.5rem;">
+      <button type="button" class="btn" style="flex:1;" id="customConfirmCancel">Cancel</button>
+      <button type="button" class="btn primary" style="flex:1;" id="customConfirmOk">OK</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Contact dialog -->
+<dialog id="contactDialog">
+  <div class="dialog-head"><h3>Contact</h3><button class="dialog-close" onclick="document.getElementById('contactDialog').close()">✕</button></div>
+  <div class="dialog-body">
+    <div class="contact-logo-wrap">
+      <img src="data:image/png;base64,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" class="contact-logo" alt="Pixelplanners logo">
+    </div>
+    <p class="contact-pitch">Op zoek naar een eigen app, website of huisstijl? Wij ontwerpen en bouwen 'm — van concept tot livegang.</p>
+    <div class="contact-team">
+      <div class="contact-person">
+        <div class="contact-person-name">Fernand Smeets</div>
+        <div class="contact-person-role">Owner &amp; Web Developer</div>
+      </div>
+      <div class="contact-person">
+        <div class="contact-person-name">Clarissa de Jong</div>
+        <div class="contact-person-role">Freelance Designer — illustraties, geboortekaartjes, websites &amp; meer</div>
+      </div>
+    </div>
+    <div class="contact-links">
+      <a href="https://pixelplanners.nl/" target="_blank" rel="noopener">pixelplanners.nl</a>
+      <a href="mailto:info@pixelplanners.nl">info@pixelplanners.nl</a>
+      <a href="https://www.linkedin.com/in/fernandsmeets/" target="_blank" rel="noopener">LinkedIn — Fernand Smeets</a>
+      <a href="https://www.linkedin.com/in/clarissadejong/" target="_blank" rel="noopener">LinkedIn — Clarissa de Jong</a>
+    </div>
   </div>
 </dialog>
 
@@ -429,8 +543,14 @@
   <div class="dialog-head"><h3 id="templateDialogTitle">New template</h3><button class="dialog-close" onclick="document.getElementById('templateDialog').close()">✕</button></div>
   <div class="dialog-body">
     <input type="text" class="plain-input" id="templateNameInput" placeholder="Template name" maxlength="30">
-    <div class="section-title">Exercises in this template</div>
+    <div class="chip-row" id="templateTagFilter" style="margin-bottom:.6rem;"></div>
+    <div class="section-title">Tap to add or remove exercises</div>
     <div class="checklist" id="templateChecklist"></div>
+    <div class="section-title" style="margin-top:.9rem; display:flex; justify-content:space-between; align-items:center;">
+      <span>Order (use the arrows to rearrange)</span>
+      <span id="templateDurationEstimate"></span>
+    </div>
+    <div id="templateOrderList"></div>
     <div class="form-actions">
       <button class="btn" onclick="document.getElementById('templateDialog').close()">Cancel</button>
       <button class="btn primary" onclick="confirmSaveTemplate()">Save</button>
@@ -439,8 +559,17 @@
 </dialog>
 
 <script>
-const APP_VERSION = '2.4.3';
+const APP_VERSION = '2.7.6';
 const STORE_KEY = 'liftlog_data_v2';
+
+// Keep only the 5 most recent versions here, newest first, whenever a new version is published.
+const CHANGELOG = [
+  { version: '2.7.6', notes: ['Fixed the muscle-group tags in Settings → Exercises crowding into the "+ New exercise" button above them, and gave that button consistent spacing everywhere it appears'] },
+  { version: '2.7.5', notes: ['Templates in Settings now show an estimated duration (8 min per exercise) next to the exercise count, and the same estimate updates live while you build or edit a template'] },
+  { version: '2.7.4', notes: ['Moved the muscle-group tag filter off the main screen — it\'s now under Settings → Exercises (below "+ New exercise") and in the template editor', 'Removed the blue focus outline that appeared around buttons (like the settings ✕) on mobile'] },
+  { version: '2.7.3', notes: ['Exercise visibility (hide/show) is now included in CSV backups too, alongside template visibility'] },
+  { version: '2.7.2', notes: ['Removed the "Add suggested templates" button — the suggested exercises and templates are now added automatically, hidden by default', 'Templates now have a show/hide eye icon in Settings, just like exercises', 'Template visibility is now included in CSV backups, so it survives a restore'] }
+];
 
 const DEFAULT_EXERCISES = [
   'Dumbbell Chest Press','Lateral Raise','Lat Pulldown','Preacher Curl',
@@ -451,6 +580,49 @@ const DEFAULT_TEMPLATES = [
   { name:'Chest Day', exercises:['Dumbbell Chest Press','Lateral Raise','Lat Pulldown','Preacher Curl','Tricep Pulldown','Hammer Curls','Dual Cable Fly'] },
   { name:'Leg Day', exercises:['Squat','Deadlift','Leg Press','Leg Curl','Calf Raise'] }
 ];
+
+// Suggested extra templates, merged into every user's data automatically (see
+// ensureSuggestedLibrary() below) — added hidden by default, revealed per-template
+// from Settings → Templates. Exercise names are kept to 25 characters or fewer;
+// extra detail goes in tags, not the name.
+const SUGGESTED_LIBRARY = {
+  templates: [
+    {
+      name: 'Full Body',
+      exercises: [
+        { name: 'Squat', tags: ['Legs'] },
+        { name: 'Deadlift', tags: ['Back', 'Legs'] },
+        { name: 'Dumbbell Chest Press', tags: ['Chest'] },
+        { name: 'Lat Pulldown', tags: ['Back'] },
+        { name: 'Overhead Press', tags: ['Shoulders'] },
+        { name: 'Plank', tags: ['Core'] }
+      ]
+    },
+    {
+      name: 'Biceps Day',
+      exercises: [
+        { name: 'Barbell Curl', tags: ['Biceps'] },
+        { name: 'Hammer Curls', tags: ['Biceps'] },
+        { name: 'Preacher Curl', tags: ['Biceps'] },
+        { name: 'Incline DB Curl', tags: ['Biceps'] },
+        { name: 'Cable Curl', tags: ['Biceps'] },
+        { name: 'Reverse Curl', tags: ['Forearms'] }
+      ]
+    },
+    {
+      name: 'Isometric & Tendon Health',
+      exercises: [
+        { name: 'Wrist Extensor Hold', tags: ['Forearm Tendon'] },
+        { name: 'Wrist Flexor Hold', tags: ['Forearm Tendon'] },
+        { name: 'Eccentric Wrist Curl', tags: ['Forearm Tendon'] },
+        { name: 'Eccentric Wrist Extend', tags: ['Forearm Tendon'] },
+        { name: "Farmer's Carry", tags: ['Grip', 'Tendon'] },
+        { name: 'Dead Hang', tags: ['Shoulder Tendon', 'Grip'] },
+        { name: 'Plank', tags: ['Core'] }
+      ]
+    }
+  ]
+};
 
 function loadData(){
   try{
@@ -476,6 +648,15 @@ function ensureSettings(){
   if(typeof data.settings.backupEmail !== 'string'){
     data.settings.backupEmail = '';
   }
+  if(typeof data.settings.dropboxToken !== 'string'){
+    data.settings.dropboxToken = '';
+  }
+  if(typeof data.settings.githubToken !== 'string'){
+    data.settings.githubToken = '';
+  }
+  if(typeof data.settings.githubRepo !== 'string'){
+    data.settings.githubRepo = '';
+  }
 }
 function saveData(){
   try{ localStorage.setItem(STORE_KEY, JSON.stringify(data)); }
@@ -483,6 +664,7 @@ function saveData(){
 }
 
 let data = loadData();
+ensureSuggestedLibrary();
 let currentTemplate = 'All';
 let selectedExercise = null;
 let todaySets = [{weight:'', reps:''}];
@@ -494,6 +676,8 @@ let settingsTab = 'exercises';
 let progressExercise = null;
 let chartIdCounter = 0;
 let editingTemplateName = null; // null = creating new
+let editingTemplateExercises = []; // ordered list of exercise names for the template being created/edited
+let templateExerciseTagFilter = null; // muscle-group tag filter for the exercise picker in the template dialog
 
 const todayStr = () => new Date().toISOString().slice(0,10);
 const fmtDate = (iso) => {
@@ -539,7 +723,7 @@ function renderTemplateChips(){
   allChip.onclick = () => { currentTemplate = 'All'; ensureSelectedExercise(); render(); };
   row.appendChild(allChip);
 
-  data.templates.forEach(t => {
+  data.templates.filter(t => !t.hidden).forEach(t => {
     const chip = document.createElement('div');
     chip.className = 'chip' + (currentTemplate === t.name ? ' active' : '');
     chip.textContent = t.name;
@@ -547,6 +731,7 @@ function renderTemplateChips(){
     row.appendChild(chip);
   });
 }
+
 
 function ensureSelectedExercise(){
   const visible = visibleExerciseNames();
@@ -591,7 +776,11 @@ function renderExerciseChips(){
   addChip.className = 'chip add';
   addChip.textContent = '+ Add';
   addChip.onclick = () => {
+    editingExerciseIndex = null;
+    document.getElementById('exerciseDialogTitle').textContent = 'Add exercise';
+    document.getElementById('exerciseDialogConfirmBtn').textContent = 'Add';
     document.getElementById('newExerciseName').value = '';
+    resetExerciseTagFields();
     document.getElementById('addExerciseDialog').showModal();
   };
   row.appendChild(addChip);
@@ -615,14 +804,83 @@ function updateExerciseScrollButtons(){
 }
 
 function openAddExerciseFromSettings(){
+  editingExerciseIndex = null;
+  document.getElementById('exerciseDialogTitle').textContent = 'Add exercise';
+  document.getElementById('exerciseDialogConfirmBtn').textContent = 'Add';
   document.getElementById('newExerciseName').value = '';
+  resetExerciseTagFields();
   document.getElementById('addExerciseDialog').showModal();
+}
+
+let editingExerciseIndex = null; // null = adding a new exercise, index = editing existing one
+function openEditExercise(i){
+  const ex = data.exercises[i];
+  if(!ex) return;
+  editingExerciseIndex = i;
+  document.getElementById('exerciseDialogTitle').textContent = 'Edit exercise';
+  document.getElementById('exerciseDialogConfirmBtn').textContent = 'Save';
+  document.getElementById('newExerciseName').value = ex.name;
+  newExerciseTagInputs = (ex.tags && ex.tags.length) ? ex.tags.slice() : [''];
+  renderNewExerciseTags();
+  document.getElementById('addExerciseDialog').showModal();
+}
+
+let newExerciseTagInputs = [''];
+function resetExerciseTagFields(){
+  newExerciseTagInputs = [''];
+  renderNewExerciseTags();
+}
+function renderNewExerciseTags(){
+  const el = document.getElementById('newExerciseTags');
+  if(!el) return;
+  el.innerHTML = newExerciseTagInputs.map((val, i) => `
+    <div style="display:flex; gap:.4rem; margin-bottom:.4rem; align-items:center;">
+      <input type="text" class="plain-input" style="flex:1;" placeholder="e.g. Triceps" maxlength="24"
+        value="${escAttr(val)}" oninput="newExerciseTagInputs[${i}] = this.value">
+      ${newExerciseTagInputs.length > 1 ? `<button type="button" class="icon-btn" onclick="removeExerciseTagField(${i})" aria-label="Remove tag">${trashIcon}</button>` : ''}
+    </div>
+  `).join('');
+}
+function addExerciseTagField(){
+  newExerciseTagInputs.push('');
+  renderNewExerciseTags();
+}
+function removeExerciseTagField(i){
+  newExerciseTagInputs.splice(i, 1);
+  renderNewExerciseTags();
 }
 
 function confirmAddExercise(){
   const name = document.getElementById('newExerciseName').value.trim();
-  if(name && !data.exercises.some(e => e.name === name)){
-    data.exercises.push({ name, hidden:false });
+  const tags = newExerciseTagInputs.map(t => t.trim()).filter(Boolean);
+  if(!name){ document.getElementById('addExerciseDialog').close(); return; }
+
+  if(editingExerciseIndex !== null){
+    const ex = data.exercises[editingExerciseIndex];
+    if(!ex){ document.getElementById('addExerciseDialog').close(); return; }
+    const oldName = ex.name;
+    if(name !== oldName){
+      if(data.exercises.some((e, i) => i !== editingExerciseIndex && e.name === name)){
+        showAlert('An exercise with this name already exists.');
+        return;
+      }
+      if(data.sessions[oldName]){
+        data.sessions[name] = data.sessions[oldName];
+        delete data.sessions[oldName];
+      }
+      data.templates.forEach(t => {
+        t.exercises = t.exercises.map(n => n === oldName ? name : n);
+      });
+      if(selectedExercise === oldName) selectedExercise = name;
+      ex.name = name;
+    }
+    ex.tags = tags;
+    saveData();
+    render();
+    renderExerciseSettings();
+    renderTemplateSettings();
+  } else if(!data.exercises.some(e => e.name === name)){
+    data.exercises.push({ name, hidden:false, tags });
     selectedExercise = name;
     todaySets = [{weight:'', reps:''}];
     todayFeel = '';
@@ -760,7 +1018,7 @@ function cancelHistoryDate(){
   editingHistoryIdx = null;
   renderHistory();
 }
-function confirmHistoryDate(idx){
+async function confirmHistoryDate(idx){
   const input = document.getElementById('editDateInput_' + idx);
   const newDate = input ? input.value : '';
   if(!newDate) return;
@@ -773,7 +1031,7 @@ function confirmHistoryDate(idx){
   }
   const conflictIdx = arr.findIndex((s, i) => i !== idx && s.date === newDate);
   if(conflictIdx >= 0){
-    const ok = confirm(`There's already a session on ${fmtDate(newDate)} for this exercise. Merge these sets into it?`);
+    const ok = await showConfirm(`There's already a session on ${fmtDate(newDate)} for this exercise. Merge these sets into it?`);
     if(!ok) return;
     arr[conflictIdx].sets = arr[conflictIdx].sets.concat(entry.sets);
     arr.splice(idx, 1);
@@ -841,10 +1099,7 @@ function saveSession(){
     list.push({ date: todayStr(), sets: cleanSets, feel: todayFeel, note: trimmedNote });
   }
   saveData();
-
-  const note = document.getElementById('savedNote');
-  if(note) note.textContent = 'Saved.';
-  setTimeout(() => { const n = document.getElementById('savedNote'); if(n) n.textContent=''; }, 2000);
+  autoBackupAll();
 
   todaySets = cleanSets.map(s => ({...s}));
   todayNote = trimmedNote;
@@ -869,6 +1124,102 @@ function openSettings(){
   document.getElementById('settingsDialog').showModal();
 }
 function switchTab(tab){ settingsTab = tab; renderSettings(); }
+
+function openChangelog(){
+  const body = document.getElementById('changelogBody');
+  body.innerHTML = CHANGELOG.map(entry => `
+    <div style="margin-bottom:1rem;">
+      <div class="num" style="font-weight:600; font-size:.9rem; margin-bottom:.3rem;">v${escAttr(entry.version)}</div>
+      <ul style="margin:0; padding-left:1.1rem; font-size:.85rem; color:var(--text-dim);">
+        ${entry.notes.map(n => `<li style="margin-bottom:.2rem;">${escAttr(n)}</li>`).join('')}
+      </ul>
+    </div>
+  `).join('');
+  document.getElementById('changelogDialog').showModal();
+}
+function openContact(){
+  document.getElementById('contactDialog').showModal();
+}
+
+const BACKUP_INFO = {
+  dropbox: {
+    title: 'Dropbox backup — setup',
+    body: `
+      <ol style="padding-left:1.1rem; margin:0; font-size:.85rem; line-height:1.65;">
+        <li>Go to the <a href="https://www.dropbox.com/developers/apps" target="_blank" rel="noopener">Dropbox App Console</a> and create a new app.</li>
+        <li>Choose access type <strong>"App folder"</strong> — the app can then only reach its own folder, not your whole Dropbox.</li>
+        <li>Under "OAuth 2", generate a permanent access token.</li>
+        <li>Paste that token into the Dropbox field above.</li>
+      </ol>
+      <p style="font-size:.82rem; color:var(--text-dim); margin-top:.8rem;">Every "Save session" then automatically uploads your full history to <code>lift-log-backup.csv</code> in that folder. Restore reads it back in, same as importing a CSV.</p>
+    `
+  },
+  github: {
+    title: 'GitHub backup — setup',
+    body: `
+      <ol style="padding-left:1.1rem; margin:0; font-size:.85rem; line-height:1.65;">
+        <li>Create (or reuse) a GitHub repository to hold the backup file.</li>
+        <li>Create a fine-grained personal access token scoped to just that repo, with <strong>Contents: Read and write</strong>.</li>
+        <li>Paste the token above, and the repo as <code>username/repo</code>.</li>
+      </ol>
+      <p style="font-size:.82rem; color:var(--text-dim); margin-top:.8rem;">Every "Save session" then automatically writes your full history to <code>lift-log-backup.csv</code> on the <code>main</code> branch of that repo. Restore reads it back in, same as importing a CSV.</p>
+    `
+  }
+};
+
+function openInfo(kind){
+  const info = BACKUP_INFO[kind];
+  if(!info) return;
+  document.getElementById('infoDialogTitle').textContent = info.title;
+  document.getElementById('infoDialogBody').innerHTML = info.body;
+  document.getElementById('infoDialog').showModal();
+}
+
+// Custom alert()/confirm() replacements, built as real <dialog> elements.
+// Some hosting contexts (e.g. a sandboxed preview iframe) block or silently
+// short-circuit native window.confirm()/window.alert() popups, which made
+// buttons relying on them (like "Add suggested templates") appear to do
+// nothing. These use the same showModal() API as every other dialog in the
+// app, so they work everywhere the rest of the UI does.
+function showAlert(message){
+  return new Promise(resolve => {
+    const dlg = document.getElementById('customAlertDialog');
+    document.getElementById('customAlertMsg').textContent = message;
+    const okBtn = document.getElementById('customAlertOk');
+    let done = false;
+    const finish = () => {
+      if(done) return;
+      done = true;
+      okBtn.removeEventListener('click', finish);
+      dlg.removeEventListener('close', finish);
+      resolve();
+    };
+    okBtn.addEventListener('click', finish);
+    dlg.addEventListener('close', finish);
+    dlg.showModal();
+  });
+}
+function showConfirm(message){
+  return new Promise(resolve => {
+    const dlg = document.getElementById('customConfirmDialog');
+    document.getElementById('customConfirmMsg').textContent = message;
+    const okBtn = document.getElementById('customConfirmOk');
+    const cancelBtn = document.getElementById('customConfirmCancel');
+    let done = false;
+    const cleanup = () => {
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      dlg.removeEventListener('close', onClose);
+    };
+    const onOk = () => { if(done) return; done = true; cleanup(); dlg.close(); resolve(true); };
+    const onCancel = () => { if(done) return; done = true; cleanup(); dlg.close(); resolve(false); };
+    const onClose = () => { if(done) return; done = true; cleanup(); resolve(false); };
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    dlg.addEventListener('close', onClose);
+    dlg.showModal();
+  });
+}
 
 function renderSettings(){
   document.getElementById('tabExercisesBtn').classList.toggle('active', settingsTab === 'exercises');
@@ -900,21 +1251,55 @@ const timerIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const pauseIconSmall = `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
 const resetIconSmall = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
 
+function templatesUsingExercise(name){
+  return data.templates.filter(t => t.exercises.includes(name)).map(t => t.name);
+}
+
+let settingsExerciseTagFilter = null;
+
 function renderExerciseSettings(){
   const el = document.getElementById('tabExercises');
+  const allTags = [...new Set(data.exercises.flatMap(ex => ex.tags || []))].sort((a, b) => a.localeCompare(b));
+  if(settingsExerciseTagFilter && !allTags.includes(settingsExerciseTagFilter)) settingsExerciseTagFilter = null;
+  const tagFilterHtml = allTags.length ? `
+    <div class="chip-row" style="margin-bottom:.9rem;">
+      ${allTags.map(t => `<div class="chip tag-chip${settingsExerciseTagFilter === t ? ' active' : ''}" data-tag="${escAttr(t)}" onclick="toggleExerciseTagFilter(this.dataset.tag)">${escAttr(t)}</div>`).join('')}
+    </div>` : '';
+  const shownExercises = settingsExerciseTagFilter
+    ? data.exercises.filter(ex => Array.isArray(ex.tags) && ex.tags.includes(settingsExerciseTagFilter))
+    : data.exercises;
   el.innerHTML = `<button class="add-template-btn" onclick="openAddExerciseFromSettings()">+ New exercise</button>` +
+    tagFilterHtml +
     `<div class="section-title">Drag order with the arrows. Hide keeps history but removes it from the main screen.</div>` +
-    data.exercises.map((ex, i) => `
+    shownExercises.map((ex) => {
+      const i = data.exercises.indexOf(ex);
+      const tags = ex.tags || [];
+      const usedIn = templatesUsingExercise(ex.name);
+      const tagsHtml = tags.length
+        ? `<div class="tag-row">${tags.map(t => `<span class="tag-pill">${escAttr(t)}</span>`).join('')}</div>` : '';
+      const usedInHtml = usedIn.length
+        ? `<div class="ex-meta">In: ${escAttr(usedIn.join(', '))}</div>` : '';
+      return `
       <div class="settings-row">
         <div class="reorder-btns">
-          <button class="icon-btn" onclick="moveExercise(${i},-1)" ${i===0?'disabled':''} aria-label="Move up">${upIcon}</button>
-          <button class="icon-btn" onclick="moveExercise(${i},1)" ${i===data.exercises.length-1?'disabled':''} aria-label="Move down">${downIcon}</button>
+          <button class="icon-btn" onclick="moveExercise(${i},-1)" ${(settingsExerciseTagFilter || i===0)?'disabled':''} aria-label="Move up">${upIcon}</button>
+          <button class="icon-btn" onclick="moveExercise(${i},1)" ${(settingsExerciseTagFilter || i===data.exercises.length-1)?'disabled':''} aria-label="Move down">${downIcon}</button>
         </div>
-        <span class="name ${ex.hidden ? 'hidden-ex' : ''}">${escAttr(ex.name)}</span>
+        <div class="ex-info">
+          <span class="name ${ex.hidden ? 'hidden-ex' : ''}">${escAttr(ex.name)}</span>
+          ${tagsHtml}
+          ${usedInHtml}
+        </div>
+        <button class="icon-btn edit-icon" onclick="openEditExercise(${i})" aria-label="Edit">✎</button>
         <button class="icon-btn" onclick="toggleHidden(${i})" aria-label="${ex.hidden ? 'Show' : 'Hide'}">${ex.hidden ? eyeOffIcon : eyeIcon}</button>
         <button class="icon-btn" onclick="deleteExercise(${i})" aria-label="Delete permanently">${trashIcon}</button>
       </div>
-    `).join('');
+    `;
+    }).join('');
+}
+function toggleExerciseTagFilter(tag){
+  settingsExerciseTagFilter = (settingsExerciseTagFilter === tag) ? null : tag;
+  renderExerciseSettings();
 }
 
 function moveExercise(i, dir){
@@ -934,13 +1319,13 @@ function toggleHidden(i){
   renderExerciseChips();
   renderContent();
 }
-function deleteExercise(i){
+async function deleteExercise(i){
   const ex = data.exercises[i];
   const hasHistory = data.sessions[ex.name] && data.sessions[ex.name].length > 0;
   const msg = hasHistory
     ? `Permanently delete "${ex.name}" and all its logged history? This can't be undone.`
     : `Permanently delete "${ex.name}"?`;
-  if(!confirm(msg)) return;
+  if(!(await showConfirm(msg))) return;
   data.exercises.splice(i,1);
   delete data.sessions[ex.name];
   data.templates.forEach(t => { t.exercises = t.exercises.filter(n => n !== ex.name); });
@@ -953,57 +1338,159 @@ function deleteExercise(i){
   renderContent();
 }
 
+// Rough duration estimate for a full template run-through: 8 minutes per
+// exercise (covers ~3 sets with rest between them). Shown only in Settings →
+// Templates, so users see the time cost as they build a template — it's not
+// shown anywhere else in the app.
+const MINUTES_PER_EXERCISE = 8;
+function estimateTemplateMinutes(t){
+  return t.exercises.length * MINUTES_PER_EXERCISE;
+}
+function formatDuration(mins){
+  if(mins <= 0) return null;
+  if(mins < 60) return `~${mins} min`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m === 0 ? `~${h}u` : `~${h}u ${m}min`;
+}
+
 function renderTemplateSettings(){
   const el = document.getElementById('tabTemplates');
   el.innerHTML = `<button class="add-template-btn" onclick="openNewTemplate()">+ New template</button>` +
-    data.templates.map((t) => `
+    data.templates.map((t, i) => {
+      const duration = formatDuration(estimateTemplateMinutes(t));
+      return `
     <div class="template-item">
       <div class="template-item-head">
-        <span class="name">${escAttr(t.name)}</span>
+        <span class="name ${t.hidden ? 'hidden-ex' : ''}">${escAttr(t.name)}</span>
         <div class="template-actions">
           <button class="icon-btn edit-icon" data-tname="${escAttr(t.name)}" onclick="openEditTemplate(this.dataset.tname)" aria-label="Edit">✎</button>
+          <button class="icon-btn" onclick="toggleTemplateHidden(${i})" aria-label="${t.hidden ? 'Show' : 'Hide'}">${t.hidden ? eyeOffIcon : eyeIcon}</button>
           <button class="icon-btn" data-tname="${escAttr(t.name)}" onclick="deleteTemplate(this.dataset.tname)" aria-label="Delete">${trashIcon}</button>
         </div>
       </div>
-      <div style="font-size:.82rem;color:var(--text-dim)">${t.exercises.length} exercise${t.exercises.length===1?'':'s'}</div>
+      <div style="font-size:.82rem;color:var(--text-dim)">${t.exercises.length} exercise${t.exercises.length===1?'':'s'}${duration ? ' · ' + duration : ''}</div>
     </div>
-  `).join('');
+  `;
+    }).join('');
+}
+function toggleTemplateHidden(i){
+  const t = data.templates[i];
+  if(!t) return;
+  t.hidden = !t.hidden;
+  if(t.hidden && currentTemplate === t.name) currentTemplate = 'All';
+  saveData();
+  renderTemplateSettings();
+  renderTemplateChips();
+  ensureSelectedExercise();
+  renderExerciseChips();
+  renderContent();
 }
 
 function openNewTemplate(){
   editingTemplateName = null;
+  editingTemplateExercises = [];
+  templateExerciseTagFilter = null;
   document.getElementById('templateDialogTitle').textContent = 'New template';
   document.getElementById('templateNameInput').value = '';
-  renderTemplateChecklist([]);
+  renderTemplateTagFilter();
+  renderTemplateChecklist();
+  renderTemplateOrderList();
   document.getElementById('templateDialog').showModal();
 }
 function openEditTemplate(name){
   const t = data.templates.find(x => x.name === name);
   if(!t) return;
   editingTemplateName = name;
+  editingTemplateExercises = t.exercises.slice();
+  templateExerciseTagFilter = null;
   document.getElementById('templateDialogTitle').textContent = 'Edit template';
   document.getElementById('templateNameInput').value = t.name;
-  renderTemplateChecklist(t.exercises);
+  renderTemplateTagFilter();
+  renderTemplateChecklist();
+  renderTemplateOrderList();
   document.getElementById('templateDialog').showModal();
 }
-function renderTemplateChecklist(selected){
+function renderTemplateTagFilter(){
+  const el = document.getElementById('templateTagFilter');
+  if(!el) return;
+  const allTags = [...new Set(data.exercises.flatMap(ex => ex.tags || []))].sort((a, b) => a.localeCompare(b));
+  if(templateExerciseTagFilter && !allTags.includes(templateExerciseTagFilter)) templateExerciseTagFilter = null;
+  if(allTags.length === 0){
+    el.style.display = 'none';
+    el.innerHTML = '';
+    return;
+  }
+  el.style.display = '';
+  el.innerHTML = allTags.map(t => `<div class="chip tag-chip${templateExerciseTagFilter === t ? ' active' : ''}" data-tag="${escAttr(t)}" onclick="toggleTemplateExerciseTagFilter(this.dataset.tag)">${escAttr(t)}</div>`).join('');
+}
+function toggleTemplateExerciseTagFilter(tag){
+  templateExerciseTagFilter = (templateExerciseTagFilter === tag) ? null : tag;
+  renderTemplateTagFilter();
+  renderTemplateChecklist();
+}
+function renderTemplateChecklist(){
   const el = document.getElementById('templateChecklist');
-  const selectedSet = new Set(selected);
-  el.innerHTML = data.exercises.map(ex => `
-    <div class="check-chip ${selectedSet.has(ex.name) ? 'on' : ''}" data-name="${escAttr(ex.name)}" onclick="this.classList.toggle('on')">${escAttr(ex.name)}</div>
+  const selectedSet = new Set(editingTemplateExercises);
+  const shown = data.exercises.filter(ex =>
+    !templateExerciseTagFilter || selectedSet.has(ex.name) || (Array.isArray(ex.tags) && ex.tags.includes(templateExerciseTagFilter))
+  );
+  el.innerHTML = shown.map(ex => `
+    <div class="check-chip ${selectedSet.has(ex.name) ? 'on' : ''}" data-name="${escAttr(ex.name)}" onclick="toggleTemplateExercise(this.dataset.name)">${escAttr(ex.name)}</div>
   `).join('');
+}
+function toggleTemplateExercise(name){
+  const idx = editingTemplateExercises.indexOf(name);
+  if(idx >= 0) editingTemplateExercises.splice(idx, 1);
+  else editingTemplateExercises.push(name);
+  renderTemplateChecklist();
+  renderTemplateOrderList();
+}
+function renderTemplateOrderList(){
+  const el = document.getElementById('templateOrderList');
+  if(!el) return;
+  const durationEl = document.getElementById('templateDurationEstimate');
+  if(durationEl){
+    const duration = formatDuration(editingTemplateExercises.length * MINUTES_PER_EXERCISE);
+    durationEl.textContent = duration || '';
+  }
+  if(editingTemplateExercises.length === 0){
+    el.innerHTML = `<div style="font-size:.82rem;color:var(--text-dim);padding:.4rem 0;">No exercises selected yet.</div>`;
+    return;
+  }
+  el.innerHTML = editingTemplateExercises.map((name, i) => `
+    <div class="settings-row">
+      <div class="reorder-btns">
+        <button class="icon-btn" onclick="moveTemplateExercise(${i},-1)" ${i===0?'disabled':''} aria-label="Move up">${upIcon}</button>
+        <button class="icon-btn" onclick="moveTemplateExercise(${i},1)" ${i===editingTemplateExercises.length-1?'disabled':''} aria-label="Move down">${downIcon}</button>
+      </div>
+      <span class="name">${escAttr(name)}</span>
+      <button class="icon-btn" onclick="removeTemplateExercise(${i})" aria-label="Remove">${trashIcon}</button>
+    </div>
+  `).join('');
+}
+function moveTemplateExercise(i, dir){
+  const j = i + dir;
+  if(j < 0 || j >= editingTemplateExercises.length) return;
+  [editingTemplateExercises[i], editingTemplateExercises[j]] = [editingTemplateExercises[j], editingTemplateExercises[i]];
+  renderTemplateOrderList();
+}
+function removeTemplateExercise(i){
+  editingTemplateExercises.splice(i, 1);
+  renderTemplateChecklist();
+  renderTemplateOrderList();
 }
 function confirmSaveTemplate(){
   const name = document.getElementById('templateNameInput').value.trim();
   if(!name) return;
-  const chosen = Array.from(document.querySelectorAll('#templateChecklist .check-chip.on')).map(el => el.dataset.name);
+  const chosen = editingTemplateExercises.slice();
 
   if(editingTemplateName){
     const t = data.templates.find(x => x.name === editingTemplateName);
     if(t){ t.name = name; t.exercises = chosen; }
   } else {
     if(data.templates.some(t => t.name === name)){
-      alert('A template with this name already exists.');
+      showAlert('A template with this name already exists.');
       return;
     }
     data.templates.push({ name, exercises: chosen });
@@ -1016,8 +1503,8 @@ function confirmSaveTemplate(){
   renderExerciseChips();
   renderContent();
 }
-function deleteTemplate(name){
-  if(!confirm(`Delete template "${name}"? Exercises and their history are kept.`)) return;
+async function deleteTemplate(name){
+  if(!(await showConfirm(`Delete template "${name}"? Exercises and their history are kept.`))) return;
   data.templates = data.templates.filter(t => t.name !== name);
   if(currentTemplate === name) currentTemplate = 'All';
   saveData();
@@ -1026,6 +1513,33 @@ function deleteTemplate(name){
   ensureSelectedExercise();
   renderExerciseChips();
   renderContent();
+}
+
+// Silently merges the suggested library (see SUGGESTED_LIBRARY above) into the
+// user's data. Runs once per load; templates that don't exist yet are added
+// hidden by default, so the exercise/template lists don't suddenly balloon —
+// the user can reveal any of them from Settings → Templates with the eye icon.
+function ensureSuggestedLibrary(){
+  const existingTemplateNames = new Set(data.templates.map(t => t.name.toLowerCase()));
+  const templatesToAdd = SUGGESTED_LIBRARY.templates.filter(t => !existingTemplateNames.has(t.name.toLowerCase()));
+  if(templatesToAdd.length === 0) return;
+
+  templatesToAdd.forEach(t => {
+    const exerciseNames = [];
+    t.exercises.forEach(ex => {
+      let existing = data.exercises.find(e => e.name.toLowerCase() === ex.name.toLowerCase());
+      if(!existing){
+        existing = { name: ex.name, hidden: false, tags: ex.tags.slice() };
+        data.exercises.push(existing);
+      } else if((!existing.tags || existing.tags.length === 0) && ex.tags.length){
+        existing.tags = ex.tags.slice();
+      }
+      exerciseNames.push(existing.name);
+    });
+    data.templates.push({ name: t.name, exercises: exerciseNames, hidden: true });
+  });
+
+  saveData();
 }
 
 /* ---------- Progress charts ---------- */
@@ -1353,6 +1867,16 @@ function buildCSV(){
       });
     });
   });
+  // Meta rows carry personal settings that aren't logged sessions — which
+  // exercises and templates are shown/hidden, and each exercise's muscle-group
+  // tags — along with the session data, so backing up and restoring keeps
+  // those choices instead of resetting them every time.
+  data.exercises.forEach(ex => {
+    rows.push(['__meta__', '__exercise__', ex.name, ex.hidden ? 'hidden' : 'visible', '', (ex.tags || []).join('|'), '']);
+  });
+  data.templates.forEach(t => {
+    rows.push(['__meta__', '__template__', t.name, t.hidden ? 'hidden' : 'visible', '', '', '']);
+  });
   return rows.map(r => r.map(csvEscape).join(',')).join('\r\n');
 }
 
@@ -1404,6 +1928,250 @@ async function exportCSV(){
   }
 }
 
+/* ---------- Dropbox cloud backup ---------- */
+
+const DROPBOX_BACKUP_PATH = '/lift-log-backup.csv';
+
+async function uploadToDropbox(csvText){
+  const token = (data.settings.dropboxToken || '').trim();
+  if(!token) return { ok:false, reason:'no-token' };
+  try{
+    const res = await fetch('https://content.dropboxapi.com/2/files/upload', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Dropbox-API-Arg': JSON.stringify({ path: DROPBOX_BACKUP_PATH, mode: 'overwrite', mute: true }),
+        'Content-Type': 'application/octet-stream'
+      },
+      body: csvText
+    });
+    if(!res.ok) return { ok:false, reason: 'http-' + res.status };
+    return { ok:true };
+  }catch(e){
+    return { ok:false, reason:'network' };
+  }
+}
+
+async function downloadFromDropbox(){
+  const token = (data.settings.dropboxToken || '').trim();
+  if(!token) return { ok:false, reason:'no-token' };
+  try{
+    const res = await fetch('https://content.dropboxapi.com/2/files/download', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Dropbox-API-Arg': JSON.stringify({ path: DROPBOX_BACKUP_PATH })
+      }
+    });
+    if(!res.ok) return { ok:false, reason: 'http-' + res.status };
+    const text = await res.text();
+    return { ok:true, text };
+  }catch(e){
+    return { ok:false, reason:'network' };
+  }
+}
+
+function dropboxErrorMessage(result){
+  if(!result) return 'Dropbox backup failed.';
+  if(result.reason === 'no-token') return 'Add a Dropbox access token above first.';
+  if(result.reason === 'network') return 'Could not reach Dropbox — check your connection.';
+  if(result.reason === 'http-401') return 'Dropbox rejected the token — check it\'s correct and not expired.';
+  if(result.reason === 'http-409') return 'No backup file found yet on Dropbox — try Backup now first.';
+  return 'Dropbox backup failed (' + (result.reason || 'unknown error') + ').';
+}
+
+async function manualDropboxBackup(){
+  ensureSettings();
+  const note = document.getElementById('dropboxNote');
+  if(!data.settings.dropboxToken.trim()){
+    if(note) note.textContent = 'Add a Dropbox access token above first.';
+    return;
+  }
+  if(note) note.textContent = 'Backing up…';
+  const csv = buildCSV();
+  const result = await uploadToDropbox(csv);
+  if(note) note.textContent = result.ok ? 'Backed up to Dropbox.' : dropboxErrorMessage(result);
+  setTimeout(() => { const n = document.getElementById('dropboxNote'); if(n) n.textContent=''; }, 3000);
+}
+
+async function restoreFromDropbox(){
+  ensureSettings();
+  const note = document.getElementById('dropboxNote');
+  if(!data.settings.dropboxToken.trim()){
+    if(note) note.textContent = 'Add a Dropbox access token above first.';
+    return;
+  }
+  if(note) note.textContent = 'Fetching from Dropbox…';
+  const result = await downloadFromDropbox();
+  if(!result.ok){
+    if(note) note.textContent = dropboxErrorMessage(result);
+    return;
+  }
+  if(note) note.textContent = '';
+  importCSVText(result.text);
+}
+
+function setDropboxToken(val){
+  ensureSettings();
+  data.settings.dropboxToken = val.trim();
+  saveData();
+}
+
+/* ---------- GitHub cloud backup ---------- */
+
+const GITHUB_BACKUP_PATH = 'lift-log-backup.csv';
+const GITHUB_BACKUP_BRANCH = 'main';
+
+function utf8ToBase64(str){
+  return btoa(unescape(encodeURIComponent(str)));
+}
+function base64ToUtf8(str){
+  return decodeURIComponent(escape(atob(str)));
+}
+
+function parseGithubRepo(){
+  const repo = (data.settings.githubRepo || '').trim();
+  const parts = repo.split('/').map(s => s.trim()).filter(Boolean);
+  if(parts.length !== 2) return null;
+  return { owner: parts[0], repoName: parts[1] };
+}
+
+async function githubGetFileSha(owner, repoName, token){
+  try{
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repoName}/contents/${GITHUB_BACKUP_PATH}?ref=${GITHUB_BACKUP_BRANCH}`, {
+      headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' }
+    });
+    if(res.status === 404) return { ok:true, sha:null };
+    if(!res.ok) return { ok:false, reason: 'http-' + res.status };
+    const json = await res.json();
+    return { ok:true, sha: json.sha };
+  }catch(e){
+    return { ok:false, reason:'network' };
+  }
+}
+
+async function uploadToGithub(csvText){
+  const token = (data.settings.githubToken || '').trim();
+  const parsed = parseGithubRepo();
+  if(!token || !parsed) return { ok:false, reason: !token ? 'no-token' : 'bad-repo' };
+  const shaResult = await githubGetFileSha(parsed.owner, parsed.repoName, token);
+  if(!shaResult.ok) return shaResult;
+  try{
+    const body = {
+      message: 'Lift Log backup ' + todayStr(),
+      content: utf8ToBase64(csvText),
+      branch: GITHUB_BACKUP_BRANCH
+    };
+    if(shaResult.sha) body.sha = shaResult.sha;
+    const res = await fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repoName}/contents/${GITHUB_BACKUP_PATH}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+    if(!res.ok) return { ok:false, reason: 'http-' + res.status };
+    return { ok:true };
+  }catch(e){
+    return { ok:false, reason:'network' };
+  }
+}
+
+async function downloadFromGithub(){
+  const token = (data.settings.githubToken || '').trim();
+  const parsed = parseGithubRepo();
+  if(!token || !parsed) return { ok:false, reason: !token ? 'no-token' : 'bad-repo' };
+  try{
+    const res = await fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repoName}/contents/${GITHUB_BACKUP_PATH}?ref=${GITHUB_BACKUP_BRANCH}`, {
+      headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' }
+    });
+    if(!res.ok) return { ok:false, reason: 'http-' + res.status };
+    const json = await res.json();
+    const text = base64ToUtf8((json.content || '').replace(/\n/g, ''));
+    return { ok:true, text };
+  }catch(e){
+    return { ok:false, reason:'network' };
+  }
+}
+
+function githubErrorMessage(result){
+  if(!result) return 'GitHub backup failed.';
+  if(result.reason === 'no-token') return 'Add a GitHub token and repo above first.';
+  if(result.reason === 'bad-repo') return 'Repo should look like username/repo.';
+  if(result.reason === 'network') return 'Could not reach GitHub — check your connection.';
+  if(result.reason === 'http-401' || result.reason === 'http-403') return 'GitHub rejected the token — check it\'s correct and has repo access.';
+  if(result.reason === 'http-404') return 'Repo or branch not found — check the repo name.';
+  return 'GitHub backup failed (' + (result.reason || 'unknown error') + ').';
+}
+
+async function manualGithubBackup(){
+  ensureSettings();
+  const note = document.getElementById('githubNote');
+  if(!data.settings.githubToken.trim() || !parseGithubRepo()){
+    if(note) note.textContent = 'Add a GitHub token and repo (username/repo) above first.';
+    return;
+  }
+  if(note) note.textContent = 'Backing up…';
+  const csv = buildCSV();
+  const result = await uploadToGithub(csv);
+  if(note) note.textContent = result.ok ? 'Backed up to GitHub.' : githubErrorMessage(result);
+  setTimeout(() => { const n = document.getElementById('githubNote'); if(n) n.textContent=''; }, 3000);
+}
+
+async function restoreFromGithub(){
+  ensureSettings();
+  const note = document.getElementById('githubNote');
+  if(!data.settings.githubToken.trim() || !parseGithubRepo()){
+    if(note) note.textContent = 'Add a GitHub token and repo (username/repo) above first.';
+    return;
+  }
+  if(note) note.textContent = 'Fetching from GitHub…';
+  const result = await downloadFromGithub();
+  if(!result.ok){
+    if(note) note.textContent = githubErrorMessage(result);
+    return;
+  }
+  if(note) note.textContent = '';
+  importCSVText(result.text);
+}
+
+function setGithubToken(val){
+  ensureSettings();
+  data.settings.githubToken = val.trim();
+  saveData();
+}
+function setGithubRepo(val){
+  ensureSettings();
+  data.settings.githubRepo = val.trim();
+  saveData();
+}
+
+/* ---------- Combined auto-backup on save ---------- */
+
+function autoBackupAll(){
+  ensureSettings();
+  const hasDropbox = !!(data.settings.dropboxToken || '').trim();
+  const hasGithub = !!(data.settings.githubToken || '').trim() && !!parseGithubRepo();
+  if(!hasDropbox && !hasGithub) return;
+  const csv = buildCSV();
+  const tasks = [];
+  if(hasDropbox) tasks.push(uploadToDropbox(csv).then(r => ({ service: 'Dropbox', ok: r.ok })));
+  if(hasGithub) tasks.push(uploadToGithub(csv).then(r => ({ service: 'GitHub', ok: r.ok })));
+  Promise.all(tasks).then(results => {
+    const note = document.getElementById('savedNote');
+    if(!note) return;
+    const okServices = results.filter(r => r.ok).map(r => r.service);
+    const failedServices = results.filter(r => !r.ok).map(r => r.service);
+    let msg = '';
+    if(okServices.length) msg += 'Backed up to ' + okServices.join(' & ') + '.';
+    if(failedServices.length) msg += (msg ? ' ' : '') + failedServices.join(' & ') + ' backup failed.';
+    note.textContent = msg;
+    setTimeout(() => { const n = document.getElementById('savedNote'); if(n) n.textContent=''; }, 3500);
+  });
+}
+
 function parseCSV(text){
   const rows = [];
   let row = [], field = '', inQuotes = false;
@@ -1431,20 +2199,18 @@ function handleImportFile(evt){
   if(!file) return;
   const reader = new FileReader();
   reader.onload = () => {
-    try{
-      importCSVText(String(reader.result));
-    }catch(err){
-      alert('Could not read that file: ' + err.message);
-    }
-    evt.target.value = '';
+    Promise.resolve()
+      .then(() => importCSVText(String(reader.result)))
+      .catch(err => showAlert('Could not read that file: ' + err.message))
+      .finally(() => { evt.target.value = ''; });
   };
-  reader.onerror = () => alert('Could not read that file.');
+  reader.onerror = () => showAlert('Could not read that file.');
   reader.readAsText(file);
 }
 
-function importCSVText(text){
+async function importCSVText(text){
   const rows = parseCSV(text);
-  if(rows.length < 2){ alert('No data rows found in that file.'); return; }
+  if(rows.length < 2){ await showAlert('No data rows found in that file.'); return; }
 
   const header = rows[0].map(h => h.trim().toLowerCase());
   const idxEx = header.indexOf('exercise');
@@ -1455,16 +2221,35 @@ function importCSVText(text){
   const idxFeel = header.indexOf('feel');
   const idxNote = header.indexOf('note');
   if(idxEx < 0 || idxDate < 0 || idxWeight < 0 || idxReps < 0){
-    alert('This file doesn\'t match the expected format. Expected columns: Exercise, Date, Set, Weight, Reps.');
+    await showAlert('This file doesn\'t match the expected format. Expected columns: Exercise, Date, Set, Weight, Reps.');
     return;
   }
 
   const grouped = {}; // "exercise||date" -> { sets:[{setNum, weight, reps}], feel, note }
+  const templateVisibility = {}; // template name -> hidden boolean, from meta rows
+  const exerciseVisibility = {}; // exercise name -> hidden boolean, from meta rows
+  const exerciseTags = {}; // exercise name -> tags array, from meta rows
   let skipped = 0;
   for(let i = 1; i < rows.length; i++){
     const r = rows[i];
     const exName = (r[idxEx] || '').trim();
     const date = (r[idxDate] || '').trim();
+    if(exName === '__meta__' && date === '__template__'){
+      const tName = (r[idxSet] || '').trim();
+      const state = (r[idxWeight] || '').trim().toLowerCase();
+      if(tName) templateVisibility[tName] = state === 'hidden';
+      continue;
+    }
+    if(exName === '__meta__' && date === '__exercise__'){
+      const eName = (r[idxSet] || '').trim();
+      const state = (r[idxWeight] || '').trim().toLowerCase();
+      const tagsVal = idxFeel >= 0 ? (r[idxFeel] || '').trim() : '';
+      if(eName){
+        exerciseVisibility[eName] = state === 'hidden';
+        exerciseTags[eName] = tagsVal ? tagsVal.split('|').map(t => t.trim()).filter(Boolean) : [];
+      }
+      continue;
+    }
     if(!exName || !/^\d{4}-\d{2}-\d{2}$/.test(date)){ skipped++; continue; }
     const weight = (r[idxWeight] || '').trim();
     const reps = (r[idxReps] || '').trim();
@@ -1481,19 +2266,26 @@ function importCSVText(text){
   const exerciseNames = [...new Set(Object.keys(grouped).map(k => k.split('||')[0]))];
   const newExercises = exerciseNames.filter(n => !data.exercises.some(e => e.name === n));
   const sessionCount = Object.keys(grouped).length;
+  const visibilityChangeCount = Object.keys(templateVisibility).length + Object.keys(exerciseVisibility).length;
 
-  if(sessionCount === 0){
-    alert('No valid rows found. Make sure dates are formatted as YYYY-MM-DD.');
+  if(sessionCount === 0 && visibilityChangeCount === 0){
+    await showAlert('No valid rows found. Make sure dates are formatted as YYYY-MM-DD.');
     return;
   }
 
-  let msg = `Import ${sessionCount} session${sessionCount === 1 ? '' : 's'} across ${exerciseNames.length} exercise${exerciseNames.length === 1 ? '' : 's'}`;
-  if(newExercises.length) msg += `, adding ${newExercises.length} new exercise${newExercises.length === 1 ? '' : 's'}`;
-  msg += `?\n\nAny existing session on the same exercise + date will be overwritten.`;
-  if(skipped) msg += `\n\n(${skipped} row${skipped === 1 ? '' : 's'} skipped — missing exercise name or invalid date.)`;
-  if(!confirm(msg)) return;
+  let msg;
+  if(sessionCount > 0){
+    msg = `Import ${sessionCount} session${sessionCount === 1 ? '' : 's'} across ${exerciseNames.length} exercise${exerciseNames.length === 1 ? '' : 's'}`;
+    if(newExercises.length) msg += `, adding ${newExercises.length} new exercise${newExercises.length === 1 ? '' : 's'}`;
+    msg += `?\n\nAny existing session on the same exercise + date will be overwritten.`;
+    if(visibilityChangeCount) msg += `\n\nExercise and template visibility settings will also be restored.`;
+    if(skipped) msg += `\n\n(${skipped} row${skipped === 1 ? '' : 's'} skipped — missing exercise name or invalid date.)`;
+  } else {
+    msg = `Restore exercise and template settings from this backup?`;
+  }
+  if(!(await showConfirm(msg))) return;
 
-  newExercises.forEach(name => data.exercises.push({ name, hidden: false }));
+  newExercises.forEach(name => data.exercises.push({ name, hidden: false, tags: exerciseTags[name] || [] }));
 
   Object.entries(grouped).forEach(([key, group]) => {
     const [exName, date] = key.split('||');
@@ -1513,6 +2305,19 @@ function importCSVText(text){
     data.sessions[ex].sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
   });
 
+  Object.entries(templateVisibility).forEach(([tName, hidden]) => {
+    const t = data.templates.find(x => x.name === tName);
+    if(t) t.hidden = hidden;
+  });
+  Object.entries(exerciseVisibility).forEach(([eName, hidden]) => {
+    const ex = data.exercises.find(x => x.name === eName);
+    if(ex) ex.hidden = hidden;
+  });
+  Object.entries(exerciseTags).forEach(([eName, tags]) => {
+    const ex = data.exercises.find(x => x.name === eName);
+    if(ex && tags.length) ex.tags = tags;
+  });
+
   saveData();
   ensureSelectedExercise();
   renderExerciseSettings();
@@ -1521,7 +2326,9 @@ function importCSVText(text){
   renderTemplateChips();
   renderExerciseChips();
   renderContent();
-  alert(`Imported ${sessionCount} session${sessionCount === 1 ? '' : 's'}.`);
+  await showAlert(sessionCount > 0
+    ? `Imported ${sessionCount} session${sessionCount === 1 ? '' : 's'}.`
+    : 'Settings restored.');
 }
 
 function renderDataSettings(){
@@ -1534,7 +2341,33 @@ function renderDataSettings(){
     <button class="btn primary" style="width:100%;margin-bottom:.4rem;" onclick="exportCSV()">Export all data (${totalSessions} session${totalSessions === 1 ? '' : 's'})</button>
     <div class="saved-note" id="exportNote" style="margin-bottom:.6rem;"></div>
 
-    <div class="row-label" style="margin-top:.3rem;">Backup email address</div>
+    <div class="row-label-with-info" style="margin-top:1rem;">
+      <span>Cloud backup (Dropbox)</span>
+      <button type="button" class="info-btn" onclick="openInfo('dropbox')" aria-label="How to set this up">ⓘ</button>
+    </div>
+    <input type="password" class="plain-input" id="dropboxTokenInput" placeholder="Dropbox access token"
+      value="${escAttr(data.settings.dropboxToken)}" oninput="setDropboxToken(this.value)">
+    <div style="display:flex; gap:.5rem; margin-top:.5rem;">
+      <button class="btn" style="flex:1;" onclick="manualDropboxBackup()">Backup now</button>
+      <button class="btn" style="flex:1;" onclick="restoreFromDropbox()">Restore from Dropbox</button>
+    </div>
+    <div class="saved-note" id="dropboxNote" style="margin-bottom:.2rem;"></div>
+
+    <div class="row-label-with-info" style="margin-top:1.1rem;">
+      <span>Cloud backup (GitHub)</span>
+      <button type="button" class="info-btn" onclick="openInfo('github')" aria-label="How to set this up">ⓘ</button>
+    </div>
+    <input type="password" class="plain-input" id="githubTokenInput" placeholder="GitHub access token"
+      value="${escAttr(data.settings.githubToken)}" oninput="setGithubToken(this.value)">
+    <input type="text" class="plain-input" id="githubRepoInput" placeholder="username/repo" style="margin-top:.5rem;"
+      value="${escAttr(data.settings.githubRepo)}" oninput="setGithubRepo(this.value)">
+    <div style="display:flex; gap:.5rem; margin-top:.5rem;">
+      <button class="btn" style="flex:1;" onclick="manualGithubBackup()">Backup now</button>
+      <button class="btn" style="flex:1;" onclick="restoreFromGithub()">Restore from GitHub</button>
+    </div>
+    <div class="saved-note" id="githubNote" style="margin-bottom:.2rem;"></div>
+
+    <div class="row-label" style="margin-top:1rem;">Backup email address</div>
     <input type="email" inputmode="email" class="plain-input" id="backupEmailInput" placeholder="you@example.com"
       value="${escAttr(data.settings.backupEmail)}" oninput="setBackupEmail(this.value)">
     <button class="btn" style="width:100%;" onclick="emailCSV()">Email CSV backup</button>
