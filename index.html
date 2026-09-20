@@ -559,16 +559,16 @@
 </dialog>
 
 <script>
-const APP_VERSION = '2.7.7';
+const APP_VERSION = '2.7.8';
 const STORE_KEY = 'liftlog_data_v2';
 
 // Keep only the 5 most recent versions here, newest first, whenever a new version is published.
 const CHANGELOG = [
+  { version: '2.7.8', notes: ['Dropbox "missing scope" errors now name exactly which permission is missing, instead of a generic code'] },
   { version: '2.7.7', notes: ['Dropbox backup/restore errors now show Dropbox\'s own error message (not just an HTTP status code), so a failed backup is easier to diagnose'] },
   { version: '2.7.6', notes: ['Fixed the muscle-group tags in Settings → Exercises crowding into the "+ New exercise" button above them, and gave that button consistent spacing everywhere it appears'] },
   { version: '2.7.5', notes: ['Templates in Settings now show an estimated duration (8 min per exercise) next to the exercise count, and the same estimate updates live while you build or edit a template'] },
-  { version: '2.7.4', notes: ['Moved the muscle-group tag filter off the main screen — it\'s now under Settings → Exercises (below "+ New exercise") and in the template editor', 'Removed the blue focus outline that appeared around buttons (like the settings ✕) on mobile'] },
-  { version: '2.7.3', notes: ['Exercise visibility (hide/show) is now included in CSV backups too, alongside template visibility'] }
+  { version: '2.7.4', notes: ['Moved the muscle-group tag filter off the main screen — it\'s now under Settings → Exercises (below "+ New exercise") and in the template editor', 'Removed the blue focus outline that appeared around buttons (like the settings ✕) on mobile'] }
 ];
 
 const DEFAULT_EXERCISES = [
@@ -1957,6 +1957,9 @@ async function dropboxErrorDetail(res){
     const text = await res.text();
     try{
       const json = JSON.parse(text);
+      if(json.error && json.error['.tag'] === 'missing_scope' && json.error.required_scope){
+        return 'missing_scope: ' + json.error.required_scope + ' is not enabled for this token';
+      }
       return json.error_summary || text;
     }catch(e){
       return text;
