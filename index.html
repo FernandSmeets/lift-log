@@ -161,6 +161,7 @@
   .icon-btn svg{ width:1.1rem; height:1.1rem; }
   .icon-btn:disabled{ opacity:.25; cursor:default; }
   .icon-btn:disabled:active{ color:var(--text-dim); }
+  .icon-btn.edit-icon{ font-size:1.5rem; line-height:1; }
 
   .add-set-btn{
     width:100%; min-height:2.75rem; padding:.6rem; margin-top:.5rem; background:none;
@@ -438,7 +439,7 @@
 </dialog>
 
 <script>
-const APP_VERSION = '2.4.2';
+const APP_VERSION = '2.4.3';
 const STORE_KEY = 'liftlog_data_v2';
 
 const DEFAULT_EXERCISES = [
@@ -613,6 +614,11 @@ function updateExerciseScrollButtons(){
   right.classList.toggle('disabled', row.scrollLeft >= maxScroll - 2);
 }
 
+function openAddExerciseFromSettings(){
+  document.getElementById('newExerciseName').value = '';
+  document.getElementById('addExerciseDialog').showModal();
+}
+
 function confirmAddExercise(){
   const name = document.getElementById('newExerciseName').value.trim();
   if(name && !data.exercises.some(e => e.name === name)){
@@ -623,6 +629,7 @@ function confirmAddExercise(){
     todayNote = '';
     saveData();
     render();
+    renderExerciseSettings();
   }
   document.getElementById('addExerciseDialog').close();
 }
@@ -895,7 +902,8 @@ const resetIconSmall = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColo
 
 function renderExerciseSettings(){
   const el = document.getElementById('tabExercises');
-  el.innerHTML = `<div class="section-title">Drag order with the arrows. Hide keeps history but removes it from the main screen.</div>` +
+  el.innerHTML = `<button class="add-template-btn" onclick="openAddExerciseFromSettings()">+ New exercise</button>` +
+    `<div class="section-title">Drag order with the arrows. Hide keeps history but removes it from the main screen.</div>` +
     data.exercises.map((ex, i) => `
       <div class="settings-row">
         <div class="reorder-btns">
@@ -947,18 +955,19 @@ function deleteExercise(i){
 
 function renderTemplateSettings(){
   const el = document.getElementById('tabTemplates');
-  el.innerHTML = data.templates.map((t) => `
+  el.innerHTML = `<button class="add-template-btn" onclick="openNewTemplate()">+ New template</button>` +
+    data.templates.map((t) => `
     <div class="template-item">
       <div class="template-item-head">
         <span class="name">${escAttr(t.name)}</span>
         <div class="template-actions">
-          <button class="icon-btn" data-tname="${escAttr(t.name)}" onclick="openEditTemplate(this.dataset.tname)" aria-label="Edit">✎</button>
+          <button class="icon-btn edit-icon" data-tname="${escAttr(t.name)}" onclick="openEditTemplate(this.dataset.tname)" aria-label="Edit">✎</button>
           <button class="icon-btn" data-tname="${escAttr(t.name)}" onclick="deleteTemplate(this.dataset.tname)" aria-label="Delete">${trashIcon}</button>
         </div>
       </div>
       <div style="font-size:.82rem;color:var(--text-dim)">${t.exercises.length} exercise${t.exercises.length===1?'':'s'}</div>
     </div>
-  `).join('') + `<button class="add-template-btn" onclick="openNewTemplate()">+ New template</button>`;
+  `).join('');
 }
 
 function openNewTemplate(){
