@@ -579,7 +579,7 @@
 </dialog>
 
 <script>
-const APP_VERSION = '2.8.7';
+const APP_VERSION = '2.8.8';
 const STORE_KEY = 'liftlog_data_v2';
 
 // Some browsers (notably iOS Safari, especially when added to the home screen)
@@ -592,11 +592,11 @@ if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 // Keep only the 5 most recent versions here, newest first, whenever a new version is published.
 const CHANGELOG = [
+  { version: '2.8.8', notes: ['Settings → Templates now has up/down arrows to reorder templates, same as Settings → Exercises — this also changes the order of the template chips on the main screen'] },
   { version: '2.8.7', notes: ['Added a Calisthenics exercise library (push-ups, pull-ups, dips, pistol squats, L-sit, front lever and more) as a new template — hidden by default, reveal it from Settings → Templates'] },
   { version: '2.8.6', notes: ['All built-in exercises now have a muscle-group tag (Lateral Raise → Shoulders, Tricep Pulldown → Triceps, Dual Cable Fly → Chest, Leg Press/Leg Curl/Calf Raise → Legs, etc.), so tag filtering works for the full default list'] },
   { version: '2.8.5', notes: ['Stronger fix for the app opening scrolled down a bit — now also re-pins to the top after the fonts finish loading, which was the most likely cause of the earlier fix not fully working'] },
-  { version: '2.8.4', notes: ['The app no longer opens scrolled down a bit — it now always starts pinned to the top'] },
-  { version: '2.8.3', notes: ['Fixed the Settings panel itself jumping up or down when switching tabs (not just the scroll position) — the panel now keeps a fixed size across all tabs'] }
+  { version: '2.8.4', notes: ['The app no longer opens scrolled down a bit — it now always starts pinned to the top'] }
 ];
 
 const DEFAULT_EXERCISES = [
@@ -1458,7 +1458,13 @@ function renderTemplateSettings(){
       return `
     <div class="template-item">
       <div class="template-item-head">
-        <span class="name ${t.hidden ? 'hidden-ex' : ''}">${escAttr(t.name)}</span>
+        <div style="display:flex; align-items:center; gap:.5rem; min-width:0;">
+          <div class="reorder-btns">
+            <button class="icon-btn" onclick="moveTemplate(${i},-1)" ${i===0?'disabled':''} aria-label="Move up">${upIcon}</button>
+            <button class="icon-btn" onclick="moveTemplate(${i},1)" ${i===data.templates.length-1?'disabled':''} aria-label="Move down">${downIcon}</button>
+          </div>
+          <span class="name ${t.hidden ? 'hidden-ex' : ''}">${escAttr(t.name)}</span>
+        </div>
         <div class="template-actions">
           <button class="icon-btn edit-icon" data-tname="${escAttr(t.name)}" onclick="openEditTemplate(this.dataset.tname)" aria-label="Edit">✎</button>
           <button class="icon-btn" onclick="toggleTemplateHidden(${i})" aria-label="${t.hidden ? 'Show' : 'Hide'}">${t.hidden ? eyeOffIcon : eyeIcon}</button>
@@ -1469,6 +1475,14 @@ function renderTemplateSettings(){
     </div>
   `;
     }).join('');
+}
+function moveTemplate(i, dir){
+  const j = i + dir;
+  if(j < 0 || j >= data.templates.length) return;
+  [data.templates[i], data.templates[j]] = [data.templates[j], data.templates[i]];
+  saveData();
+  renderTemplateSettings();
+  renderTemplateChips();
 }
 function toggleTemplateHidden(i){
   const t = data.templates[i];
