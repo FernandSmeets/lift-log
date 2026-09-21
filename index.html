@@ -6,6 +6,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#14161A">
+<meta name="apple-mobile-web-app-title" content="Lift Log">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
 <title>Lift Log</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -18,7 +24,7 @@
     --tag:#6FA8DC; --tag-dim:#6FA8DC29;
     --brand:#6D3795; --brand-link:#B78FE8; --brand-dim:#6D379533;
   }
-  html{ height:100%; -webkit-text-size-adjust:100%; }
+  html{ height:100%; -webkit-text-size-adjust:100%; overflow-anchor:none; }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   button, button:focus, button:focus-visible{ outline:none; }
   body{
@@ -27,6 +33,7 @@
     padding:0 0 calc(6.5rem + env(safe-area-inset-bottom));
     overscroll-behavior-y:contain;
     touch-action:manipulation;
+    overflow-anchor:none;
   }
   .num{ font-family:'Oswald',sans-serif; font-variant-numeric:tabular-nums; }
 
@@ -239,6 +246,15 @@
       position:fixed; bottom:0; left:0; right:0; top:auto; margin:0; }
   }
   dialog::backdrop{ background:rgba(0,0,0,.55); }
+  /* Settings dialog gets a fixed height (not just a max-height) so the panel's
+     size doesn't change when switching between tabs of different lengths —
+     only the inner .dialog-body scrolls, the outer box stays put. */
+  #settingsDialog{ height:85dvh; }
+  #settingsDialog .dialog-body{ height:calc(85dvh - 3.2rem); max-height:none; }
+  @media (max-width:480px){
+    #settingsDialog{ height:88dvh; }
+    #settingsDialog .dialog-body{ height:calc(88dvh - 3.2rem); }
+  }
   .dialog-head{
     padding:1rem calc(1.1rem + env(safe-area-inset-right)) 1rem calc(1.1rem + env(safe-area-inset-left));
     border-bottom:1px solid var(--border);
@@ -276,6 +292,10 @@
   .settings-row:last-child{ border-bottom:none; }
   .settings-row .ex-info{ flex:1; min-width:0; display:flex; flex-direction:column; gap:.15rem; }
   .settings-row .name{ font-size:.92rem; }
+  .builtin-dot{
+    display:inline-block; width:.4rem; height:.4rem; border-radius:50%;
+    background:var(--text-dim); margin-left:.4rem; vertical-align:middle;
+  }
   .settings-row .name.hidden-ex{ color:var(--text-dim); text-decoration:line-through; text-decoration-color:var(--border); }
   .ex-meta{ font-size:.72rem; color:var(--text-dim); line-height:1.3; }
   .tag-row{ display:flex; flex-wrap:wrap; gap:.3rem; }
@@ -559,16 +579,24 @@
 </dialog>
 
 <script>
-const APP_VERSION = '2.7.8';
+const APP_VERSION = '2.8.7';
 const STORE_KEY = 'liftlog_data_v2';
+
+// Some browsers (notably iOS Safari, especially when added to the home screen)
+// restore a remembered scroll position or shift the page down slightly while
+// the address bar collapses right after launch, so the app appears to open
+// "scrolled down" until the user nudges it up themselves. Forcing scroll
+// restoration to manual and pinning scroll to the top a few times right after
+// load (immediately, and again once the browser chrome has settled) avoids that.
+if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 // Keep only the 5 most recent versions here, newest first, whenever a new version is published.
 const CHANGELOG = [
-  { version: '2.7.8', notes: ['Dropbox "missing scope" errors now name exactly which permission is missing, instead of a generic code'] },
-  { version: '2.7.7', notes: ['Dropbox backup/restore errors now show Dropbox\'s own error message (not just an HTTP status code), so a failed backup is easier to diagnose'] },
-  { version: '2.7.6', notes: ['Fixed the muscle-group tags in Settings → Exercises crowding into the "+ New exercise" button above them, and gave that button consistent spacing everywhere it appears'] },
-  { version: '2.7.5', notes: ['Templates in Settings now show an estimated duration (8 min per exercise) next to the exercise count, and the same estimate updates live while you build or edit a template'] },
-  { version: '2.7.4', notes: ['Moved the muscle-group tag filter off the main screen — it\'s now under Settings → Exercises (below "+ New exercise") and in the template editor', 'Removed the blue focus outline that appeared around buttons (like the settings ✕) on mobile'] }
+  { version: '2.8.7', notes: ['Added a Calisthenics exercise library (push-ups, pull-ups, dips, pistol squats, L-sit, front lever and more) as a new template — hidden by default, reveal it from Settings → Templates'] },
+  { version: '2.8.6', notes: ['All built-in exercises now have a muscle-group tag (Lateral Raise → Shoulders, Tricep Pulldown → Triceps, Dual Cable Fly → Chest, Leg Press/Leg Curl/Calf Raise → Legs, etc.), so tag filtering works for the full default list'] },
+  { version: '2.8.5', notes: ['Stronger fix for the app opening scrolled down a bit — now also re-pins to the top after the fonts finish loading, which was the most likely cause of the earlier fix not fully working'] },
+  { version: '2.8.4', notes: ['The app no longer opens scrolled down a bit — it now always starts pinned to the top'] },
+  { version: '2.8.3', notes: ['Fixed the Settings panel itself jumping up or down when switching tabs (not just the scroll position) — the panel now keeps a fixed size across all tabs'] }
 ];
 
 const DEFAULT_EXERCISES = [
@@ -576,6 +604,23 @@ const DEFAULT_EXERCISES = [
   'Tricep Pulldown','Hammer Curls','Dual Cable Fly',
   'Squat','Deadlift','Leg Press','Leg Curl','Calf Raise'
 ];
+// Muscle-group tags for the built-in default exercises above. Reuses the same
+// tag names already used elsewhere (SUGGESTED_LIBRARY below) wherever the
+// muscle group matches, so only one genuinely new tag ("Triceps") was needed.
+const DEFAULT_EXERCISE_TAGS = {
+  'Dumbbell Chest Press': ['Chest'],
+  'Lateral Raise': ['Shoulders'],
+  'Lat Pulldown': ['Back'],
+  'Preacher Curl': ['Biceps'],
+  'Tricep Pulldown': ['Triceps'],
+  'Hammer Curls': ['Biceps'],
+  'Dual Cable Fly': ['Chest'],
+  'Squat': ['Legs'],
+  'Deadlift': ['Back', 'Legs'],
+  'Leg Press': ['Legs'],
+  'Leg Curl': ['Legs'],
+  'Calf Raise': ['Legs']
+};
 const DEFAULT_TEMPLATES = [
   { name:'Chest Day', exercises:['Dumbbell Chest Press','Lateral Raise','Lat Pulldown','Preacher Curl','Tricep Pulldown','Hammer Curls','Dual Cable Fly'] },
   { name:'Leg Day', exercises:['Squat','Deadlift','Leg Press','Leg Curl','Calf Raise'] }
@@ -620,6 +665,35 @@ const SUGGESTED_LIBRARY = {
         { name: 'Dead Hang', tags: ['Shoulder Tendon', 'Grip'] },
         { name: 'Plank', tags: ['Core'] }
       ]
+    },
+    {
+      name: 'Calisthenics',
+      exercises: [
+        { name: 'Push-Ups', tags: ['Chest'] },
+        { name: 'Diamond Push-Ups', tags: ['Triceps'] },
+        { name: 'Pike Push-Ups', tags: ['Shoulders'] },
+        { name: 'Handstand Push-Ups', tags: ['Shoulders'] },
+        { name: 'Dips', tags: ['Chest', 'Triceps'] },
+        { name: 'Pull-Ups', tags: ['Back'] },
+        { name: 'Chin-Ups', tags: ['Back', 'Biceps'] },
+        { name: 'Australian Rows', tags: ['Back'] },
+        { name: 'Muscle-Ups', tags: ['Back', 'Chest'] },
+        { name: 'Squat', tags: ['Legs'] },
+        { name: 'Pistol Squats', tags: ['Legs'] },
+        { name: 'Bulgarian Split Squats', tags: ['Legs'] },
+        { name: 'Glute Bridges', tags: ['Legs'] },
+        { name: 'Nordic Curls', tags: ['Legs'] },
+        { name: 'Calf Raise', tags: ['Legs'] },
+        { name: 'Plank', tags: ['Core'] },
+        { name: 'Hollow Body Hold', tags: ['Core'] },
+        { name: 'L-Sit', tags: ['Core'] },
+        { name: 'Hanging Leg Raises', tags: ['Core'] },
+        { name: 'Dragon Flag', tags: ['Core'] },
+        { name: 'Toes-to-Bar', tags: ['Core'] },
+        { name: 'Handstand', tags: ['Shoulders'] },
+        { name: 'Front Lever', tags: ['Back'] },
+        { name: 'Planche', tags: ['Chest'] }
+      ]
     }
   ]
 };
@@ -634,7 +708,7 @@ function loadData(){
     }
   }catch(e){ console.error('load failed', e); }
   return {
-    exercises: DEFAULT_EXERCISES.map(name => ({ name, hidden:false })),
+    exercises: DEFAULT_EXERCISES.map(name => ({ name, hidden:false, builtin:true, tags: (DEFAULT_EXERCISE_TAGS[name] || []).slice() })),
     templates: DEFAULT_TEMPLATES.map(t => ({ ...t })),
     sessions: {},
     settings: { restSeconds: 90 }
@@ -663,7 +737,24 @@ function saveData(){
   catch(e){ console.error('save failed', e); }
 }
 
+// Backfills DEFAULT_EXERCISE_TAGS onto any already-saved exercise that matches
+// one of the built-in default names by name and has no tags yet — so existing
+// users (whose data predates this tag set) get the same tags a fresh install
+// would, not just brand-new installs.
+function ensureDefaultExerciseTags(){
+  let changed = false;
+  data.exercises.forEach(ex => {
+    const defaults = DEFAULT_EXERCISE_TAGS[ex.name];
+    if(defaults && (!ex.tags || ex.tags.length === 0)){
+      ex.tags = defaults.slice();
+      changed = true;
+    }
+  });
+  if(changed) saveData();
+}
+
 let data = loadData();
+ensureDefaultExerciseTags();
 ensureSuggestedLibrary();
 let currentTemplate = 'All';
 let selectedExercise = null;
@@ -1123,7 +1214,12 @@ function openSettings(){
   if(versionEl) versionEl.textContent = 'Lift Log v' + APP_VERSION;
   document.getElementById('settingsDialog').showModal();
 }
-function switchTab(tab){ settingsTab = tab; renderSettings(); }
+function switchTab(tab){
+  settingsTab = tab;
+  renderSettings();
+  const body = document.querySelector('#settingsDialog .dialog-body');
+  if(body) body.scrollTop = 0;
+}
 
 function openChangelog(){
   const body = document.getElementById('changelogBody');
@@ -1270,7 +1366,7 @@ function renderExerciseSettings(){
     : data.exercises;
   el.innerHTML = `<button class="add-template-btn" onclick="openAddExerciseFromSettings()">+ New exercise</button>` +
     tagFilterHtml +
-    `<div class="section-title">Drag order with the arrows. Hide keeps history but removes it from the main screen.</div>` +
+    `<div class="section-title">Drag order with the arrows. Hide keeps history but removes it from the main screen. A dot ${'<span class="builtin-dot" style="margin-left:.15rem;"></span>'} marks a built-in exercise.</div>` +
     shownExercises.map((ex) => {
       const i = data.exercises.indexOf(ex);
       const tags = ex.tags || [];
@@ -1286,7 +1382,7 @@ function renderExerciseSettings(){
           <button class="icon-btn" onclick="moveExercise(${i},1)" ${(settingsExerciseTagFilter || i===data.exercises.length-1)?'disabled':''} aria-label="Move down">${downIcon}</button>
         </div>
         <div class="ex-info">
-          <span class="name ${ex.hidden ? 'hidden-ex' : ''}">${escAttr(ex.name)}</span>
+          <span class="name ${ex.hidden ? 'hidden-ex' : ''}">${escAttr(ex.name)}${ex.builtin ? '<span class="builtin-dot" title="Built-in exercise"></span>' : ''}</span>
           ${tagsHtml}
           ${usedInHtml}
         </div>
@@ -1529,7 +1625,7 @@ function ensureSuggestedLibrary(){
     t.exercises.forEach(ex => {
       let existing = data.exercises.find(e => e.name.toLowerCase() === ex.name.toLowerCase());
       if(!existing){
-        existing = { name: ex.name, hidden: false, tags: ex.tags.slice() };
+        existing = { name: ex.name, hidden: false, tags: ex.tags.slice(), builtin: true };
         data.exercises.push(existing);
       } else if((!existing.tags || existing.tags.length === 0) && ex.tags.length){
         existing.tags = ex.tags.slice();
@@ -2444,6 +2540,23 @@ if(exerciseRowEl) exerciseRowEl.addEventListener('scroll', updateExerciseScrollB
 ensureSelectedExercise();
 initRestTimer();
 render();
+
+// Pin the viewport to the top on launch (see the scrollRestoration note above).
+// Repeated at several points because a few different things can nudge the
+// scroll position downward after the first paint: iOS's address bar collapse
+// animation, and — the most common culprit — the Oswald/Inter web fonts
+// finishing loading and swapping in, which changes text metrics in the
+// header and can shift layout enough to move the scroll position.
+function pinToTop(){ window.scrollTo(0, 0); }
+pinToTop();
+window.addEventListener('load', pinToTop);
+window.addEventListener('pageshow', pinToTop);
+setTimeout(pinToTop, 50);
+setTimeout(pinToTop, 300);
+setTimeout(pinToTop, 800);
+if(document.fonts && document.fonts.ready){
+  document.fonts.ready.then(pinToTop);
+}
 </script>
 </body>
 </html>
