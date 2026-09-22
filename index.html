@@ -18,11 +18,25 @@
 <style>
   :root{
     --bg:#14161A; --surface:#1E2127; --surface-hi:#262A31;
-    --border:#33383F; --text:#ECEEF0; --text-dim:#8B9099;
+    --border:#33383F; --text:#ECEEF0; --text-dim:#A3A8B0;
     --accent:#E8543E; --accent-dim:#E8543E33; --good:#6FCF97;
     --feel-easy:#6FCF97; --feel-medium:#F2C94C; --feel-hard:#EB5757;
     --tag:#6FA8DC; --tag-dim:#6FA8DC29;
     --brand:#6D3795; --brand-link:#B78FE8; --brand-dim:#6D379533;
+    /* Shared text-size scale. Replaces ~20 near-duplicate one-off rem values
+       with a consistent set of steps, one per functional role. 16px on form
+       inputs and 11px on chart labels are deliberate exceptions (16px avoids
+       iOS Safari zooming into the field on focus) and stay outside this scale. */
+    --fs-2xs:.68rem;   /* smallest meta: axis labels, tiny pill badges */
+    --fs-xs:.72rem;    /* micro-labels: row labels, section titles, legends */
+    --fs-sm:.8rem;     /* secondary/meta text */
+    --fs-base:.88rem;  /* default body/list text */
+    --fs-md:.92rem;    /* slightly emphasized text: names, header date */
+    --fs-strong:.95rem;/* buttons and emphasized UI text */
+    --fs-lg:1.1rem;    /* lead values, dialog titles */
+    --fs-icon:1.35rem; /* icon-sized glyphs used as text (×, +, −, ✓) */
+    --fs-title:1.5rem; /* app title */
+    --fs-display:2.2rem; /* large empty-state figure */
   }
   html{ height:100%; -webkit-text-size-adjust:100%; overflow-anchor:none; }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -44,30 +58,38 @@
     position:sticky; top:0; background:var(--bg); z-index:5;
   }
   header .titles h1{
-    font-family:'Oswald',sans-serif; font-weight:600; font-size:1.5rem;
+    font-family:'Oswald',sans-serif; font-weight:600; font-size:var(--fs-title);
     margin:0 0 .15rem; letter-spacing:.01em;
+    display:flex; align-items:center; gap:.4rem;
   }
-  header .date{ color:var(--text-dim); font-size:.9rem; }
+  /* Small app icon next to the name. Sized to sit inside the h1's own line
+     box (font-size 1.5rem, so a ~1.4rem icon fits with no extra height),
+     so it never pushes the header — or anything below it — down. This icon
+     is a placeholder and expected to be swapped for a proper brand mark. */
+  .brand-mark{
+    width:1.4rem; height:1.4rem; border-radius:6px; flex:0 0 auto; display:block;
+  }
+  header .date{ color:var(--text-dim); font-size:var(--fs-md); }
   .cog-btn{
-    background:var(--surface); border:1px solid var(--border); border-radius:10px;
-    width:2.75rem; height:2.75rem; display:flex; align-items:center; justify-content:center;
-    cursor:pointer; color:var(--text-dim); flex:0 0 auto; margin-top:.1rem;
+    background:var(--surface); border:1px solid var(--border); border-radius:11px;
+    width:2.95rem; height:2.95rem; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; color:var(--text-dim); flex:0 0 auto;
     -webkit-user-select:none; user-select:none;
   }
   .cog-btn:active{ color:var(--text); border-color:var(--accent); background:var(--surface-hi); }
-  .cog-btn svg{ width:1.2rem; height:1.2rem; }
+  .cog-btn svg{ width:1.4rem; height:1.4rem; }
 
   main{
     max-width:480px; margin:0 auto;
     padding:1rem calc(1.1rem + env(safe-area-inset-right)) 1rem calc(1.1rem + env(safe-area-inset-left));
   }
 
-  .row-label{ font-size:.72rem; color:var(--text-dim); margin:0 0 .4rem; letter-spacing:.02em; }
+  .row-label{ font-size:var(--fs-xs); color:var(--text-dim); margin:0 0 .4rem; letter-spacing:.02em; }
   .row-label-with-info{ display:flex; align-items:center; justify-content:space-between; margin:0 0 .4rem; }
-  .row-label-with-info span{ font-size:.72rem; color:var(--text-dim); letter-spacing:.02em; }
+  .row-label-with-info span{ font-size:var(--fs-xs); color:var(--text-dim); letter-spacing:.02em; }
   .info-btn{
     background:none; border:1px solid var(--border); color:var(--text-dim);
-    width:1.35rem; height:1.35rem; border-radius:50%; font-size:.75rem; line-height:1;
+    width:1.35rem; height:1.35rem; border-radius:50%; font-size:var(--fs-xs); line-height:1;
     display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0;
   }
   .info-btn:active{ color:var(--accent); border-color:var(--accent); }
@@ -77,9 +99,10 @@
   }
   .chip-row::-webkit-scrollbar{ display:none; }
   .chip{
+    position:relative;
     flex:0 0 auto; min-height:2.75rem; padding:.5rem 1rem; border-radius:9px;
     background:var(--surface); border:1px solid var(--border);
-    color:var(--text-dim); font-size:.9rem; font-weight:500;
+    color:var(--text-dim); font-size:var(--fs-md); font-weight:500;
     display:flex; align-items:center;
     cursor:pointer; white-space:nowrap; transition:background .12s, color .12s, border-color .12s;
     -webkit-user-select:none; user-select:none;
@@ -89,10 +112,19 @@
   .chip:active{ background:var(--surface-hi); }
   .chip.active:active{ background:var(--accent-dim); }
 
+  /* Green border + bold checkmark for an exercise chip with a logged session
+     for today's date. Purely derived from existing session data at render
+     time, so it clears itself automatically once the date changes — nothing
+     to reset. */
+  .chip.done-today{ border-color:var(--feel-easy); }
+  .chip.done-today.active{ border-color:var(--feel-easy); }
+  .chip-check-badge{ margin-left:.4rem; display:flex; align-items:center; color:var(--feel-easy); }
+  .chip-check-badge svg{ width:1.15rem; height:1.15rem; stroke-width:3.5; }
+
   .chip.tag-chip{
     min-height:2.2rem; padding:.35rem .85rem; border-radius:999px;
     background:var(--tag-dim); border-color:transparent; color:var(--tag);
-    font-size:.8rem; font-weight:600;
+    font-size:var(--fs-sm); font-weight:600;
   }
   .chip.tag-chip.active{ background:var(--tag); border-color:var(--tag); color:#14161A; }
   .chip.tag-chip:active{ filter:brightness(.95); }
@@ -119,7 +151,7 @@
     background:var(--surface); border:1px solid var(--border);
     border-radius:10px; padding:1rem; margin-bottom:1rem;
   }
-  .panel h2{ font-size:.78rem; color:var(--text-dim); margin:0 0 .7rem; font-weight:500; letter-spacing:.02em; }
+  .panel h2{ font-size:var(--fs-sm); color:var(--text-dim); margin:0 0 .7rem; font-weight:500; letter-spacing:.02em; }
   .panel h2 .when{ color:var(--text-dim); }
 
   .set-row{
@@ -127,10 +159,10 @@
     align-items:center; padding:.4rem 0;
   }
   .set-row + .set-row{ border-top:1px solid var(--border); }
-  .set-idx{ color:var(--text-dim); font-size:.85rem; }
-  .prev-val{ color:var(--text-dim); font-size:1.05rem; }
-  .prev-val .num{ color:var(--text); font-size:1.1rem; }
-  .empty-prev{ color:var(--text-dim); font-size:.88rem; padding:.3rem 0; }
+  .set-idx{ color:var(--text-dim); font-size:var(--fs-base); }
+  .prev-val{ color:var(--text-dim); font-size:var(--fs-lg); }
+  .prev-val .num{ color:var(--text); font-size:var(--fs-lg); }
+  .empty-prev{ color:var(--text-dim); font-size:var(--fs-base); padding:.3rem 0; }
 
   .today-panel .set-row{ grid-template-columns:1.6rem 1fr 1fr 2.5rem; }
   input.field{
@@ -141,13 +173,13 @@
   }
   input.field:focus{ outline:none; border-color:var(--accent); }
   input.field::placeholder{ color:var(--text-dim); opacity:.6; }
-  .unit{ font-size:.7rem; color:var(--text-dim); display:block; margin-top:.15rem; text-align:center; }
+  .unit{ font-size:var(--fs-2xs); color:var(--text-dim); display:block; margin-top:.15rem; text-align:center; }
 
   .stepper{ display:flex; align-items:stretch; gap:.25rem; }
   .stepper-btn{
-    flex:0 0 auto; width:1.55rem; min-height:2.6rem; border-radius:7px;
+    flex:0 0 auto; width:2.3rem; min-height:3.1rem; border-radius:8px;
     border:1px solid var(--border); background:var(--surface-hi); color:var(--text);
-    font-size:1.05rem; line-height:1; display:flex; align-items:center; justify-content:center;
+    font-size:var(--fs-icon); font-weight:600; line-height:1; display:flex; align-items:center; justify-content:center;
     cursor:pointer; -webkit-user-select:none; user-select:none; padding:0;
   }
   .stepper-btn:active{ border-color:var(--accent); color:var(--accent); }
@@ -156,7 +188,7 @@
   .feel-chip{
     flex:1; text-align:center; padding:.55rem .3rem; min-height:2.6rem; border-radius:8px; cursor:pointer;
     border:1.5px solid var(--border); background:var(--surface-hi); color:var(--text-dim);
-    font-size:.85rem; font-weight:500; display:flex; align-items:center; justify-content:center;
+    font-size:var(--fs-base); font-weight:500; display:flex; align-items:center; justify-content:center;
     -webkit-user-select:none; user-select:none;
   }
   .feel-chip.easy{ border-color:var(--feel-easy); }
@@ -167,16 +199,16 @@
   .feel-chip.hard.active{ background:var(--feel-hard); color:#2A0B0B; }
 
   .feel-badge{
-    display:inline-flex; align-items:center; font-size:.66rem; font-weight:600;
+    display:inline-flex; align-items:center; font-size:var(--fs-2xs); font-weight:600;
     padding:.1rem .5rem; border-radius:999px; vertical-align:middle;
   }
   .feel-badge.easy{ background:var(--feel-easy); color:#0B1F16; }
   .feel-badge.medium{ background:var(--feel-medium); color:#241D06; }
   .feel-badge.hard{ background:var(--feel-hard); color:#2A0B0B; }
 
-  .last-note{ color:var(--text-dim); font-size:.85rem; font-style:italic; margin-top:.6rem; padding-top:.5rem; border-top:1px solid var(--border); }
+  .last-note{ color:var(--text-dim); font-size:var(--fs-base); font-style:italic; margin-top:.6rem; padding-top:.5rem; border-top:1px solid var(--border); }
 
-  .pr-badge{ font-size:.7rem; color:var(--good); font-weight:600; white-space:nowrap; }
+  .pr-badge{ font-size:var(--fs-2xs); color:var(--good); font-weight:600; white-space:nowrap; }
   .icon-btn{
     background:none; border:none; color:var(--text-dim); cursor:pointer;
     width:2.75rem; height:2.75rem; padding:0;
@@ -187,29 +219,29 @@
   .icon-btn svg{ width:1.1rem; height:1.1rem; }
   .icon-btn:disabled{ opacity:.25; cursor:default; }
   .icon-btn:disabled:active{ color:var(--text-dim); }
-  .icon-btn.edit-icon{ font-size:1.5rem; line-height:1; }
+  .icon-btn.edit-icon{ font-size:var(--fs-icon); line-height:1; }
 
   .add-set-btn{
     width:100%; min-height:2.75rem; padding:.6rem; margin-top:.5rem; background:none;
-    border:1px dashed var(--border); border-radius:8px; color:var(--text-dim);
-    font-size:.9rem; cursor:pointer;
+    border:1px dashed var(--border); border-radius:7px; color:var(--accent);
+    font-size:var(--fs-md); cursor:pointer;
   }
-  .add-set-btn:active{ border-color:var(--accent); color:var(--accent); }
+  .add-set-btn:active{ filter:brightness(.95); }
 
   .save-btn{
     width:100%; min-height:3rem; padding:.85rem; background:var(--accent); border:none;
-    border-radius:9px; color:#14161A; font-weight:600; font-size:1rem;
+    border-radius:9px; color:#14161A; font-weight:600; font-size:var(--fs-strong);
     cursor:pointer; margin-top:.25rem;
   }
   .save-btn:disabled{ background:var(--surface-hi); color:var(--text-dim); cursor:default; }
   .save-btn:not(:disabled):active{ filter:brightness(.95); }
 
-  .saved-note{ text-align:center; color:var(--good); font-size:.85rem; margin-top:.6rem; min-height:1.1em; }
+  .saved-note{ text-align:center; color:var(--good); font-size:var(--fs-base); margin-top:.6rem; min-height:1.1em; }
 
   .save-wrap{ position:relative; }
   .save-check{
     position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) scale(.4);
-    opacity:0; pointer-events:none; font-size:1.3rem; font-weight:700; color:#14161A;
+    opacity:0; pointer-events:none; font-size:var(--fs-icon); font-weight:700; color:#14161A;
     background:var(--good); width:2.3rem; height:2.3rem; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
     transition: opacity .08s ease, transform .08s ease;
@@ -220,20 +252,20 @@
   }
 
   .history-toggle{
-    text-align:center; color:var(--text-dim); font-size:.85rem; margin-top:1rem;
+    text-align:center; color:var(--text-dim); font-size:var(--fs-base); margin-top:1rem;
     cursor:pointer; text-decoration:underline; text-decoration-color:var(--border);
   }
   .history-list{ margin-top:.75rem; }
-  .history-entry{ padding:.6rem 0; border-top:1px solid var(--border); display:flex; flex-wrap:wrap; justify-content:space-between; font-size:.88rem; }
+  .history-entry{ padding:.6rem 0; border-top:1px solid var(--border); display:flex; flex-wrap:wrap; justify-content:space-between; font-size:var(--fs-base); }
   .history-entry .d{ color:var(--text-dim); }
   .history-entry .s{ text-align:right; }
   .history-entry .date-edit-trigger{ cursor:pointer; color:var(--text-dim); }
   .history-entry .date-edit-trigger:hover{ color:var(--text); }
   .history-entry-editing{ align-items:center; }
-  .history-note{ flex-basis:100%; color:var(--text-dim); font-size:.8rem; font-style:italic; margin-top:.3rem; }
+  .history-note{ flex-basis:100%; color:var(--text-dim); font-size:var(--fs-sm); font-style:italic; margin-top:.3rem; }
 
   .empty-state{ text-align:center; padding:2.5rem 1rem; color:var(--text-dim); }
-  .empty-state .num{ font-size:2.2rem; display:block; margin-bottom:.3rem; color:var(--text); }
+  .empty-state .num{ font-size:var(--fs-display); display:block; margin-bottom:.3rem; color:var(--text); }
 
   /* Dialogs */
   dialog{
@@ -260,9 +292,9 @@
     border-bottom:1px solid var(--border);
     display:flex; align-items:center; justify-content:space-between;
   }
-  .dialog-head h3{ margin:0; font-family:'Oswald',sans-serif; font-size:1.15rem; }
+  .dialog-head h3{ margin:0; font-family:'Oswald',sans-serif; font-size:var(--fs-lg); }
   .dialog-close{
-    background:none; border:none; color:var(--text-dim); font-size:1.3rem; cursor:pointer; line-height:1;
+    background:none; border:none; color:var(--text-dim); font-size:var(--fs-icon); cursor:pointer; line-height:1;
     width:2.5rem; height:2.5rem; display:flex; align-items:center; justify-content:center; margin:-0.5rem -0.5rem -0.5rem 0;
   }
   .dialog-close:active{ color:var(--text); }
@@ -272,18 +304,53 @@
     max-height:calc(88dvh - 3.2rem);
   }
 
-  .tabs{
-    display:flex; gap:.35rem; margin-bottom:1rem;
-    overflow-x:auto; -webkit-overflow-scrolling:touch;
-  }
-  .tabs::-webkit-scrollbar{ display:none; }
+  /* Settings tab row: the four workout-building tabs (Exercises, Templates,
+     Progress, Timer) that genuinely belong together get equal-width tabs
+     filling the row — always, on any phone, with nothing to scroll and so
+     nothing to hint at. Data and Info are app-level rather than workout-level,
+     so they live behind the "•••" button instead, in a short dropdown. This
+     replaces the scrolling tab row entirely (see the changelog for the
+     several scroll-hint attempts that came before it). */
+  .tabs-row{ position:relative; display:flex; gap:.35rem; margin-bottom:1rem; }
   .tab{
-    flex:0 0 auto; text-align:center; padding:.6rem .85rem; min-height:2.6rem; border-radius:8px; cursor:pointer;
-    background:var(--surface-hi); color:var(--text-dim); font-size:.8rem; font-weight:500; white-space:nowrap;
+    flex:1; text-align:center; padding:.6rem .5rem; min-height:2.6rem; border-radius:8px; cursor:pointer;
+    background:var(--surface-hi); color:var(--text-dim); font-size:var(--fs-sm); font-weight:500; white-space:nowrap;
     display:flex; align-items:center; justify-content:center;
     -webkit-user-select:none; user-select:none;
   }
   .tab.active{ background:var(--accent-dim); color:var(--text); }
+  .more-tab-btn{
+    flex:0 0 auto; width:2.6rem; min-height:2.6rem; border-radius:8px; padding:0; border:none;
+    background:var(--surface-hi); color:var(--text-dim); cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    -webkit-user-select:none; user-select:none;
+  }
+  .more-tab-btn.active{ background:var(--accent-dim); color:var(--text); }
+  .more-tab-btn svg{ width:1.15rem; height:1.15rem; }
+  /* position:fixed rather than absolute-inside-.tabs-row: the exercise tab's
+     own tag-filter chip row a bit further down is horizontally scrollable
+     (-webkit-overflow-scrolling:touch), which on iOS Safari promotes it to
+     its own compositing layer — the same kind of layer that painted over the
+     old scroll-hint badge a few versions back. An absolutely positioned menu
+     anchored to .tabs-row can end up underneath that layer regardless of
+     z-index; a fixed-position menu, placed at the button's exact on-screen
+     coordinates by toggleMoreTabMenu(), floats above the whole dialog instead
+     of inside any of its scrolling containers, so this can't recur here or
+     wherever else a scrollable row happens to sit below it later. */
+  .more-tab-menu{
+    position:fixed; z-index:50;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:.35rem; min-width:8rem; box-shadow:0 8px 20px rgba(0,0,0,.4);
+    display:none; flex-direction:column; gap:.15rem;
+  }
+  .more-tab-menu.open{ display:flex; }
+  .more-tab-menu-item{
+    padding:.6rem .7rem; border-radius:7px; font-size:var(--fs-base); color:var(--text-dim); font-family:inherit;
+    cursor:pointer; text-align:left; background:none; border:none;
+    -webkit-user-select:none; user-select:none;
+  }
+  .more-tab-menu-item.active{ color:var(--text); background:var(--accent-dim); }
+  .more-tab-menu-item:active{ filter:brightness(.95); }
 
   .settings-row{
     display:flex; align-items:center; gap:.5rem; padding:.4rem 0;
@@ -291,32 +358,32 @@
   }
   .settings-row:last-child{ border-bottom:none; }
   .settings-row .ex-info{ flex:1; min-width:0; display:flex; flex-direction:column; gap:.15rem; }
-  .settings-row .name{ font-size:.92rem; }
+  .settings-row .name{ font-size:var(--fs-md); }
   .builtin-dot{
     display:inline-block; width:.4rem; height:.4rem; border-radius:50%;
     background:var(--text-dim); margin-left:.4rem; vertical-align:middle;
   }
   .settings-row .name.hidden-ex{ color:var(--text-dim); text-decoration:line-through; text-decoration-color:var(--border); }
-  .ex-meta{ font-size:.72rem; color:var(--text-dim); line-height:1.3; }
+  .ex-meta{ font-size:var(--fs-xs); color:var(--text-dim); line-height:1.3; }
   .tag-row{ display:flex; flex-wrap:wrap; gap:.3rem; }
   .tag-pill{
     display:inline-block; background:var(--tag-dim); color:var(--tag);
-    border-radius:999px; padding:.1rem .55rem; font-size:.68rem; font-weight:600;
+    border-radius:999px; padding:.1rem .55rem; font-size:var(--fs-2xs); font-weight:600;
     white-space:nowrap;
   }
   .reorder-btns{ display:flex; flex-direction:column; gap:1px; }
 
   .contact-logo-wrap{
-    background:#fff; border-radius:10px; padding:.7rem 1rem;
+    background:transparent; padding:.3rem 0;
     display:flex; align-items:center; justify-content:center; margin-bottom:.9rem;
   }
   .contact-logo{ width:100%; max-width:12rem; height:auto; display:block; }
-  .contact-pitch{ font-size:.88rem; color:var(--text); margin:.9rem 0; line-height:1.55; }
+  .contact-pitch{ font-size:var(--fs-base); color:var(--text); margin:.9rem 0; line-height:1.55; }
   .contact-team{ display:flex; flex-direction:column; gap:.65rem; margin-bottom:1rem; padding-top:.85rem; border-top:1px solid var(--border); }
-  .contact-person-name{ font-size:.9rem; font-weight:600; }
-  .contact-person-role{ font-size:.8rem; color:var(--text-dim); margin-top:.1rem; }
+  .contact-person-name{ font-size:var(--fs-md); font-weight:600; }
+  .contact-person-role{ font-size:var(--fs-sm); color:var(--text-dim); margin-top:.1rem; }
   .contact-links{ display:flex; flex-direction:column; gap:.55rem; padding-top:.85rem; border-top:1px solid var(--border); }
-  .contact-links a{ color:var(--brand-link); font-size:.85rem; text-decoration:none; }
+  .contact-links a{ color:var(--brand-link); font-size:var(--fs-base); text-decoration:none; }
   .contact-links a:active{ text-decoration:underline; }
   .reorder-btns .icon-btn{ padding:0; width:2rem; height:1.35rem; }
   .reorder-btns svg{ width:.9rem; height:.9rem; }
@@ -330,11 +397,12 @@
   .form-actions{ display:flex; gap:.5rem; justify-content:flex-end; margin-top:.4rem; }
   .btn{
     padding:.6rem 1.1rem; min-height:2.6rem; border-radius:8px; border:1px solid var(--border);
-    background:none; color:var(--text); cursor:pointer; font-size:.9rem;
+    background:none; color:var(--text); cursor:pointer; font-size:var(--fs-md);
     -webkit-user-select:none; user-select:none;
   }
   .btn.primary{ background:var(--accent); border-color:var(--accent); color:#14161A; font-weight:600; }
-  .btn.danger{ border-color:var(--accent); color:var(--accent); }
+  .btn.danger{ border-color:var(--feel-hard); color:var(--feel-hard); }
+  .icon-btn.danger:active{ color:var(--feel-hard); }
   .btn:active{ background:var(--surface-hi); }
   .btn.primary:active{ filter:brightness(.95); background:var(--accent); }
 
@@ -343,33 +411,74 @@
   }
   .template-item:last-child{ border-bottom:none; }
   .template-item-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:.4rem; }
-  .template-item-head .name{ font-weight:600; font-size:.95rem; }
+  .template-item-head .name{ font-weight:600; font-size:var(--fs-strong); }
   .template-item-head .name.hidden-ex{ color:var(--text-dim); text-decoration:line-through; text-decoration-color:var(--border); font-weight:600; }
   .template-actions{ display:flex; gap:.3rem; }
   .checklist{ display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.4rem; }
   .check-chip{
-    padding:.5rem .75rem; min-height:2.4rem; display:flex; align-items:center; border-radius:8px; font-size:.82rem; cursor:pointer;
+    padding:.5rem .75rem; min-height:2.4rem; display:flex; align-items:center; border-radius:8px; font-size:var(--fs-sm); cursor:pointer;
     background:var(--surface-hi); border:1px solid var(--border); color:var(--text-dim);
     -webkit-user-select:none; user-select:none;
   }
   .check-chip.on{ background:var(--accent-dim); border-color:var(--accent); color:var(--text); }
   .add-template-btn{
     width:100%; margin:.8rem 0 1rem; padding:.6rem; background:none; border:1px dashed var(--border);
-    border-radius:7px; color:var(--accent); cursor:pointer; font-size:.88rem;
+    border-radius:7px; color:var(--accent); cursor:pointer; font-size:var(--fs-base);
   }
-  .section-title{ font-size:.72rem; color:var(--text-dim); margin:0 0 .5rem; letter-spacing:.02em; }
+  .section-title{ font-size:var(--fs-xs); color:var(--text-dim); margin:0 0 .5rem; letter-spacing:.02em; }
   .settings-footer{
     display:flex; align-items:center; justify-content:space-between; gap:.5rem;
     margin-top:1.25rem; padding-top:.9rem; border-top:1px solid var(--border);
   }
   .settings-version{
-    color:var(--text-dim); font-size:.72rem;
+    color:var(--text-dim); font-size:var(--fs-xs);
     font-variant-numeric:tabular-nums;
   }
   .footer-link{
-    background:none; border:none; color:var(--accent); font-size:.72rem;
+    background:none; border:none; color:var(--accent); font-size:var(--fs-xs);
     cursor:pointer; padding:0; text-decoration:underline; text-decoration-color:var(--accent-dim);
   }
+
+  /* Collapsible sections in Settings → Data (Dropbox / GitHub / CSV export) —
+     plain <details>/<summary> so they work without extra JS, closed by
+     default so the tab isn't a wall of inputs. */
+  .backup-section{
+    border:1px solid var(--border); border-radius:10px; margin-bottom:.7rem; overflow:hidden;
+  }
+  .backup-section summary{
+    list-style:none; cursor:pointer; padding:.85rem .9rem; font-size:var(--fs-base); font-weight:600;
+    display:flex; align-items:center; justify-content:space-between;
+    -webkit-user-select:none; user-select:none;
+  }
+  .backup-section summary::-webkit-details-marker{ display:none; }
+  .backup-summary-right{ display:flex; align-items:center; gap:.5rem; }
+  .backup-chevron{ width:1.05rem; height:1.05rem; color:var(--text-dim); transition:transform .15s; flex:0 0 auto; }
+  .backup-section[open] .backup-chevron{ transform:rotate(180deg); }
+  .backup-section .backup-body{ padding:0 .9rem .9rem; border-top:1px solid var(--border); padding-top:.9rem; }
+
+  /* "Add to Home Screen" walkthrough (iOS Safari only, shown once — see
+     maybeShowA2hsPrompt()). A small step-by-step dialog with a pulsing icon
+     per step to draw the eye, dot progress indicator, and Back/Next controls
+     that double as Skip/Got it on the first and last steps. */
+  .a2hs-step-num{ text-align:center; font-size:var(--fs-xs); color:var(--text-dim); letter-spacing:.02em; margin-bottom:.9rem; }
+  .a2hs-icon-wrap{ display:flex; justify-content:center; margin-bottom:1.1rem; }
+  .a2hs-icon{
+    width:4.5rem; height:4.5rem; border-radius:50%; background:var(--accent-dim);
+    border:1.5px solid var(--accent); color:var(--accent);
+    display:flex; align-items:center; justify-content:center;
+    animation:a2hsPulse 1.4s ease-in-out infinite;
+  }
+  .a2hs-icon svg{ width:2.1rem; height:2.1rem; }
+  @keyframes a2hsPulse{
+    0%,100%{ transform:scale(1); }
+    50%{ transform:scale(1.08); }
+  }
+  .a2hs-step-text{ text-align:center; font-size:var(--fs-strong); line-height:1.5; margin:0 0 .5rem; }
+  .a2hs-step-text strong{ color:var(--accent); }
+  .a2hs-note{ text-align:center; font-size:var(--fs-base); color:var(--text-dim); line-height:1.55; margin:.6rem 0 0; padding-top:.8rem; border-top:1px solid var(--border); }
+  .a2hs-dots{ display:flex; justify-content:center; gap:.4rem; margin:1.1rem 0 .3rem; }
+  .a2hs-dot{ width:.5rem; height:.5rem; border-radius:50%; background:var(--border); }
+  .a2hs-dot.active{ background:var(--accent); }
 
   .rest-fab-wrap{
     position:fixed;
@@ -384,13 +493,25 @@
     box-shadow:0 4px 16px rgba(0,0,0,.4);
     font-family:'Oswald',sans-serif; font-weight:600;
     -webkit-user-select:none; user-select:none;
+    /* Grows into the counting-down clock (see .big below) with a soft
+       overshoot so it feels like it "pops" up to size rather than just
+       resizing — the timer becomes the most important thing on screen while
+       it's actively counting (or just finished), so it earns the extra
+       visual weight. Shrinks back the same way once it's reset to idle. */
+    transition: width .45s cubic-bezier(.34,1.56,.64,1), height .45s cubic-bezier(.34,1.56,.64,1),
+      background-color .25s ease, box-shadow .45s ease;
   }
   .rest-fab.running{ background:var(--good); }
+  .rest-fab.big{ width:6.5rem; height:6.5rem; box-shadow:0 6px 24px rgba(0,0,0,.45); }
   .rest-fab:active{ filter:brightness(.95); }
   .rest-fab.done{ animation: restPulse .55s ease-in-out 3; }
   .rest-fab-icon{ display:flex; align-items:center; justify-content:center; }
   .rest-fab-icon svg{ width:1.6rem; height:1.6rem; }
-  .rest-fab-text{ font-size:1.05rem; font-variant-numeric:tabular-nums; }
+  .rest-fab-text{
+    font-size:var(--fs-lg); font-variant-numeric:tabular-nums;
+    transition: font-size .45s cubic-bezier(.34,1.56,.64,1);
+  }
+  .rest-fab.big .rest-fab-text{ font-size:1.9rem; }
   .rest-reset-btn{
     width:2.75rem; height:2.75rem; border-radius:50%; cursor:pointer;
     border:1px solid var(--border); background:var(--surface); color:var(--text-dim);
@@ -407,17 +528,20 @@
     padding:.7rem .6rem .5rem; margin-bottom:.7rem;
   }
   .chart-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.3rem; }
-  .chart-title{ font-size:.78rem; color:var(--text-dim); }
-  .chart-current{ font-size:.85rem; color:var(--text-dim); }
+  .chart-title{ font-size:var(--fs-sm); color:var(--text-dim); }
+  .chart-current{ font-size:var(--fs-base); color:var(--text-dim); }
   .chart-wrap{ position:relative; }
   .chart-svg{ width:100%; height:auto; display:block; }
   .chart-grid{ stroke:var(--border); stroke-width:1; }
   .chart-point-label{ font-family:'Oswald',sans-serif; font-size:11px; font-weight:600; }
-  .chart-axis-labels{ display:flex; justify-content:space-between; font-size:.68rem; color:var(--text-dim); margin-top:.15rem; }
+  .chart-axis-labels{ display:flex; justify-content:space-between; font-size:var(--fs-2xs); color:var(--text-dim); margin-top:.15rem; }
+  .chart-legend{ display:flex; gap:1rem; flex-wrap:wrap; margin-top:.5rem; }
+  .chart-legend-item{ display:flex; align-items:center; gap:.35rem; font-size:var(--fs-xs); color:var(--text-dim); }
+  .chart-legend-dot{ width:.55rem; height:.55rem; border-radius:50%; flex:0 0 auto; display:inline-block; }
   .chart-tip{
     position:absolute; transform:translate(-50%,-100%); margin-top:-8px;
     background:var(--surface); border:1px solid var(--border); border-radius:6px;
-    padding:.3rem .55rem; font-size:.72rem; color:var(--text); white-space:nowrap;
+    padding:.3rem .55rem; font-size:var(--fs-xs); color:var(--text); white-space:nowrap;
     pointer-events:none; box-shadow:0 2px 10px rgba(0,0,0,.4); z-index:2;
   }
 </style>
@@ -426,7 +550,7 @@
 
 <header>
   <div class="titles">
-    <h1>Lift Log</h1>
+    <h1><img class="brand-mark" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAWfmNhQlgAABZ+anVtYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAAFlhqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjBmNjJhYWQ4LTcwZjQtNDA0My1hYTMxLWM0ZjQzNTRiM2Q4NQAAAAOTanVtYgAAAClqdW1kYzJhcwARABCAAACqADibcQNjMnBhLmFzc2VydGlvbnMAAAAAuGp1bWIAAABEanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5pbmdyZWRpZW50LnYzAAAAABhjMnNoOBlaoYAoDpjmk0fR6p7RoQAAAGxjYm9yo2lkYzpmb3JtYXRpaW1hZ2UvcG5namluc3RhbmNlSUR4LHhtcDppaWQ6ODEyODMwMDUtOGQ4Ni00ODE4LTk5Y2YtNDYzOTRjODZjZmJibHJlbGF0aW9uc2hpcGhwYXJlbnRPZgAAAeJqdW1iAAAAQWp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuYWN0aW9ucy52MgAAAAAYYzJzaB4UGB1A6VxyNU6Aa5eGQv8AAAGZY2JvcqJnYWN0aW9uc4KiZmFjdGlvbmtjMnBhLm9wZW5lZGpwYXJhbWV0ZXJzoWtpbmdyZWRpZW50c4GiY3VybHgtc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5pbmdyZWRpZW50LnYzZGhhc2hYIKzUTKJ1VJQV2lH8+BPuBDaij1k7eO/CsuZaDv7e7QOSpGZhY3Rpb254HWNvbS5hbnRocm9waWMuY2xhdWRlLnByb3ZpZGVkanBhcmFtZXRlcnOheB9jb20uYW50aHJvcGljLm9yaWdpbi1jb25maWRlbmNlZ3Vua25vd25rZGVzY3JpcHRpb254ZkNsYXVkZSBwcm92aWRlZCB0aGlzIGZpbGUgYXQgdGhlIHJlcXVlc3Qgb2YgYSB1c2VyIGFuZCBtYXkgaGF2ZSBjcmVhdGVkIG9yIG1vZGlmaWVkIHRoZSBmaWxlIGNvbnRlbnRzLm1zb2Z0d2FyZUFnZW50oWRuYW1lZkNsYXVkZXJhbGxBY3Rpb25zSW5jbHVkZWT1AAAAyGp1bWIAAABAanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5oYXNoLmRhdGEAAAAAGGMyc2gHmlQ8vw7Ge2Ws+rBuxs84AAAAgGNib3KlY2FsZ2ZzaGEyNTZjcGFkTQAAAAAAAAAAAAAAAABkaGFzaFggCBgiUoL1FyMRkmIFZ39199RDGMjCNL1VavOw7TKNEjRkbmFtZW5qdW1iZiBtYW5pZmVzdGpleGNsdXNpb25zgaJlc3RhcnQYIWZsZW5ndGgZFooAAAI+anVtYgAAACdqdW1kYzJjbAARABCAAACqADibcQNjMnBhLmNsYWltLnYyAAAAAg9jYm9ypWNhbGdmc2hhMjU2aXNpZ25hdHVyZXhNc2VsZiNqdW1iZj0vYzJwYS91cm46YzJwYTowZjYyYWFkOC03MGY0LTQwNDMtYWEzMS1jNGY0MzU0YjNkODUvYzJwYS5zaWduYXR1cmVqaW5zdGFuY2VJRHgseG1wOmlpZDpmNjA4YzU2Yi04ODhmLTRkMmYtODU1MS00M2M1Y2FkOWE2NjZyY3JlYXRlZF9hc3NlcnRpb25zg6JjdXJseC1zZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmluZ3JlZGllbnQudjNkaGFzaFggrNRMonVUlBXaUfz4E+4ENqKPWTt478Ky5loO/t7tA5KiY3VybHgqc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5hY3Rpb25zLnYyZGhhc2hYIG0gJP5/dFOqomJvs9QmiHVNfvDQ16i1855uQ/MueNQSomN1cmx4KXNlbGYjanVtYmY9YzJwYS5hc3NlcnRpb25zL2MycGEuaGFzaC5kYXRhZGhhc2hYIF0wFZFOELrW1cNtSiAwHted6sGJeQmIgg7bRI2h7L9fdGNsYWltX2dlbmVyYXRvcl9pbmZvo2RuYW1lb0FudGhyb3BpYyBGaWxlc2d2ZXJzaW9uZTEuMC4wa3NwZWNWZXJzaW9uZTIuNC4wAAAQOGp1bWIAAAAoanVtZGMyY3MAEQAQgAAAqgA4m3EDYzJwYS5zaWduYXR1cmUAAAAQCGNib3LShFkCEqIBJhghWQIKMIICBjCCAY2gAwIBAgIUQOWgCu7COdC+uIP6BkIFPWdVEwAwCgYIKoZIzj0EAwMwSTEXMBUGA1UEChMOQW50aHJvcGljLCBQQkMxLjAsBgNVBAMTJUFudGhyb3BpYyBDb250ZW50IENyZWRlbnRpYWxzIFJvb3QgQ0EwHhcNMjYwODA3MTg0MzU2WhcNMjgwODA2MTk0MzU2WjBEMRcwFQYDVQQKEw5BbnRocm9waWMsIFBCQzEpMCcGA1UEAxMgQW50aHJvcGljIENsYXVkZSBDb250ZW50IFNpZ25pbmcwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASYegpry1AYBRTVNL1CpTlbROnY3dey+UrsF9C3phYrATN3ZHf93Mo8RQN0KOUuOn19P4oWNFWe5n2/She9N7eTo1gwVjAOBgNVHQ8BAf8EBAMCB4AwFQYDVR0lBA4wDAYKKwYBBAGD6F4CATAMBgNVHRMBAf8EAjAAMB8GA1UdIwQYMBaAFM5R4gSBTmRbI/jjxM+aPpzB11zCMAoGCCqGSM49BAMDA2cAMGQCMDFzHRSeAXrSy1WOzkbhPZ6Km2wGTmZ/2gK18k8BQGXyqz88Rdrz6CTX9flAnYNVxgIwcF9c3fVhqmJKpi+UhasNUMko69cyX6STPfta3Q8EjyzDjzoyrol46FP6VFHhvUcJoWNwYWRZDZ4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2WEC9ZWE3+ZYmD/aKeTwr8pa4c1IfppSkGJ1Veh397tk1Hdm3u8rwx0pgKqHLmJdFMoKILvGeFhDap4w/6k+6dOuqrJoNEAAACJ5JREFUeNptVmmQVNUVPufct/U60wwyG8sMyrBEBsuEmSQqlSpCSYJGVGJiFK0YUmoqm4lKjIoayyqtxB38YQkaYkxCATohCygQFbHASLQiM4igAw7L7D3dPd39tntOfryeJSb317td933fed+5fb4Pk6k0ACAiiyTiiVQqbZimoQxAEBFEAEARgfElICCIOLYDECAEzez7frFYKBWLSCQCIoIgmExXRQRTMjWJZFKEw1Az8xicQESCiEgRIDMLAAKIAIAggAAgIillEJXL5ezIsLAAgAhjKl0NIOecU2s7ThD4EXMFHTHaKCLX84rFoiISkUQiYZrm+DEZ+y4ABATTMALfHx4ejOgNZl1dnbFs2/M8QBTmqMZxERCxWCw2NTVd++1rPM8fHR3d8Ze/9vf3m5YZlTn2qQKIIOD5nmmYqXRVfiSLRGRZthOLe74vIswsIiwcPbOIiPi+n8lkfnnX2o+OHd+zdy8CPPTgryzL0qGuHGPW0VlmYQaBIAhM0zZMi5kNx4mJCLAGASCa1DoBEVJUKBQuv2zFG2+8uX7DM1Nrag4efGdddZVt267rGoYhFXEAiUQEEUFYBITIsizf9wxlGKy1q1kQpTQKSERoWRZLpZ9EVCgUOruOnDN1qmVb6VQ6DMN8Po9E0V0QECLleh4zA7NYjkFga02kAIAIoay5JWHc2Zx45JGHt23d0tIyp1wuE5GIaGZmzhcK586e7bquW3abm5tnzJgxWiwiIDMDiCJVLpXmz5vX8fL2B+9fd9d5iRmOcrUmQgAkBHBZ1jYYrRcuXnXj6uc3PreotdUwDM/zmJmQEolEV9cRwzCqqqtzubzj2P0DA8KsFBGR7we+78disXlz527dsuX6W29pnTPntkazyIggAELlkBttaoTAu+CS7qPHNj3//PGPP66qrkqlUkqp4Ww21PrTnh5mXV9ft2rV1VddufKJJ54ipXL5fKFQmFJTYzuOZVnHjh9/9rmN2cFsYX77HAqqSXzNIGBopBXtF/p972dmzf746NHa+ob29rb71t3bMue83bv37tu/3zLNDz882tbWtnPXqz/98Y++unTpxk0vrFx5hSKKx+M33rA6FnN27XrtcFdXV1dX3+lTdl2jhbTyKxe9uOsfiECmbTfXTXODwEml+/t6FyxYEAZhXW0tIj32+BMjIyOZTOa+dfck4jHLMn+7+XcbN216/NFf102bls/n//DHP/195866urpisZiIJxrq60dGskY8Ebpey6yZSATChu/7PadOXyDglkuWZb333vsDA4Pfuuab1163uqWl5ZGHH6qrq+vo2LH6hu/OmDXjtd17zp09e9Gi1pkzZ2Yy1S/+/qU1a74/b+7ckVxu2/aXe8+esS17aHQUSR0/cVKHISBR6Ll7333fUSrbezZTUzMyPPDF9rYgDDo7O3+x9o6f3Pbz3bv3vLB5c6oqzZpjjvONyy87cODgRRdf8krHn6+/7juL29q3bX/56quu7O7uDnUYS6VKZ05pzR2v7zcIRQSn1TVopB3NNLDixplX39DeuvDNN984cuTDw52dDQ0Nt99xZ119faFQiMdiIpJMptKpZG9fX7FYRMQHH7i/qbmpo2PHpo3PfqHtS6P53N/2v9259mb+4J+rPnGnkBRGCyqVTOWCsCyUHBnINp6HOlyx4utHj3509913bd22/fDhTqWUYajoP2HZVn//gIjYtl0slhYtav3Brbf4vmfbVrFYCsOwJpXq2775ucGgz9MGQhD4yoknbYLDZd7fn9vy0kuL2xYvXbq0ubnpyafWP73hmenTp39t+fJDh/5lWZYAhEFgmsZILnfxRV9uaprV8UpHqVxefumyTCaTy+WfXL/htV07X836Z3yJKdDCYRAQIohADIFIAWIQBOl0+u577v3NY48vWrjwZHd3e/viZcuWjeRy0az2PK922rTbf3ZbT0+PE4s9vX7Dzbf+sL9/INSh57poWAaRjSACCAgAKp5IQcUxwA+CxoaGbDb77w8+WHj++V1HjpTd8slPP11+6bJ9+94yTZOIstnsmjU3nT3Tu3XrtnQycUHrQsu2y2752LHj7x465MTsih0hAkAY+CqeSEVDXVgs2+4+cWJgcMjzvIMH3wmCwHFivb291Zkpvb1nPc9XSvlB8Ln5898+cGAoO1wS+uiTExAGJ0727N6zN+Y4Ew7xGQIEiEzYUMbp06f7BwYd20ZCZrYsS2seHBqMBrNjGrl8YXBoKAjCKxpSi6em3jo1ONjXFzUJx6Z99BAG3phEUnE8AbFMyzQMFgbAqJBcbgSYFSEL5Bn8QmGwVH6gZepjF9ZWg2w+XUzblfEOOPYOoogEgU8AEqFLxcOBhcdNHwGEWbMuaxnyNYvc1JB8fcms5dOSaQWsORcwRCYIExYtFQcFADB4DH6ygUdLIYQsLMKC56edz2ecvf3FRxdMTabstEKXgRBpMiqOeyFgNK0BjMnQ49oBAApkAz3FVCHCkkxsa/t0HYZLBkeH3DAWM4KKl1WaCSCAkygi0SPTFeHIf8dikESBqcx8XUNq35JZ986pqTKVrWDY0yBggihERaQQEYBk/N0x0AovRhsKw3Ai2ciEPlrge43JuWlTa50v+54felo8lhKRH7Ib6lIQBpqLIVcYZJIOIALAOgQAjMUTTizxX+EQAABYoMqktEFZL/QF6mOGr6XXDWpjpgVw1gsdRVNMlQt0NmRV0QfHiQjJLRdFBG3bsWzHMK3/5QhFtICBSAA+MwKYhAGLAFgKmSEUUYgGVuJjJauJIFEY+L7vERE6sbgw205cGaYITybASniMqqtcNkREAJ64DjJZHwRAIq1Dzy0hEhIpMxqTYUBISimslIEIkzsyNq0QYfKPE8AYxWNADIPA98pIhEhIqCzbQUAACQOPWQMiEiHiZ/VChP+zJvIriGitfa8cBB4pRUQR438AhoAPChDsiosAAAAASUVORK5CYII=" alt="">Lift Log</h1>
     <div class="date" id="dateLabel"></div>
   </div>
   <button class="cog-btn" onclick="openSettings()" aria-label="Settings">
@@ -465,6 +589,8 @@
   <div class="dialog-head"><h3 id="exerciseDialogTitle">Add exercise</h3><button class="dialog-close" onclick="document.getElementById('addExerciseDialog').close()">✕</button></div>
   <div class="dialog-body">
     <input type="text" class="plain-input" id="newExerciseName" placeholder="e.g. Romanian Deadlift" maxlength="40">
+    <div class="section-title" style="margin-top:.8rem;">What do you track?</div>
+    <div class="checklist" id="newExerciseMetrics"></div>
     <div class="section-title" style="margin-top:.8rem;">Muscle group tags (optional)</div>
     <div id="newExerciseTags"></div>
     <button type="button" class="add-set-btn" onclick="addExerciseTagField()">+ Add another tag</button>
@@ -479,18 +605,25 @@
 <dialog id="settingsDialog">
   <div class="dialog-head"><h3>Settings</h3><button class="dialog-close" onclick="document.getElementById('settingsDialog').close()">✕</button></div>
   <div class="dialog-body">
-    <div class="tabs">
+    <div class="tabs-row">
       <div class="tab" id="tabExercisesBtn" onclick="switchTab('exercises')">Exercises</div>
       <div class="tab" id="tabTemplatesBtn" onclick="switchTab('templates')">Templates</div>
       <div class="tab" id="tabProgressBtn" onclick="switchTab('progress')">Progress</div>
       <div class="tab" id="tabTimerBtn" onclick="switchTab('timer')">Timer</div>
-      <div class="tab" id="tabDataBtn" onclick="switchTab('data')">Data</div>
+      <button type="button" class="more-tab-btn" id="moreTabBtn" onclick="toggleMoreTabMenu(event)" aria-label="More">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.4" fill="currentColor" stroke="none"/></svg>
+      </button>
+      <div class="more-tab-menu" id="moreTabMenu">
+        <button type="button" class="more-tab-menu-item" id="tabDataBtn" onclick="switchTab('data')">Data</button>
+        <button type="button" class="more-tab-menu-item" id="tabInfoBtn" onclick="switchTab('info')">Info</button>
+      </div>
     </div>
     <div id="tabExercises"></div>
     <div id="tabTemplates"></div>
     <div id="tabProgress"></div>
     <div id="tabTimer"></div>
     <div id="tabData"></div>
+    <div id="tabInfo"></div>
     <div class="settings-footer">
       <button type="button" class="footer-link" onclick="openContact()">Contact</button>
       <span class="settings-version" id="settingsVersion"></span>
@@ -511,11 +644,17 @@
   <div class="dialog-body" id="infoDialogBody"></div>
 </dialog>
 
+<!-- Add to Home Screen walkthrough (iOS Safari only, shown once — see maybeShowA2hsPrompt()) -->
+<dialog id="a2hsDialog">
+  <div class="dialog-head"><h3>Add to Home Screen</h3><button class="dialog-close" onclick="document.getElementById('a2hsDialog').close()">✕</button></div>
+  <div class="dialog-body" id="a2hsBody"></div>
+</dialog>
+
 <!-- Custom alert/confirm dialogs (native browser confirm()/alert() popups are unreliable in some hosting contexts) -->
 <dialog id="customAlertDialog">
   <div class="dialog-head"><h3>Notice</h3><button class="dialog-close" onclick="document.getElementById('customAlertDialog').close()">✕</button></div>
   <div class="dialog-body">
-    <p id="customAlertMsg" style="white-space:pre-wrap; font-size:.9rem; line-height:1.6; margin:0 0 .9rem;"></p>
+    <p id="customAlertMsg" style="white-space:pre-wrap; font-size:var(--fs-md); line-height:1.6; margin:0 0 .9rem;"></p>
     <button type="button" class="btn primary" style="width:100%;" id="customAlertOk">OK</button>
   </div>
 </dialog>
@@ -523,7 +662,7 @@
 <dialog id="customConfirmDialog">
   <div class="dialog-head"><h3>Please confirm</h3><button class="dialog-close" onclick="document.getElementById('customConfirmDialog').close()">✕</button></div>
   <div class="dialog-body">
-    <p id="customConfirmMsg" style="white-space:pre-wrap; font-size:.9rem; line-height:1.6; margin:0 0 .9rem;"></p>
+    <p id="customConfirmMsg" style="white-space:pre-wrap; font-size:var(--fs-md); line-height:1.6; margin:0 0 .9rem;"></p>
     <div style="display:flex; gap:.5rem;">
       <button type="button" class="btn" style="flex:1;" id="customConfirmCancel">Cancel</button>
       <button type="button" class="btn primary" style="flex:1;" id="customConfirmOk">OK</button>
@@ -538,7 +677,6 @@
     <div class="contact-logo-wrap">
       <img src="data:image/png;base64,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" class="contact-logo" alt="Pixelplanners logo">
     </div>
-    <p class="contact-pitch">Op zoek naar een eigen app, website of huisstijl? Wij ontwerpen en bouwen 'm — van concept tot livegang.</p>
     <div class="contact-team">
       <div class="contact-person">
         <div class="contact-person-name">Fernand Smeets</div>
@@ -546,7 +684,7 @@
       </div>
       <div class="contact-person">
         <div class="contact-person-name">Clarissa de Jong</div>
-        <div class="contact-person-role">Freelance Designer — illustraties, geboortekaartjes, websites &amp; meer</div>
+        <div class="contact-person-role">Freelance Designer — illustrations, birth announcements, websites &amp; more</div>
       </div>
     </div>
     <div class="contact-links">
@@ -579,7 +717,7 @@
 </dialog>
 
 <script>
-const APP_VERSION = '2.8.8';
+const APP_VERSION = '2.9.31';
 const STORE_KEY = 'liftlog_data_v2';
 
 // Some browsers (notably iOS Safari, especially when added to the home screen)
@@ -590,13 +728,18 @@ const STORE_KEY = 'liftlog_data_v2';
 // load (immediately, and again once the browser chrome has settled) avoids that.
 if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
-// Keep only the 5 most recent versions here, newest first, whenever a new version is published.
+// Keep only the 10 most recent versions here, newest first, whenever a new version is published.
 const CHANGELOG = [
-  { version: '2.8.8', notes: ['Settings → Templates now has up/down arrows to reorder templates, same as Settings → Exercises — this also changes the order of the template chips on the main screen'] },
-  { version: '2.8.7', notes: ['Added a Calisthenics exercise library (push-ups, pull-ups, dips, pistol squats, L-sit, front lever and more) as a new template — hidden by default, reveal it from Settings → Templates'] },
-  { version: '2.8.6', notes: ['All built-in exercises now have a muscle-group tag (Lateral Raise → Shoulders, Tricep Pulldown → Triceps, Dual Cable Fly → Chest, Leg Press/Leg Curl/Calf Raise → Legs, etc.), so tag filtering works for the full default list'] },
-  { version: '2.8.5', notes: ['Stronger fix for the app opening scrolled down a bit — now also re-pins to the top after the fonts finish loading, which was the most likely cause of the earlier fix not fully working'] },
-  { version: '2.8.4', notes: ['The app no longer opens scrolled down a bit — it now always starts pinned to the top'] }
+  { version: '2.9.31', notes: ['The rest timer now grows noticeably bigger, with a soft pop animation, while it\'s counting down (or paused mid-count, or just finished) — it\'s the most important thing on screen at that moment, so it shrinks back to its small corner size only once it\'s reset to idle'] },
+  { version: '2.9.30', notes: ['Added a "+ Add" chip at the end of the template row on the home screen (same style as the exercise row\'s), which jumps straight to creating a new template'] },
+  { version: '2.9.29', notes: ['The "+ Add" chip at the end of the exercise row now behaves differently depending on what\'s selected: with "All" selected it still creates a brand-new exercise, but with a specific template selected it instead jumps to that template\'s edit screen in Settings, so you can add an exercise that already exists to it — the "+ New exercise" button is still right there if it truly doesn\'t exist yet'] },
+  { version: '2.9.28', notes: ['Style-guide cleanup: destructive actions (delete exercise/template, "delete permanently") now use a distinct red instead of the same orange as primary buttons; every numeric value — including the exercise history list — now consistently uses the app\'s number font; and the ~20 near-duplicate text sizes across the app were consolidated into one shared size scale (no visual layout changes intended)'] },
+  { version: '2.9.27', notes: ['Settings → Progress now shows a second line on the reps chart for total reps logged that day (all sets added together), next to the existing top-set line, with a small legend underneath so it\'s clear which line is which'] },
+  { version: '2.9.26', notes: ['You can now choose what to track per exercise — Weight, Reps and/or Duration — from the edit-exercise screen. Planks and wall-sits can be set to duration-only, push-ups and pull-ups to reps-only, and the today panel, history, PRs, progress charts and CSV backup all follow that choice'] },
+  { version: '2.9.25', notes: ['Fixed the Data/Info "•••" menu opening underneath the exercise tag filter chips on the Exercises tab — it now floats above the whole settings panel instead of being anchored inside the tab row'] },
+  { version: '2.9.24', notes: ['Reworked Settings navigation: Exercises, Templates, Progress and Timer now sit as four equal tabs that always fit without scrolling, with Data and Info moved behind a "•••" menu next to them — no more scroll hints needed at all'] },
+  { version: '2.9.23', notes: ['Fixed the "more tabs" hint badge letting a scrolled-under tab\'s text show through it instead of staying solid on top — an iOS Safari quirk with the scrollable tab row\'s own rendering layer'] },
+  { version: '2.9.22', notes: ['Fixed the "more tabs" hint in Settings not showing up the moment the panel opens (it needed a scroll or tap first before it would appear)'] },
 ];
 
 const DEFAULT_EXERCISES = [
@@ -620,6 +763,38 @@ const DEFAULT_EXERCISE_TAGS = {
   'Leg Press': ['Legs'],
   'Leg Curl': ['Legs'],
   'Calf Raise': ['Legs']
+};
+// Default tracked metrics for built-in/suggested exercises whose relevant
+// inputs aren't the usual weight+reps: isometric holds are duration-only,
+// bodyweight rep exercises are reps-only (no weight field needed). Anything
+// not listed here defaults to ['weight','reps'] via exerciseMetrics() below.
+const DEFAULT_EXERCISE_METRICS = {
+  'Plank': ['duration'],
+  'Wrist Extensor Hold': ['duration'],
+  'Wrist Flexor Hold': ['duration'],
+  'Dead Hang': ['duration'],
+  'Hollow Body Hold': ['duration'],
+  'L-Sit': ['duration'],
+  'Handstand': ['duration'],
+  'Front Lever': ['duration'],
+  'Planche': ['duration'],
+  "Farmer's Carry": ['duration'],
+  'Push-Ups': ['reps'],
+  'Diamond Push-Ups': ['reps'],
+  'Pike Push-Ups': ['reps'],
+  'Handstand Push-Ups': ['reps'],
+  'Dips': ['reps'],
+  'Pull-Ups': ['reps'],
+  'Chin-Ups': ['reps'],
+  'Australian Rows': ['reps'],
+  'Muscle-Ups': ['reps'],
+  'Pistol Squats': ['reps'],
+  'Bulgarian Split Squats': ['reps'],
+  'Glute Bridges': ['reps'],
+  'Nordic Curls': ['reps'],
+  'Hanging Leg Raises': ['reps'],
+  'Dragon Flag': ['reps'],
+  'Toes-to-Bar': ['reps']
 };
 const DEFAULT_TEMPLATES = [
   { name:'Chest Day', exercises:['Dumbbell Chest Press','Lateral Raise','Lat Pulldown','Preacher Curl','Tricep Pulldown','Hammer Curls','Dual Cable Fly'] },
@@ -708,7 +883,7 @@ function loadData(){
     }
   }catch(e){ console.error('load failed', e); }
   return {
-    exercises: DEFAULT_EXERCISES.map(name => ({ name, hidden:false, builtin:true, tags: (DEFAULT_EXERCISE_TAGS[name] || []).slice() })),
+    exercises: DEFAULT_EXERCISES.map(name => ({ name, hidden:false, builtin:true, tags: (DEFAULT_EXERCISE_TAGS[name] || []).slice(), metrics: (DEFAULT_EXERCISE_METRICS[name] || ['weight','reps']).slice() })),
     templates: DEFAULT_TEMPLATES.map(t => ({ ...t })),
     sessions: {},
     settings: { restSeconds: 90 }
@@ -753,12 +928,30 @@ function ensureDefaultExerciseTags(){
   if(changed) saveData();
 }
 
+// Backfills DEFAULT_EXERCISE_METRICS onto any already-saved exercise that
+// matches one of the special-cased names above and has no metrics set yet —
+// so existing users get the same duration-only/reps-only defaults a fresh
+// install would, instead of everything staying weight+reps until manually
+// changed.
+function ensureDefaultExerciseMetrics(){
+  let changed = false;
+  data.exercises.forEach(ex => {
+    const defaults = DEFAULT_EXERCISE_METRICS[ex.name];
+    if(defaults && !Array.isArray(ex.metrics)){
+      ex.metrics = defaults.slice();
+      changed = true;
+    }
+  });
+  if(changed) saveData();
+}
+
 let data = loadData();
 ensureDefaultExerciseTags();
+ensureDefaultExerciseMetrics();
 ensureSuggestedLibrary();
 let currentTemplate = 'All';
 let selectedExercise = null;
-let todaySets = [{weight:'', reps:''}];
+let todaySets = [emptySet()];
 let todayFeel = '';
 let todayNote = '';
 let historyOpen = false;
@@ -780,13 +973,17 @@ document.getElementById('dateLabel').textContent =
   new Date().toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric'});
 
 function visibleExerciseNames(){
-  let names = data.exercises.filter(e => !e.hidden).map(e => e.name);
+  // When a specific template is selected, its own exercise order (set via the
+  // reorder arrows in the template editor) drives the order shown here. With
+  // "All" selected there's no such order to follow, so exercises are listed
+  // alphabetically instead.
   if(currentTemplate !== 'All'){
     const tpl = data.templates.find(t => t.name === currentTemplate);
-    const tplSet = tpl ? new Set(tpl.exercises) : new Set();
-    names = names.filter(n => tplSet.has(n));
+    if(!tpl) return [];
+    const visibleSet = new Set(data.exercises.filter(e => !e.hidden).map(e => e.name));
+    return tpl.exercises.filter(n => visibleSet.has(n));
   }
-  return names;
+  return data.exercises.filter(e => !e.hidden).map(e => e.name).sort((a, b) => a.localeCompare(b));
 }
 
 function getLastSession(exercise){
@@ -795,12 +992,47 @@ function getLastSession(exercise){
   if(past.length === 0) return null;
   return past[past.length - 1];
 }
-function getBestSet(exercise){
+function hasSessionToday(exercise){
+  const list = data.sessions[exercise] || [];
+  return list.some(s => s.date === todayStr());
+}
+// Per-exercise configurable tracking metrics (weight / reps / duration).
+// exerciseMetrics() falls back to weight+reps for any exercise saved before
+// this feature existed, so no data migration is needed. primaryMetric()
+// picks the one metric that drives PR badges and the progress-chart "top
+// set" comparison, in priority order weight > reps > duration.
+function exerciseMetrics(ex){
+  return (ex && Array.isArray(ex.metrics) && ex.metrics.length) ? ex.metrics : ['weight','reps'];
+}
+function exerciseMetricsByName(name){
+  return exerciseMetrics(data.exercises.find(e => e.name === name));
+}
+function primaryMetric(metrics){
+  if(metrics.includes('weight')) return 'weight';
+  if(metrics.includes('reps')) return 'reps';
+  return 'duration';
+}
+function metricUnit(metric){
+  return metric === 'weight' ? 'kg' : metric === 'reps' ? 'reps' : 'sec';
+}
+function metricLabel(metric){
+  return metric === 'weight' ? 'Weight' : metric === 'reps' ? 'Reps' : 'Duration';
+}
+function metricStep(metric){
+  return metric === 'weight' ? 0.5 : metric === 'duration' ? 5 : 1;
+}
+function emptySet(){
+  return { weight:'', reps:'', duration:'' };
+}
+function setHasData(s){
+  return !!s && (s.weight !== '' || s.reps !== '' || s.duration !== '');
+}
+function getBestValue(exercise, metric){
   const list = data.sessions[exercise] || [];
   let best = null;
   list.forEach(s => s.sets.forEach(set => {
-    const w = parseFloat(set.weight);
-    if(!isNaN(w) && (!best || w > best)) best = w;
+    const v = parseFloat(set[metric]);
+    if(!isNaN(v) && (best === null || v > best)) best = v;
   }));
   return best;
 }
@@ -821,6 +1053,14 @@ function renderTemplateChips(){
     chip.onclick = () => { currentTemplate = t.name; ensureSelectedExercise(); render(); };
     row.appendChild(chip);
   });
+
+  const addChip = document.createElement('div');
+  addChip.className = 'chip add';
+  addChip.textContent = '+ Add';
+  addChip.onclick = () => openNewTemplate();
+  row.appendChild(addChip);
+
+  centerSelectedTemplateChip();
 }
 
 
@@ -829,7 +1069,7 @@ function ensureSelectedExercise(){
   if(!visible.includes(selectedExercise)){
     selectedExercise = visible[0] || null;
     if(selectedExercise) loadTodayState(selectedExercise);
-    else { todaySets = [{weight:'', reps:''}]; todayFeel = ''; todayNote = ''; }
+    else { todaySets = [emptySet()]; todayFeel = ''; todayNote = ''; }
   }
 }
 
@@ -837,16 +1077,16 @@ function loadTodayState(exerciseName){
   const list = data.sessions[exerciseName] || [];
   const todaysExisting = list.find(s => s.date === todayStr());
   if(todaysExisting){
-    todaySets = todaysExisting.sets.map(s => ({ weight: s.weight, reps: s.reps }));
+    todaySets = todaysExisting.sets.map(s => ({ weight: s.weight || '', reps: s.reps || '', duration: s.duration || '' }));
     todayFeel = todaysExisting.feel || '';
     todayNote = todaysExisting.note || '';
     return;
   }
   const last = getLastSession(exerciseName);
   if(last && last.sets.length){
-    todaySets = last.sets.map(s => ({ weight: s.weight, reps: s.reps }));
+    todaySets = last.sets.map(s => ({ weight: s.weight || '', reps: s.reps || '', duration: s.duration || '' }));
   } else {
-    todaySets = [{ weight: '', reps: '' }];
+    todaySets = [emptySet()];
   }
   todayFeel = '';
   todayNote = '';
@@ -858,8 +1098,18 @@ function renderExerciseChips(){
   const visible = visibleExerciseNames();
   visible.forEach(name => {
     const chip = document.createElement('div');
-    chip.className = 'chip' + (name === selectedExercise ? ' active' : '');
-    chip.textContent = name;
+    const doneToday = hasSessionToday(name);
+    chip.className = 'chip' + (name === selectedExercise ? ' active' : '') + (doneToday ? ' done-today' : '');
+    const label = document.createElement('span');
+    label.textContent = name;
+    chip.appendChild(label);
+    if(doneToday){
+      const badge = document.createElement('span');
+      badge.className = 'chip-check-badge';
+      badge.setAttribute('aria-label', 'Done today');
+      badge.innerHTML = checkIcon;
+      chip.appendChild(badge);
+    }
     chip.onclick = () => { selectedExercise = name; loadTodayState(name); historyOpen=false; editingHistoryIdx=null; render(); };
     row.appendChild(chip);
   });
@@ -867,16 +1117,75 @@ function renderExerciseChips(){
   addChip.className = 'chip add';
   addChip.textContent = '+ Add';
   addChip.onclick = () => {
-    editingExerciseIndex = null;
-    document.getElementById('exerciseDialogTitle').textContent = 'Add exercise';
-    document.getElementById('exerciseDialogConfirmBtn').textContent = 'Add';
-    document.getElementById('newExerciseName').value = '';
-    resetExerciseTagFields();
-    document.getElementById('addExerciseDialog').showModal();
+    if(currentTemplate === 'All'){
+      editingExerciseIndex = null;
+      document.getElementById('exerciseDialogTitle').textContent = 'Add exercise';
+      document.getElementById('exerciseDialogConfirmBtn').textContent = 'Add';
+      document.getElementById('newExerciseName').value = '';
+      resetExerciseTagFields();
+      document.getElementById('addExerciseDialog').showModal();
+    } else {
+      // With a specific template selected, "+ Add" adds an *existing*
+      // exercise to that template rather than creating a brand-new one —
+      // most of the time the exercise the user wants is just missing from
+      // this template, not missing from the app. Jumps straight to that
+      // template's own edit screen (Settings → Templates), which lists every
+      // exercise to pick from and still has its own "+ New exercise" button
+      // for the case where it really doesn't exist yet.
+      openSettings();
+      switchTab('templates');
+      openEditTemplate(currentTemplate);
+    }
   };
   row.appendChild(addChip);
   updateExerciseScrollButtons();
+  centerSelectedExerciseChip();
 }
+
+// Smoothly scrolls the exercise row so the selected chip sits centered,
+// leaving the previous chip partly visible on the left and the next one
+// partly visible on the right — like it was dragged there by hand. Scroll
+// position is clamped to [0, maxScroll], so a chip near either end of the
+// list (nothing to show beside it) just settles naturally instead of forcing
+// empty space into view.
+function centerElementInRow(row, el){
+  if(!row || !el) return;
+  const rowRect = row.getBoundingClientRect();
+  const elRect = el.getBoundingClientRect();
+  const elCenterInRow = (elRect.left - rowRect.left) + row.scrollLeft + (elRect.width / 2);
+  const target = elCenterInRow - (row.clientWidth / 2);
+  const maxScroll = row.scrollWidth - row.clientWidth;
+  const clamped = Math.max(0, Math.min(target, maxScroll));
+  row.scrollTo({ left: clamped, behavior: 'smooth' });
+}
+function centerActiveChip(rowId){
+  const row = document.getElementById(rowId);
+  if(!row) return;
+  centerElementInRow(row, row.querySelector('.chip.active'));
+}
+// Opens/closes the "•••" dropdown holding Data and Info. Called with the
+// click event so it can stop the click from bubbling to the document-level
+// listener below, which would otherwise close the menu the same instant it
+// opens. Since the menu is position:fixed (see the CSS comment on
+// .more-tab-menu for why), its screen position isn't automatic like an
+// absolutely positioned one would be — it's set here, in viewport
+// coordinates, from the button's own on-screen position each time it opens.
+function toggleMoreTabMenu(event){
+  if(event) event.stopPropagation();
+  const menu = document.getElementById('moreTabMenu');
+  const btn = document.getElementById('moreTabBtn');
+  if(!menu || !btn) return;
+  const opening = !menu.classList.contains('open');
+  if(opening){
+    const rect = btn.getBoundingClientRect();
+    menu.style.top = (rect.bottom + 6) + 'px';
+    menu.style.right = (window.innerWidth - rect.right) + 'px';
+    menu.style.left = 'auto';
+  }
+  menu.classList.toggle('open');
+}
+function centerSelectedExerciseChip(){ centerActiveChip('exerciseRow'); }
+function centerSelectedTemplateChip(){ centerActiveChip('templateRow'); }
 
 function scrollExerciseRow(dir){
   const row = document.getElementById('exerciseRow');
@@ -900,6 +1209,8 @@ function openAddExerciseFromSettings(){
   document.getElementById('exerciseDialogConfirmBtn').textContent = 'Add';
   document.getElementById('newExerciseName').value = '';
   resetExerciseTagFields();
+  newExerciseMetrics = ['weight','reps'];
+  renderNewExerciseMetrics();
   document.getElementById('addExerciseDialog').showModal();
 }
 
@@ -913,7 +1224,27 @@ function openEditExercise(i){
   document.getElementById('newExerciseName').value = ex.name;
   newExerciseTagInputs = (ex.tags && ex.tags.length) ? ex.tags.slice() : [''];
   renderNewExerciseTags();
+  newExerciseMetrics = exerciseMetrics(ex).slice();
+  renderNewExerciseMetrics();
   document.getElementById('addExerciseDialog').showModal();
+}
+
+let newExerciseMetrics = ['weight','reps'];
+function renderNewExerciseMetrics(){
+  const el = document.getElementById('newExerciseMetrics');
+  if(!el) return;
+  el.innerHTML = ['weight','reps','duration'].map(m => `
+    <div class="check-chip ${newExerciseMetrics.includes(m) ? 'on' : ''}" onclick="toggleNewExerciseMetric('${m}')">${metricLabel(m)}</div>
+  `).join('');
+}
+function toggleNewExerciseMetric(m){
+  if(newExerciseMetrics.includes(m)){
+    if(newExerciseMetrics.length === 1) return; // at least one metric must stay selected
+    newExerciseMetrics = newExerciseMetrics.filter(x => x !== m);
+  } else {
+    newExerciseMetrics = newExerciseMetrics.concat(m);
+  }
+  renderNewExerciseMetrics();
 }
 
 let newExerciseTagInputs = [''];
@@ -944,6 +1275,7 @@ function removeExerciseTagField(i){
 function confirmAddExercise(){
   const name = document.getElementById('newExerciseName').value.trim();
   const tags = newExerciseTagInputs.map(t => t.trim()).filter(Boolean);
+  const metrics = ['weight','reps','duration'].filter(m => newExerciseMetrics.includes(m));
   if(!name){ document.getElementById('addExerciseDialog').close(); return; }
 
   if(editingExerciseIndex !== null){
@@ -966,14 +1298,15 @@ function confirmAddExercise(){
       ex.name = name;
     }
     ex.tags = tags;
+    ex.metrics = metrics;
     saveData();
     render();
     renderExerciseSettings();
     renderTemplateSettings();
   } else if(!data.exercises.some(e => e.name === name)){
-    data.exercises.push({ name, hidden:false, tags });
+    data.exercises.push({ name, hidden:false, tags, metrics });
     selectedExercise = name;
-    todaySets = [{weight:'', reps:''}];
+    todaySets = [emptySet()];
     todayFeel = '';
     todayNote = '';
     saveData();
@@ -991,7 +1324,10 @@ function renderContent(){
   }
 
   const last = getLastSession(selectedExercise);
-  const best = getBestSet(selectedExercise);
+  const metrics = exerciseMetricsByName(selectedExercise);
+  const activeMetrics = ['weight','reps','duration'].filter(m => metrics.includes(m));
+  const primary = primaryMetric(metrics);
+  const best = getBestValue(selectedExercise, primary);
 
   let lastHtml = '';
   if(last){
@@ -999,10 +1335,9 @@ function renderContent(){
     lastHtml = `<div class="panel">
       <h2>Last time <span class="when">· ${fmtDate(last.date)}</span>${lastFeelBadge}</h2>
       ${last.sets.map((s,i) => `
-        <div class="set-row">
+        <div class="set-row" style="grid-template-columns:1.6rem repeat(${activeMetrics.length},1fr);">
           <span class="set-idx">${i+1}</span>
-          <span class="prev-val"><span class="num">${s.weight || '—'}</span> kg</span>
-          <span class="prev-val"><span class="num">${s.reps || '—'}</span> reps</span>
+          ${activeMetrics.map(m => `<span class="prev-val"><span class="num">${s[m] || '—'}</span> ${metricUnit(m)}</span>`).join('')}
         </div>
       `).join('')}
       ${last.note ? `<div class="last-note">"${escAttr(last.note)}"</div>` : ''}
@@ -1012,35 +1347,27 @@ function renderContent(){
   }
 
   const todayRows = todaySets.map((s, i) => {
-    const w = parseFloat(s.weight);
-    const isPr = best !== null && !isNaN(w) && w > best;
+    const v = parseFloat(s[primary]);
+    const isPr = best !== null && !isNaN(v) && v > best;
     return `
-    <div class="set-row">
+    <div class="set-row" style="grid-template-columns:1.6rem repeat(${activeMetrics.length},1fr) 2.5rem;">
       <span class="set-idx">${i+1}</span>
+      ${activeMetrics.map(m => `
       <div>
         <div class="stepper">
-          <button class="stepper-btn" onclick="stepValue(${i},'weight',-0.5)" aria-label="Decrease weight">−</button>
-          <input class="field" type="number" inputmode="decimal" placeholder="${last && last.sets[i] ? last.sets[i].weight : '0'}"
-            value="${s.weight}" oninput="updateSet(${i},'weight',this.value)">
-          <button class="stepper-btn" onclick="stepValue(${i},'weight',0.5)" aria-label="Increase weight">+</button>
+          <button class="stepper-btn" onclick="stepValue(${i},'${m}',-${metricStep(m)})" aria-label="Decrease ${metricLabel(m).toLowerCase()}">−</button>
+          <input class="field" type="number" inputmode="${m === 'weight' ? 'decimal' : 'numeric'}" placeholder="${last && last.sets[i] ? (last.sets[i][m] || '0') : '0'}"
+            value="${s[m]}" oninput="updateSet(${i},'${m}',this.value)">
+          <button class="stepper-btn" onclick="stepValue(${i},'${m}',${metricStep(m)})" aria-label="Increase ${metricLabel(m).toLowerCase()}">+</button>
         </div>
-        <span class="unit">kg</span>
-      </div>
-      <div>
-        <div class="stepper">
-          <button class="stepper-btn" onclick="stepValue(${i},'reps',-1)" aria-label="Decrease reps">−</button>
-          <input class="field" type="number" inputmode="numeric" placeholder="${last && last.sets[i] ? last.sets[i].reps : '0'}"
-            value="${s.reps}" oninput="updateSet(${i},'reps',this.value)">
-          <button class="stepper-btn" onclick="stepValue(${i},'reps',1)" aria-label="Increase reps">+</button>
-        </div>
-        <span class="unit">reps</span>
-      </div>
+        <span class="unit">${metricUnit(m)}</span>
+      </div>`).join('')}
       <button class="icon-btn" onclick="removeSet(${i})" aria-label="Remove set">✕</button>
       ${isPr ? `<span class="pr-badge">PR</span>` : ''}
     </div>`;
   }).join('');
 
-  const hasAnyInput = todaySets.some(s => s.weight !== '' || s.reps !== '');
+  const hasAnyInput = todaySets.some(setHasData);
 
   content.innerHTML = `
     ${lastHtml}
@@ -1070,8 +1397,16 @@ function renderContent(){
 }
 
 function toggleHistory(){ historyOpen = !historyOpen; editingHistoryIdx = null; render(); }
+function formatSetCompact(set, metrics){
+  if(metrics.length === 2 && metrics.includes('weight') && metrics.includes('reps')){
+    return `<span class="num">${set.weight||'—'}×${set.reps||'—'}</span>`;
+  }
+  return metrics.map(m => `<span class="num">${set[m] || '—'}</span> ${metricUnit(m)}`).join(' · ');
+}
 function renderHistory(){
   const arr = data.sessions[selectedExercise] || [];
+  const metrics = exerciseMetricsByName(selectedExercise);
+  const activeMetrics = ['weight','reps','duration'].filter(m => metrics.includes(m));
   const el = document.getElementById('historyList');
   if(!el) return;
   if(arr.length === 0){
@@ -1093,7 +1428,7 @@ function renderHistory(){
     return `
     <div class="history-entry">
       <span class="d date-edit-trigger" onclick="startEditHistoryDate(${s.idx})">${fmtDate(s.date)} ${editIcon}${feelBadgeHtml(s.feel)}</span>
-      <span class="s">${s.sets.map(set => `${set.weight||'—'}×${set.reps||'—'}`).join(', ')}</span>
+      <span class="s">${s.sets.map(set => formatSetCompact(set, activeMetrics)).join(', ')}</span>
       ${s.note ? `<div class="history-note">"${escAttr(s.note)}"</div>` : ''}
     </div>`;
   }).join('') + `</div>`;
@@ -1138,7 +1473,7 @@ async function confirmHistoryDate(idx){
 function updateSet(i, field, val){
   todaySets[i][field] = val;
   const btn = document.getElementById('saveBtn');
-  if(btn) btn.disabled = !todaySets.some(s => s.weight !== '' || s.reps !== '');
+  if(btn) btn.disabled = !todaySets.some(setHasData);
 }
 function stepValue(i, field, delta){
   let cur = parseFloat(todaySets[i][field]);
@@ -1159,10 +1494,15 @@ function setTodayFeel(val){
 function updateTodayNote(val){
   todayNote = val;
 }
-function addSet(){ todaySets.push({weight:'', reps:''}); render(); }
-function removeSet(i){
+function addSet(){ todaySets.push(emptySet()); render(); }
+async function removeSet(i){
+  const s = todaySets[i];
+  const hasData = setHasData(s);
+  // Only ask for confirmation when there's actually something to lose — an
+  // empty, never-touched row can just be removed right away.
+  if(hasData && !(await showConfirm('Delete this set? The values you entered for it will be lost.'))) return;
   todaySets.splice(i,1);
-  if(todaySets.length === 0) todaySets = [{weight:'', reps:''}];
+  if(todaySets.length === 0) todaySets = [emptySet()];
   render();
 }
 
@@ -1175,7 +1515,7 @@ function feelBadgeHtml(f){
 }
 
 function saveSession(){
-  const cleanSets = todaySets.filter(s => s.weight !== '' || s.reps !== '');
+  const cleanSets = todaySets.filter(setHasData);
   if(cleanSets.length === 0) return;
 
   if(!data.sessions[selectedExercise]) data.sessions[selectedExercise] = [];
@@ -1192,8 +1532,21 @@ function saveSession(){
   saveData();
   autoBackupAll();
 
-  todaySets = cleanSets.map(s => ({...s}));
-  todayNote = trimmedNote;
+  // Move on to the next exercise in the current view automatically, so you
+  // can work through a template set by set without reselecting each one by
+  // hand. If this was the last exercise (or the view is empty), just stay
+  // put and show the values that were saved.
+  const visible = visibleExerciseNames();
+  const idx = visible.indexOf(selectedExercise);
+  if(idx >= 0 && idx < visible.length - 1){
+    selectedExercise = visible[idx + 1];
+    loadTodayState(selectedExercise);
+    historyOpen = false;
+    editingHistoryIdx = null;
+  } else {
+    todaySets = cleanSets.map(s => ({...s}));
+    todayNote = trimmedNote;
+  }
   render();
 
   const check = document.getElementById('saveCheck');
@@ -1212,6 +1565,8 @@ function openSettings(){
   renderSettings();
   const versionEl = document.getElementById('settingsVersion');
   if(versionEl) versionEl.textContent = 'Lift Log v' + APP_VERSION;
+  const menu = document.getElementById('moreTabMenu');
+  if(menu) menu.classList.remove('open');
   document.getElementById('settingsDialog').showModal();
 }
 function switchTab(tab){
@@ -1219,14 +1574,16 @@ function switchTab(tab){
   renderSettings();
   const body = document.querySelector('#settingsDialog .dialog-body');
   if(body) body.scrollTop = 0;
+  const menu = document.getElementById('moreTabMenu');
+  if(menu) menu.classList.remove('open');
 }
 
 function openChangelog(){
   const body = document.getElementById('changelogBody');
   body.innerHTML = CHANGELOG.map(entry => `
     <div style="margin-bottom:1rem;">
-      <div class="num" style="font-weight:600; font-size:.9rem; margin-bottom:.3rem;">v${escAttr(entry.version)}</div>
-      <ul style="margin:0; padding-left:1.1rem; font-size:.85rem; color:var(--text-dim);">
+      <div class="num" style="font-weight:600; font-size:var(--fs-md); margin-bottom:.3rem;">v${escAttr(entry.version)}</div>
+      <ul style="margin:0; padding-left:1.1rem; font-size:var(--fs-base); color:var(--text-dim);">
         ${entry.notes.map(n => `<li style="margin-bottom:.2rem;">${escAttr(n)}</li>`).join('')}
       </ul>
     </div>
@@ -1241,24 +1598,25 @@ const BACKUP_INFO = {
   dropbox: {
     title: 'Dropbox backup — setup',
     body: `
-      <ol style="padding-left:1.1rem; margin:0; font-size:.85rem; line-height:1.65;">
+      <ol style="padding-left:1.1rem; margin:0; font-size:var(--fs-base); line-height:1.65;">
         <li>Go to the <a href="https://www.dropbox.com/developers/apps" target="_blank" rel="noopener">Dropbox App Console</a> and create a new app.</li>
         <li>Choose access type <strong>"App folder"</strong> — the app can then only reach its own folder, not your whole Dropbox.</li>
-        <li>Under "OAuth 2", generate a permanent access token.</li>
+        <li>Open the <strong>"Permissions"</strong> tab first and enable <code>files.content.write</code> and <code>files.content.read</code>, then click "Submit". Do this <strong>before</strong> the next step — a token generated before the permissions are set won't include them, and backups will fail.</li>
+        <li>Only then, under "OAuth 2", generate a permanent access token.</li>
         <li>Paste that token into the Dropbox field above.</li>
       </ol>
-      <p style="font-size:.82rem; color:var(--text-dim); margin-top:.8rem;">Every "Save session" then automatically uploads your full history to <code>lift-log-backup.csv</code> in that folder. Restore reads it back in, same as importing a CSV.</p>
+      <p style="font-size:var(--fs-sm); color:var(--text-dim); margin-top:.8rem;">Every "Save session" then automatically uploads your full history to <code>lift-log-backup.csv</code> in that folder. Restore reads it back in, same as importing a CSV.</p>
     `
   },
   github: {
     title: 'GitHub backup — setup',
     body: `
-      <ol style="padding-left:1.1rem; margin:0; font-size:.85rem; line-height:1.65;">
+      <ol style="padding-left:1.1rem; margin:0; font-size:var(--fs-base); line-height:1.65;">
         <li>Create (or reuse) a GitHub repository to hold the backup file.</li>
         <li>Create a fine-grained personal access token scoped to just that repo, with <strong>Contents: Read and write</strong>.</li>
         <li>Paste the token above, and the repo as <code>username/repo</code>.</li>
       </ol>
-      <p style="font-size:.82rem; color:var(--text-dim); margin-top:.8rem;">Every "Save session" then automatically writes your full history to <code>lift-log-backup.csv</code> on the <code>main</code> branch of that repo. Restore reads it back in, same as importing a CSV.</p>
+      <p style="font-size:var(--fs-sm); color:var(--text-dim); margin-top:.8rem;">Every "Save session" then automatically writes your full history to <code>lift-log-backup.csv</code> on the <code>main</code> branch of that repo. Restore reads it back in, same as importing a CSV.</p>
     `
   }
 };
@@ -1269,6 +1627,78 @@ function openInfo(kind){
   document.getElementById('infoDialogTitle').textContent = info.title;
   document.getElementById('infoDialogBody').innerHTML = info.body;
   document.getElementById('infoDialog').showModal();
+}
+
+/* ---------- Add to Home Screen walkthrough (iOS Safari, shown once) ---------- */
+
+const A2HS_SEEN_KEY = 'liftlog_a2hs_seen_v1';
+let a2hsStep = 0;
+const A2HS_STEPS = [
+  {
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="8.3" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="12" r="1.1" fill="currentColor" stroke="none"/></svg>`,
+    text: 'Tap the <strong>••• menu</strong> in the bottom right of Safari.'
+  },
+  {
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 15.5V4M12 4L8 8M12 4l4 4"/><path d="M5 12v6.5a2 2 0 002 2h10a2 2 0 002-2V12"/></svg>`,
+    text: 'Tap <strong>Share</strong>.'
+  },
+  {
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 9l7 7 7-7"/></svg>`,
+    text: 'Scroll down and tap <strong>Show More</strong>.'
+  },
+  {
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg>`,
+    text: 'Tap <strong>Add to Home Screen</strong>.'
+  }
+];
+
+function renderA2hsStep(){
+  const body = document.getElementById('a2hsBody');
+  const total = A2HS_STEPS.length;
+  const s = A2HS_STEPS[a2hsStep];
+  const isFirst = a2hsStep === 0;
+  const isLast = a2hsStep === total - 1;
+  const dots = A2HS_STEPS.map((_, i) => `<span class="a2hs-dot${i === a2hsStep ? ' active' : ''}"></span>`).join('');
+  body.innerHTML = `
+    <div class="a2hs-step-num">Step ${a2hsStep + 1} of ${total}</div>
+    <div class="a2hs-icon-wrap"><div class="a2hs-icon">${s.icon}</div></div>
+    <p class="a2hs-step-text">${s.text}</p>
+    ${isLast ? `<p class="a2hs-note">This turns Lift Log into a real app — the browser bar disappears the next time you open it. Afterwards, don't forget to move the icon to the front of your home screen, so you can easily find and open it.</p>` : ''}
+    <div class="a2hs-dots">${dots}</div>
+    <div class="form-actions" style="justify-content:space-between;">
+      <button class="btn" onclick="a2hsBack()">${isFirst ? 'Skip' : 'Back'}</button>
+      <button class="btn primary" onclick="a2hsNext()">${isLast ? 'Got it' : 'Next'}</button>
+    </div>
+  `;
+}
+function a2hsNext(){
+  if(a2hsStep < A2HS_STEPS.length - 1){ a2hsStep++; renderA2hsStep(); }
+  else { document.getElementById('a2hsDialog').close(); }
+}
+function a2hsBack(){
+  if(a2hsStep > 0){ a2hsStep--; renderA2hsStep(); }
+  else { document.getElementById('a2hsDialog').close(); }
+}
+function openA2hs(){
+  a2hsStep = 0;
+  renderA2hsStep();
+  document.getElementById('a2hsDialog').showModal();
+}
+// Shown once, only to iOS Safari visitors who haven't already added the app
+// to their home screen (window.navigator.standalone / display-mode:standalone
+// both mean it's already installed, and other iOS browsers like Chrome/Firefox
+// use a different share sheet than the one these steps describe).
+function maybeShowA2hsPrompt(){
+  try{
+    if(localStorage.getItem(A2HS_SEEN_KEY)) return;
+    const ua = window.navigator.userAgent || '';
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isStandalone = window.navigator.standalone === true || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+    const isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
+    if(isIOS && isSafari && !isStandalone){
+      setTimeout(openA2hs, 1000);
+    }
+  }catch(e){}
 }
 
 // Custom alert()/confirm() replacements, built as real <dialog> elements.
@@ -1323,17 +1753,50 @@ function renderSettings(){
   document.getElementById('tabProgressBtn').classList.toggle('active', settingsTab === 'progress');
   document.getElementById('tabTimerBtn').classList.toggle('active', settingsTab === 'timer');
   document.getElementById('tabDataBtn').classList.toggle('active', settingsTab === 'data');
+  document.getElementById('tabInfoBtn').classList.toggle('active', settingsTab === 'info');
+  document.getElementById('moreTabBtn').classList.toggle('active', settingsTab === 'data' || settingsTab === 'info');
   document.getElementById('tabExercises').style.display = settingsTab === 'exercises' ? 'block' : 'none';
   document.getElementById('tabTemplates').style.display = settingsTab === 'templates' ? 'block' : 'none';
   document.getElementById('tabProgress').style.display = settingsTab === 'progress' ? 'block' : 'none';
   document.getElementById('tabTimer').style.display = settingsTab === 'timer' ? 'block' : 'none';
   document.getElementById('tabData').style.display = settingsTab === 'data' ? 'block' : 'none';
+  document.getElementById('tabInfo').style.display = settingsTab === 'info' ? 'block' : 'none';
 
   renderExerciseSettings();
   renderTemplateSettings();
   renderProgressSettings();
   renderTimerSettings();
   renderDataSettings();
+  renderInfoSettings();
+}
+
+// Settings → Info: a simple menu of the app's "about" actions — the same
+// Contact and Changelog dialogs also reachable from the settings footer, plus
+// a way to replay the one-time "Add to Home Screen" walkthrough on demand
+// (for anyone who dismissed it too fast, or for checking it in a preview
+// where the automatic first-visit trigger doesn't apply).
+function renderInfoSettings(){
+  const el = document.getElementById('tabInfo');
+  if(!el) return;
+  const chevronRight = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:1rem;height:1rem;"><path d="M9 6l6 6-6 6"/></svg>`;
+  el.innerHTML = `
+    <div class="section-title">About Lift Log</div>
+    <div class="settings-row" style="cursor:pointer;" onclick="openContact()">
+      <div class="ex-info"><span class="name">Contact</span></div>
+      <span class="icon-btn" aria-hidden="true" style="color:var(--text-dim);">${chevronRight}</span>
+    </div>
+    <div class="settings-row" style="cursor:pointer;" onclick="openChangelog()">
+      <div class="ex-info"><span class="name">Changelog</span></div>
+      <span class="icon-btn" aria-hidden="true" style="color:var(--text-dim);">${chevronRight}</span>
+    </div>
+    <div class="settings-row" style="cursor:pointer;" onclick="openA2hs()">
+      <div class="ex-info">
+        <span class="name">Add app icon to home screen</span>
+        <span class="ex-meta">Replay the walkthrough for adding Lift Log to your iPhone home screen</span>
+      </div>
+      <span class="icon-btn" aria-hidden="true" style="color:var(--text-dim);">${chevronRight}</span>
+    </div>
+  `;
 }
 
 const eyeIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>`;
@@ -1361,12 +1824,21 @@ function renderExerciseSettings(){
     <div class="chip-row" style="margin-bottom:.9rem;">
       ${allTags.map(t => `<div class="chip tag-chip${settingsExerciseTagFilter === t ? ' active' : ''}" data-tag="${escAttr(t)}" onclick="toggleExerciseTagFilter(this.dataset.tag)">${escAttr(t)}</div>`).join('')}
     </div>` : '';
-  const shownExercises = settingsExerciseTagFilter
+  const shownExercises = (settingsExerciseTagFilter
     ? data.exercises.filter(ex => Array.isArray(ex.tags) && ex.tags.includes(settingsExerciseTagFilter))
-    : data.exercises;
+    : data.exercises.slice()
+  ).sort((a, b) => a.name.localeCompare(b.name));
+  const allHidden = data.exercises.length > 0 && data.exercises.every(ex => ex.hidden);
+  const toggleAllHtml = data.exercises.length > 0 ? `
+    <div class="settings-row" style="border-bottom:1px dashed var(--border);">
+      <div class="ex-info"><span class="name" style="color:var(--text-dim); font-style:italic;">All exercises</span></div>
+      <button class="icon-btn" onclick="toggleAllExercisesVisibility()" aria-label="${allHidden ? 'Show all' : 'Hide all'}">${allHidden ? eyeIcon : eyeOffIcon}</button>
+      <span class="icon-btn" style="visibility:hidden;" aria-hidden="true"></span>
+    </div>` : '';
   el.innerHTML = `<button class="add-template-btn" onclick="openAddExerciseFromSettings()">+ New exercise</button>` +
     tagFilterHtml +
-    `<div class="section-title">Drag order with the arrows. Hide keeps history but removes it from the main screen. A dot ${'<span class="builtin-dot" style="margin-left:.15rem;"></span>'} marks a built-in exercise.</div>` +
+    `<div class="section-title">Listed alphabetically. The order shown on the main screen for a template comes from that template's own order (Settings → Templates). Hide keeps history but removes it from the main screen. A dot ${'<span class="builtin-dot" style="margin-left:.15rem;"></span>'} marks a built-in exercise.</div>` +
+    toggleAllHtml +
     shownExercises.map((ex) => {
       const i = data.exercises.indexOf(ex);
       const tags = ex.tags || [];
@@ -1375,20 +1847,20 @@ function renderExerciseSettings(){
         ? `<div class="tag-row">${tags.map(t => `<span class="tag-pill">${escAttr(t)}</span>`).join('')}</div>` : '';
       const usedInHtml = usedIn.length
         ? `<div class="ex-meta">In: ${escAttr(usedIn.join(', '))}</div>` : '';
+      const exMetrics = exerciseMetrics(ex);
+      const metricsHtml = (exMetrics.length === 2 && exMetrics.includes('weight') && exMetrics.includes('reps'))
+        ? '' : `<div class="ex-meta">Tracks: ${exMetrics.map(metricLabel).join(', ')}</div>`;
       return `
       <div class="settings-row">
-        <div class="reorder-btns">
-          <button class="icon-btn" onclick="moveExercise(${i},-1)" ${(settingsExerciseTagFilter || i===0)?'disabled':''} aria-label="Move up">${upIcon}</button>
-          <button class="icon-btn" onclick="moveExercise(${i},1)" ${(settingsExerciseTagFilter || i===data.exercises.length-1)?'disabled':''} aria-label="Move down">${downIcon}</button>
-        </div>
         <div class="ex-info">
           <span class="name ${ex.hidden ? 'hidden-ex' : ''}">${escAttr(ex.name)}${ex.builtin ? '<span class="builtin-dot" title="Built-in exercise"></span>' : ''}</span>
           ${tagsHtml}
+          ${metricsHtml}
           ${usedInHtml}
         </div>
         <button class="icon-btn edit-icon" onclick="openEditExercise(${i})" aria-label="Edit">✎</button>
         <button class="icon-btn" onclick="toggleHidden(${i})" aria-label="${ex.hidden ? 'Show' : 'Hide'}">${ex.hidden ? eyeOffIcon : eyeIcon}</button>
-        <button class="icon-btn" onclick="deleteExercise(${i})" aria-label="Delete permanently">${trashIcon}</button>
+        <button class="icon-btn danger" onclick="deleteExercise(${i})" aria-label="Delete permanently">${trashIcon}</button>
       </div>
     `;
     }).join('');
@@ -1397,19 +1869,39 @@ function toggleExerciseTagFilter(tag){
   settingsExerciseTagFilter = (settingsExerciseTagFilter === tag) ? null : tag;
   renderExerciseSettings();
 }
-
-function moveExercise(i, dir){
-  const j = i + dir;
-  if(j < 0 || j >= data.exercises.length) return;
-  [data.exercises[i], data.exercises[j]] = [data.exercises[j], data.exercises[i]];
-  saveData();
-  renderExerciseSettings();
-  renderExerciseChips();
-}
 function toggleHidden(i){
   data.exercises[i].hidden = !data.exercises[i].hidden;
   saveData();
   renderExerciseSettings();
+  ensureSelectedExercise();
+  renderTemplateChips();
+  renderExerciseChips();
+  renderContent();
+}
+// Bulk-hides every exercise currently visible, for people who'd rather start
+// from a clean list and add only their own exercises. Nothing is deleted —
+// history and templates stay intact, and any individual exercise (or a newly
+// added one) can still be shown again from its own eye icon.
+// Master toggle above the individual per-exercise eye icons. Hides every
+// exercise when at least one is currently visible, or shows every exercise
+// again once all of them are hidden — either way nothing is deleted, and a
+// confirmation is required first since it affects the whole list at once.
+async function toggleAllExercisesVisibility(){
+  const total = data.exercises.length;
+  if(total === 0) return;
+  const allHidden = data.exercises.every(ex => ex.hidden);
+  if(allHidden){
+    const ok = await showConfirm(`Show all ${total} exercise${total === 1 ? '' : 's'} again on the main screen?`);
+    if(!ok) return;
+    data.exercises.forEach(ex => { ex.hidden = false; });
+  } else {
+    const ok = await showConfirm(`Hide all ${total} exercise${total === 1 ? '' : 's'} from the main screen? Nothing is deleted — you can show any of them again individually, and anything you add stays visible.`);
+    if(!ok) return;
+    data.exercises.forEach(ex => { ex.hidden = true; });
+  }
+  saveData();
+  renderExerciseSettings();
+  renderTemplateSettings();
   ensureSelectedExercise();
   renderTemplateChips();
   renderExerciseChips();
@@ -1468,10 +1960,10 @@ function renderTemplateSettings(){
         <div class="template-actions">
           <button class="icon-btn edit-icon" data-tname="${escAttr(t.name)}" onclick="openEditTemplate(this.dataset.tname)" aria-label="Edit">✎</button>
           <button class="icon-btn" onclick="toggleTemplateHidden(${i})" aria-label="${t.hidden ? 'Show' : 'Hide'}">${t.hidden ? eyeOffIcon : eyeIcon}</button>
-          <button class="icon-btn" data-tname="${escAttr(t.name)}" onclick="deleteTemplate(this.dataset.tname)" aria-label="Delete">${trashIcon}</button>
+          <button class="icon-btn danger" data-tname="${escAttr(t.name)}" onclick="deleteTemplate(this.dataset.tname)" aria-label="Delete">${trashIcon}</button>
         </div>
       </div>
-      <div style="font-size:.82rem;color:var(--text-dim)">${t.exercises.length} exercise${t.exercises.length===1?'':'s'}${duration ? ' · ' + duration : ''}</div>
+      <div style="font-size:var(--fs-sm);color:var(--text-dim)">${t.exercises.length} exercise${t.exercises.length===1?'':'s'}${duration ? ' · ' + duration : ''}</div>
     </div>
   `;
     }).join('');
@@ -1565,7 +2057,7 @@ function renderTemplateOrderList(){
     durationEl.textContent = duration || '';
   }
   if(editingTemplateExercises.length === 0){
-    el.innerHTML = `<div style="font-size:.82rem;color:var(--text-dim);padding:.4rem 0;">No exercises selected yet.</div>`;
+    el.innerHTML = `<div style="font-size:var(--fs-sm);color:var(--text-dim);padding:.4rem 0;">No exercises selected yet.</div>`;
     return;
   }
   el.innerHTML = editingTemplateExercises.map((name, i) => `
@@ -1639,7 +2131,7 @@ function ensureSuggestedLibrary(){
     t.exercises.forEach(ex => {
       let existing = data.exercises.find(e => e.name.toLowerCase() === ex.name.toLowerCase());
       if(!existing){
-        existing = { name: ex.name, hidden: false, tags: ex.tags.slice(), builtin: true };
+        existing = { name: ex.name, hidden: false, tags: ex.tags.slice(), builtin: true, metrics: (DEFAULT_EXERCISE_METRICS[ex.name] || ['weight','reps']).slice() };
         data.exercises.push(existing);
       } else if((!existing.tags || existing.tags.length === 0) && ex.tags.length){
         existing.tags = ex.tags.slice();
@@ -1689,40 +2181,64 @@ function renderProgressCharts(){
   const el = document.getElementById('progressCharts');
   if(!el) return;
 
+  const ex = data.exercises.find(e => e.name === progressExercise);
+  const metrics = exerciseMetrics(ex);
+  const activeMetrics = ['weight','reps','duration'].filter(m => metrics.includes(m));
+  const primary = primaryMetric(metrics);
+
   const sessions = (data.sessions[progressExercise] || []).slice()
     .sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
 
+  const tracksReps = activeMetrics.includes('reps');
   const points = sessions.map(s => {
     let top = null;
     s.sets.forEach(set => {
-      const w = parseFloat(set.weight);
-      const r = parseFloat(set.reps);
-      if(isNaN(w)) return;
-      if(!top || w > top.weight || (w === top.weight && !isNaN(r) && r > top.reps)){
-        top = { weight: w, reps: isNaN(r) ? 0 : r };
+      const pv = parseFloat(set[primary]);
+      if(isNaN(pv)) return;
+      if(!top || pv > top[primary]){
+        const entry = { date: s.date };
+        activeMetrics.forEach(m => { const v = parseFloat(set[m]); entry[m] = isNaN(v) ? 0 : v; });
+        top = entry;
       }
     });
-    return top ? { date: s.date, weight: top.weight, reps: top.reps } : null;
+    // Total reps that day (all sets added together, not just the top set) —
+    // shown as a second line on the reps chart next to the per-set "top set"
+    // line, so a session's total volume is visible alongside its best single set.
+    if(top && tracksReps){
+      top.totalReps = s.sets.reduce((sum, set) => sum + (parseFloat(set.reps) || 0), 0);
+    }
+    return top;
   }).filter(Boolean);
 
   if(points.length < 2){
-    el.innerHTML = `<div class="empty-prev" style="margin-top:.8rem;">Not enough logged sessions yet for ${escAttr(progressExercise)} to show a trend (need at least 2 with a weight logged).</div>`;
+    el.innerHTML = `<div class="empty-prev" style="margin-top:.8rem;">Not enough logged sessions yet for ${escAttr(progressExercise)} to show a trend (need at least 2 with a ${metricLabel(primary).toLowerCase()} logged).</div>`;
     return;
   }
 
-  const weightChart = buildLineChart(points.map(p => ({ date: p.date, value: p.weight })), { color: 'var(--accent)', unit: 'kg', title: 'Top set weight' });
-  const repsChart = buildLineChart(points.map(p => ({ date: p.date, value: p.reps })), { color: 'var(--good)', unit: 'reps', title: 'Top set reps' });
+  const chartColors = { weight: 'var(--accent)', reps: 'var(--good)', duration: 'var(--tag)' };
+  const chartsHtml = activeMetrics.map(m => {
+    if(m === 'reps'){
+      return buildMultiLineChart(points.map(p => ({ date: p.date })), [
+        { values: points.map(p => p.reps), color: chartColors.reps, label: 'Top set' },
+        { values: points.map(p => p.totalReps), color: 'var(--brand-link)', label: 'Total that day' }
+      ], { unit: metricUnit('reps'), title: 'Reps per session' });
+    }
+    return buildLineChart(points.map(p => ({ date: p.date, value: p[m] })), { color: chartColors[m], unit: metricUnit(m), title: `Top set ${metricLabel(m).toLowerCase()}` });
+  }).join('');
 
-  const tableRows = points.slice().reverse().map(p => `
+  const tableRows = points.slice().reverse().map(p => {
+    const parts = activeMetrics.map(m => `<span class="num">${p[m]}</span> ${metricUnit(m)}`);
+    if(tracksReps) parts.push(`<span class="num">${p.totalReps}</span> total reps`);
+    return `
     <div class="history-entry">
       <span class="d">${fmtDate(p.date)}</span>
-      <span class="s"><span class="num">${p.weight}</span> kg × <span class="num">${p.reps}</span> reps</span>
+      <span class="s">${parts.join(' · ')}</span>
     </div>
-  `).join('');
+  `;
+  }).join('');
 
   el.innerHTML = `
-    ${weightChart}
-    ${repsChart}
+    ${chartsHtml}
     <div class="row-label" style="margin-top:.9rem;">Per session (top set)</div>
     <div class="history-list">${tableRows}</div>
   `;
@@ -1785,6 +2301,73 @@ function buildLineChart(points, opts){
         <div class="chart-tip" id="${id}_tip" style="display:none;"></div>
       </div>
       <div class="chart-axis-labels"><span>${fmtDate(points[0].date)}</span><span>${fmtDate(points[points.length - 1].date)}</span></div>
+    </div>
+  `;
+}
+
+// Same idea as buildLineChart, but draws two series sharing one y-axis scale
+// (e.g. reps: the top single set that day vs. the total across all sets that
+// day) plus a small legend underneath so it's clear which line is which.
+function buildMultiLineChart(points, series, opts){
+  const { unit, title } = opts;
+  const id = 'chart_' + (chartIdCounter++);
+  const w = 300, h = 118;
+  const padL = 10, padR = 10, padT = 24, padB = 20;
+
+  const allValues = series.flatMap(s => s.values);
+  let min = Math.min(...allValues), max = Math.max(...allValues);
+  if(min === max){ min -= 1; max += 1; }
+  const rangePad = (max - min) * 0.15;
+  min -= rangePad; max += rangePad;
+
+  const n = points.length;
+  const xStep = n > 1 ? (w - padL - padR) / (n - 1) : 0;
+
+  const seriesRender = series.map(s => {
+    const xy = s.values.map((v, i) => ({
+      x: padL + i * xStep,
+      y: padT + (1 - (v - min) / (max - min)) * (h - padT - padB),
+      date: points[i].date,
+      value: v
+    }));
+    const pathD = xy.map((p, i) => (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ');
+    const maxVal = Math.max(...s.values);
+    const prIdx = s.values.lastIndexOf(maxVal);
+    const circles = xy.map((p, i) => {
+      const isPr = i === prIdx;
+      const r = isPr ? 5 : 3.5;
+      const label = escAttr(fmtDate(p.date)) + ': ' + p.value + ' ' + unit + ' (' + escAttr(s.label) + ')';
+      return `
+        <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r}" fill="${isPr ? s.color : 'var(--surface-hi)'}" stroke="${s.color}" stroke-width="2"/>
+        <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="11" fill="transparent" style="cursor:pointer;" onclick="showChartTip(event,'${id}','${label}')"/>
+      `;
+    }).join('');
+    return { pathD, circles, color: s.color, lastValue: s.values[s.values.length - 1] };
+  });
+
+  const legendHtml = `
+    <div class="chart-legend">
+      ${series.map(s => `<span class="chart-legend-item"><span class="chart-legend-dot" style="background:${s.color}"></span>${escAttr(s.label)}</span>`).join('')}
+    </div>
+  `;
+
+  return `
+    <div class="chart-card">
+      <div class="chart-head">
+        <span class="chart-title">${title}</span>
+        <span class="chart-current">${seriesRender.map(sr => `<span class="num" style="color:${sr.color}">${sr.lastValue}</span>`).join(' / ')} ${unit}</span>
+      </div>
+      <div class="chart-wrap" id="${id}_wrap">
+        <svg viewBox="0 0 ${w} ${h}" class="chart-svg" preserveAspectRatio="none">
+          <line x1="${padL}" y1="${padT}" x2="${w - padR}" y2="${padT}" class="chart-grid"/>
+          <line x1="${padL}" y1="${h - padB}" x2="${w - padR}" y2="${h - padB}" class="chart-grid"/>
+          ${seriesRender.map(sr => `<path d="${sr.pathD}" fill="none" stroke="${sr.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}
+          ${seriesRender.map(sr => sr.circles).join('')}
+        </svg>
+        <div class="chart-tip" id="${id}_tip" style="display:none;"></div>
+      </div>
+      <div class="chart-axis-labels"><span>${fmtDate(points[0].date)}</span><span>${fmtDate(points[points.length - 1].date)}</span></div>
+      ${legendHtml}
     </div>
   `;
 }
@@ -1871,6 +2454,10 @@ function renderRestFab(){
   if(!fab) return;
   fab.classList.toggle('running', restRunning);
   const isIdle = !restRunning && restRemaining === data.settings.restSeconds;
+  // Bigger clock whenever it's actually counting, paused mid-count, or just
+  // finished — i.e. any time it's showing a number instead of the idle
+  // clock icon. Only fully idle/reset shrinks it back down.
+  fab.classList.toggle('big', !isIdle);
   if(isIdle){
     icon.style.display = '';
     text.style.display = 'none';
@@ -1959,7 +2546,7 @@ function playBeep(){
 
 /* ---------- CSV export / import ---------- */
 
-const CSV_HEADER = ['Exercise','Date','Set','Weight','Reps','Feel','Note'];
+const CSV_HEADER = ['Exercise','Date','Set','Weight','Reps','Duration','Feel','Note'];
 
 function csvEscape(val){
   val = String(val === undefined || val === null ? '' : val);
@@ -1973,19 +2560,20 @@ function buildCSV(){
     const sessions = (data.sessions[ex.name] || []).slice().sort((a,b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
     sessions.forEach(s => {
       s.sets.forEach((set, i) => {
-        rows.push([ex.name, s.date, i + 1, set.weight, set.reps, s.feel || '', s.note || '']);
+        rows.push([ex.name, s.date, i + 1, set.weight, set.reps, set.duration || '', s.feel || '', s.note || '']);
       });
     });
   });
   // Meta rows carry personal settings that aren't logged sessions — which
-  // exercises and templates are shown/hidden, and each exercise's muscle-group
-  // tags — along with the session data, so backing up and restoring keeps
-  // those choices instead of resetting them every time.
+  // exercises and templates are shown/hidden, each exercise's muscle-group
+  // tags, and each exercise's tracked metrics (weight/reps/duration) — along
+  // with the session data, so backing up and restoring keeps those choices
+  // instead of resetting them every time.
   data.exercises.forEach(ex => {
-    rows.push(['__meta__', '__exercise__', ex.name, ex.hidden ? 'hidden' : 'visible', '', (ex.tags || []).join('|'), '']);
+    rows.push(['__meta__', '__exercise__', ex.name, ex.hidden ? 'hidden' : 'visible', '', exerciseMetrics(ex).join('|'), (ex.tags || []).join('|'), '']);
   });
   data.templates.forEach(t => {
-    rows.push(['__meta__', '__template__', t.name, t.hidden ? 'hidden' : 'visible', '', '', '']);
+    rows.push(['__meta__', '__template__', t.name, t.hidden ? 'hidden' : 'visible', '', '', '', '']);
   });
   return rows.map(r => r.map(csvEscape).join(',')).join('\r\n');
 }
@@ -2346,6 +2934,7 @@ async function importCSVText(text){
   const idxSet = header.indexOf('set');
   const idxWeight = header.indexOf('weight');
   const idxReps = header.indexOf('reps');
+  const idxDuration = header.indexOf('duration');
   const idxFeel = header.indexOf('feel');
   const idxNote = header.indexOf('note');
   if(idxEx < 0 || idxDate < 0 || idxWeight < 0 || idxReps < 0){
@@ -2353,10 +2942,11 @@ async function importCSVText(text){
     return;
   }
 
-  const grouped = {}; // "exercise||date" -> { sets:[{setNum, weight, reps}], feel, note }
+  const grouped = {}; // "exercise||date" -> { sets:[{setNum, weight, reps, duration}], feel, note }
   const templateVisibility = {}; // template name -> hidden boolean, from meta rows
   const exerciseVisibility = {}; // exercise name -> hidden boolean, from meta rows
   const exerciseTags = {}; // exercise name -> tags array, from meta rows
+  const exerciseMetricsMap = {}; // exercise name -> metrics array, from meta rows (old files without this column leave exercises on the default)
   let skipped = 0;
   for(let i = 1; i < rows.length; i++){
     const r = rows[i];
@@ -2372,21 +2962,25 @@ async function importCSVText(text){
       const eName = (r[idxSet] || '').trim();
       const state = (r[idxWeight] || '').trim().toLowerCase();
       const tagsVal = idxFeel >= 0 ? (r[idxFeel] || '').trim() : '';
+      const metricsVal = idxDuration >= 0 ? (r[idxDuration] || '').trim() : '';
       if(eName){
         exerciseVisibility[eName] = state === 'hidden';
         exerciseTags[eName] = tagsVal ? tagsVal.split('|').map(t => t.trim()).filter(Boolean) : [];
+        const parsedMetrics = metricsVal ? metricsVal.split('|').map(m => m.trim()).filter(m => ['weight','reps','duration'].includes(m)) : [];
+        if(parsedMetrics.length) exerciseMetricsMap[eName] = parsedMetrics;
       }
       continue;
     }
     if(!exName || !/^\d{4}-\d{2}-\d{2}$/.test(date)){ skipped++; continue; }
     const weight = (r[idxWeight] || '').trim();
     const reps = (r[idxReps] || '').trim();
+    const duration = idxDuration >= 0 ? (r[idxDuration] || '').trim() : '';
     const feelVal = idxFeel >= 0 ? (r[idxFeel] || '').trim().toLowerCase() : '';
     const noteVal = idxNote >= 0 ? (r[idxNote] || '').trim() : '';
     const setNum = parseInt(r[idxSet], 10);
     const key = exName + '||' + date;
     if(!grouped[key]) grouped[key] = { sets: [], feel: '', note: '' };
-    grouped[key].sets.push({ setNum: isNaN(setNum) ? grouped[key].sets.length + 1 : setNum, weight, reps });
+    grouped[key].sets.push({ setNum: isNaN(setNum) ? grouped[key].sets.length + 1 : setNum, weight, reps, duration });
     if(!grouped[key].feel && ['easy','medium','hard'].includes(feelVal)) grouped[key].feel = feelVal;
     if(!grouped[key].note && noteVal) grouped[key].note = noteVal;
   }
@@ -2413,11 +3007,11 @@ async function importCSVText(text){
   }
   if(!(await showConfirm(msg))) return;
 
-  newExercises.forEach(name => data.exercises.push({ name, hidden: false, tags: exerciseTags[name] || [] }));
+  newExercises.forEach(name => data.exercises.push({ name, hidden: false, tags: exerciseTags[name] || [], metrics: exerciseMetricsMap[name] || ['weight','reps'] }));
 
   Object.entries(grouped).forEach(([key, group]) => {
     const [exName, date] = key.split('||');
-    const sets = group.sets.sort((a, b) => a.setNum - b.setNum).map(s => ({ weight: s.weight, reps: s.reps }));
+    const sets = group.sets.sort((a, b) => a.setNum - b.setNum).map(s => ({ weight: s.weight, reps: s.reps, duration: s.duration || '' }));
     if(!data.sessions[exName]) data.sessions[exName] = [];
     const list = data.sessions[exName];
     const existingIdx = list.findIndex(s => s.date === date);
@@ -2445,6 +3039,10 @@ async function importCSVText(text){
     const ex = data.exercises.find(x => x.name === eName);
     if(ex && tags.length) ex.tags = tags;
   });
+  Object.entries(exerciseMetricsMap).forEach(([eName, metrics]) => {
+    const ex = data.exercises.find(x => x.name === eName);
+    if(ex && metrics.length) ex.metrics = metrics;
+  });
 
   saveData();
   ensureSelectedExercise();
@@ -2459,48 +3057,74 @@ async function importCSVText(text){
     : 'Settings restored.');
 }
 
+const chevronDownIcon = `<svg class="backup-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>`;
+
 function renderDataSettings(){
   const el = document.getElementById('tabData');
   if(!el) return;
   ensureSettings();
   const totalSessions = Object.values(data.sessions).reduce((sum, list) => sum + list.length, 0);
   el.innerHTML = `
-    <div class="section-title">Back up your logged history as a CSV file, or restore it on another device.</div>
-    <button class="btn primary" style="width:100%;margin-bottom:.4rem;" onclick="exportCSV()">Export all data (${totalSessions} session${totalSessions === 1 ? '' : 's'})</button>
-    <div class="saved-note" id="exportNote" style="margin-bottom:.6rem;"></div>
+    <div class="section-title">Back up your logged history, or restore it on another device. Pick an option below.</div>
 
-    <div class="row-label-with-info" style="margin-top:1rem;">
-      <span>Cloud backup (Dropbox)</span>
-      <button type="button" class="info-btn" onclick="openInfo('dropbox')" aria-label="How to set this up">ⓘ</button>
-    </div>
-    <input type="password" class="plain-input" id="dropboxTokenInput" placeholder="Dropbox access token"
-      value="${escAttr(data.settings.dropboxToken)}" oninput="setDropboxToken(this.value)">
-    <div style="display:flex; gap:.5rem; margin-top:.5rem;">
-      <button class="btn" style="flex:1;" onclick="manualDropboxBackup()">Backup now</button>
-      <button class="btn" style="flex:1;" onclick="restoreFromDropbox()">Restore from Dropbox</button>
-    </div>
-    <div class="saved-note" id="dropboxNote" style="margin-bottom:.2rem;"></div>
+    <details class="backup-section">
+      <summary>
+        <span>Dropbox</span>
+        <span class="backup-summary-right">
+          <button type="button" class="info-btn" onclick="event.stopPropagation(); openInfo('dropbox')" aria-label="How to set this up">ⓘ</button>
+          ${chevronDownIcon}
+        </span>
+      </summary>
+      <div class="backup-body">
+        <input type="password" class="plain-input" id="dropboxTokenInput" placeholder="Dropbox access token"
+          value="${escAttr(data.settings.dropboxToken)}" oninput="setDropboxToken(this.value)">
+        <div style="display:flex; gap:.5rem; margin-top:.5rem;">
+          <button class="btn" style="flex:1;" onclick="manualDropboxBackup()">Backup now</button>
+          <button class="btn" style="flex:1;" onclick="restoreFromDropbox()">Restore from Dropbox</button>
+        </div>
+        <div class="saved-note" id="dropboxNote" style="margin-bottom:.2rem;"></div>
+      </div>
+    </details>
 
-    <div class="row-label-with-info" style="margin-top:1.1rem;">
-      <span>Cloud backup (GitHub)</span>
-      <button type="button" class="info-btn" onclick="openInfo('github')" aria-label="How to set this up">ⓘ</button>
-    </div>
-    <input type="password" class="plain-input" id="githubTokenInput" placeholder="GitHub access token"
-      value="${escAttr(data.settings.githubToken)}" oninput="setGithubToken(this.value)">
-    <input type="text" class="plain-input" id="githubRepoInput" placeholder="username/repo" style="margin-top:.5rem;"
-      value="${escAttr(data.settings.githubRepo)}" oninput="setGithubRepo(this.value)">
-    <div style="display:flex; gap:.5rem; margin-top:.5rem;">
-      <button class="btn" style="flex:1;" onclick="manualGithubBackup()">Backup now</button>
-      <button class="btn" style="flex:1;" onclick="restoreFromGithub()">Restore from GitHub</button>
-    </div>
-    <div class="saved-note" id="githubNote" style="margin-bottom:.2rem;"></div>
+    <details class="backup-section">
+      <summary>
+        <span>GitHub</span>
+        <span class="backup-summary-right">
+          <button type="button" class="info-btn" onclick="event.stopPropagation(); openInfo('github')" aria-label="How to set this up">ⓘ</button>
+          ${chevronDownIcon}
+        </span>
+      </summary>
+      <div class="backup-body">
+        <input type="password" class="plain-input" id="githubTokenInput" placeholder="GitHub access token"
+          value="${escAttr(data.settings.githubToken)}" oninput="setGithubToken(this.value)">
+        <input type="text" class="plain-input" id="githubRepoInput" placeholder="username/repo" style="margin-top:.5rem;"
+          value="${escAttr(data.settings.githubRepo)}" oninput="setGithubRepo(this.value)">
+        <div style="display:flex; gap:.5rem; margin-top:.5rem;">
+          <button class="btn" style="flex:1;" onclick="manualGithubBackup()">Backup now</button>
+          <button class="btn" style="flex:1;" onclick="restoreFromGithub()">Restore from GitHub</button>
+        </div>
+        <div class="saved-note" id="githubNote" style="margin-bottom:.2rem;"></div>
+      </div>
+    </details>
 
-    <div class="row-label" style="margin-top:1rem;">Backup email address</div>
-    <input type="email" inputmode="email" class="plain-input" id="backupEmailInput" placeholder="you@example.com"
-      value="${escAttr(data.settings.backupEmail)}" oninput="setBackupEmail(this.value)">
-    <button class="btn" style="width:100%;" onclick="emailCSV()">Email CSV backup</button>
-    <div class="saved-note" id="emailNote" style="margin-bottom:.2rem;"></div>
-    <div class="section-title">Opens your phone's mail app with the data pasted into the message — a mailto link can't attach a real file. For a proper .csv file (or a very long history), use Export above instead.</div>
+    <details class="backup-section">
+      <summary>
+        <span>CSV export</span>
+        <span class="backup-summary-right">${chevronDownIcon}</span>
+      </summary>
+      <div class="backup-body">
+        <div class="section-title" style="margin-top:.7rem;">Download your logged history as a CSV file.</div>
+        <button class="btn primary" style="width:100%;margin-bottom:.4rem;" onclick="exportCSV()">Export all data (${totalSessions} session${totalSessions === 1 ? '' : 's'})</button>
+        <div class="saved-note" id="exportNote" style="margin-bottom:.6rem;"></div>
+
+        <div class="row-label" style="margin-top:.9rem;">Email CSV export</div>
+        <input type="email" inputmode="email" class="plain-input" id="backupEmailInput" placeholder="you@example.com"
+          value="${escAttr(data.settings.backupEmail)}" oninput="setBackupEmail(this.value)">
+        <button class="btn" style="width:100%;" onclick="emailCSV()">Email CSV backup</button>
+        <div class="saved-note" id="emailNote" style="margin-bottom:.2rem;"></div>
+        <div class="section-title">Opens your phone's mail app with the data pasted into the message — a mailto link can't attach a real file. For a proper .csv file (or a very long history), use Export above instead.</div>
+      </div>
+    </details>
 
     <div class="section-title" style="margin-top:1rem;">Import a CSV in the same format (columns: Exercise, Date, Set, Weight, Reps, Feel, Note). Unknown exercises are added automatically; a session on the same exercise and date is overwritten.</div>
     <input type="file" accept=".csv,text/csv" id="importFileInput" style="display:none" onchange="handleImportFile(event)">
@@ -2551,9 +3175,35 @@ function render(){
 const exerciseRowEl = document.getElementById('exerciseRow');
 if(exerciseRowEl) exerciseRowEl.addEventListener('scroll', updateExerciseScrollButtons);
 
+// Closes the Data/Info "•••" dropdown on any click outside it (the button's
+// own click is stopped from reaching here — see toggleMoreTabMenu()).
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('moreTabMenu');
+  const btn = document.getElementById('moreTabBtn');
+  if(menu && menu.classList.contains('open') && !menu.contains(e.target) && (!btn || !btn.contains(e.target))){
+    menu.classList.remove('open');
+  }
+});
+// The dropdown is position:fixed at coordinates set when it opens (see
+// toggleMoreTabMenu()), so it won't follow the settings body if that scrolls
+// while the menu is open — simplest is to just close it on scroll.
+const settingsDialogBodyEl = document.querySelector('#settingsDialog .dialog-body');
+if(settingsDialogBodyEl){
+  settingsDialogBodyEl.addEventListener('scroll', () => {
+    const menu = document.getElementById('moreTabMenu');
+    if(menu) menu.classList.remove('open');
+  });
+}
+
 ensureSelectedExercise();
 initRestTimer();
 render();
+// Mark the walkthrough as seen however the dialog closes (Skip, Got it, the ✕,
+// or a tap/swipe outside it), so it only ever shows once per device.
+document.getElementById('a2hsDialog').addEventListener('close', () => {
+  try{ localStorage.setItem(A2HS_SEEN_KEY, '1'); }catch(e){}
+});
+maybeShowA2hsPrompt();
 
 // Pin the viewport to the top on launch (see the scrollRestoration note above).
 // Repeated at several points because a few different things can nudge the
