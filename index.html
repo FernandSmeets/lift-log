@@ -7,6 +7,23 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#14161A">
 <meta name="apple-mobile-web-app-title" content="Lift Log">
+<script>
+  // Apply the saved light/dark theme before the first paint, so someone who
+  // picked the light theme never sees a flash of the dark one on launch.
+  // Mirrors applyTheme() further down; kept tiny and self-contained on purpose.
+  (function(){
+    try{
+      var d = JSON.parse(localStorage.getItem('liftlog_data_v2') || 'null');
+      if(d && d.settings && d.settings.theme === 'light'){
+        document.documentElement.setAttribute('data-theme', 'light');
+        var tc = document.querySelector('meta[name="theme-color"]');
+        if(tc) tc.setAttribute('content', '#F4F5F7');
+        var sb = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+        if(sb) sb.setAttribute('content', 'default');
+      }
+    }catch(e){}
+  })();
+</script>
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
@@ -23,6 +40,12 @@
     --feel-easy:#6FCF97; --feel-medium:#F2C94C; --feel-hard:#EB5757;
     --tag:#6FA8DC; --tag-dim:#6FA8DC29;
     --brand:#6D3795; --brand-link:#B78FE8; --brand-dim:#6D379533;
+    --shadow-sm:0 2px 10px rgba(0,0,0,.38);
+    --shadow-menu:0 8px 20px rgba(0,0,0,.4);
+    --shadow-fab:0 4px 16px rgba(0,0,0,.4);
+    --shadow-fab-big:0 6px 24px rgba(0,0,0,.45);
+    --backdrop:rgba(0,0,0,.55);
+    color-scheme:dark;
     /* Shared text-size scale. Replaces ~20 near-duplicate one-off rem values
        with a consistent set of steps, one per functional role. 16px on form
        inputs and 11px on chart labels are deliberate exceptions (16px avoids
@@ -38,6 +61,27 @@
     --fs-title:1.5rem; /* app title */
     --fs-display:2.2rem; /* large empty-state figure */
   }
+  /* Light theme (Settings → ••• → Appearance). Only the colour tokens change;
+     every component already reads from these, so no per-component overrides
+     are needed beyond the one below. Accent, green, blue and purple are a
+     shade deeper than in dark mode so they keep enough contrast as text on
+     white; the brand orange itself stays recognisably the same. */
+  :root[data-theme="light"]{
+    --bg:#F4F5F7; --surface:#FFFFFF; --surface-hi:#ECEEF1;
+    --border:#D8DBE0; --text:#16181C; --text-dim:#5E646E;
+    --accent:#E0492F; --accent-dim:#E8543E26; --good:#23965A;
+    --feel-easy:#3FB673; --feel-medium:#E2AE1F; --feel-hard:#E04848;
+    --tag:#2F76BA; --tag-dim:#2F76BA1F;
+    --brand:#6D3795; --brand-link:#7446B0; --brand-dim:#6D379522;
+    --shadow-sm:0 2px 8px rgba(20,22,26,.14);
+    --shadow-menu:0 8px 24px rgba(20,22,26,.14);
+    --shadow-fab:0 4px 14px rgba(20,22,26,.22);
+    --shadow-fab-big:0 6px 22px rgba(20,22,26,.26);
+    --backdrop:rgba(20,22,26,.35);
+    color-scheme:light;
+  }
+  /* Dark text on the (deeper) light-theme blue is too low-contrast; white reads better. */
+  :root[data-theme="light"] .chip.tag-chip.active{ color:#FFFFFF; }
   html{ height:100%; -webkit-text-size-adjust:100%; overflow-anchor:none; }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   button, button:focus, button:focus-visible{ outline:none; }
@@ -277,7 +321,7 @@
     dialog{ width:100vw; max-width:100vw; max-height:88dvh; border-radius:16px 16px 0 0;
       position:fixed; bottom:0; left:0; right:0; top:auto; margin:0; }
   }
-  dialog::backdrop{ background:rgba(0,0,0,.55); }
+  dialog::backdrop{ background:var(--backdrop); }
   /* Settings dialog gets a fixed height (not just a max-height) so the panel's
      size doesn't change when switching between tabs of different lengths —
      only the inner .dialog-body scrolls, the outer box stays put. */
@@ -340,7 +384,7 @@
   .more-tab-menu{
     position:fixed; z-index:50;
     background:var(--surface); border:1px solid var(--border); border-radius:10px;
-    padding:.35rem; min-width:8rem; box-shadow:0 8px 20px rgba(0,0,0,.4);
+    padding:.35rem; min-width:8rem; box-shadow:var(--shadow-menu);
     display:none; flex-direction:column; gap:.15rem;
   }
   .more-tab-menu.open{ display:flex; }
@@ -490,7 +534,7 @@
     width:4rem; height:4rem; border-radius:50%; border:none; cursor:pointer;
     background:var(--accent); color:#14161A;
     display:flex; align-items:center; justify-content:center;
-    box-shadow:0 4px 16px rgba(0,0,0,.4);
+    box-shadow:var(--shadow-fab);
     font-family:'Oswald',sans-serif; font-weight:600;
     -webkit-user-select:none; user-select:none;
     /* Grows into the counting-down clock (see .big below) with a soft
@@ -502,7 +546,7 @@
       background-color .25s ease, box-shadow .45s ease;
   }
   .rest-fab.running{ background:var(--good); }
-  .rest-fab.big{ width:6.5rem; height:6.5rem; box-shadow:0 6px 24px rgba(0,0,0,.45); }
+  .rest-fab.big{ width:6.5rem; height:6.5rem; box-shadow:var(--shadow-fab-big); }
   .rest-fab:active{ filter:brightness(.95); }
   .rest-fab.done{ animation: restPulse .55s ease-in-out 3; }
   .rest-fab-icon{ display:flex; align-items:center; justify-content:center; }
@@ -516,12 +560,29 @@
     width:2.75rem; height:2.75rem; border-radius:50%; cursor:pointer;
     border:1px solid var(--border); background:var(--surface); color:var(--text-dim);
     display:flex; align-items:center; justify-content:center;
-    box-shadow:0 2px 10px rgba(0,0,0,.35);
+    box-shadow:var(--shadow-sm);
     -webkit-user-select:none; user-select:none;
   }
   .rest-reset-btn:active{ color:var(--text); border-color:var(--accent); }
   .rest-reset-btn svg{ width:1rem; height:1rem; }
   @keyframes restPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.12); } }
+
+  /* Settings → Appearance: two tappable preview tiles, each a tiny mock-up
+     of the app in that theme. Preview colours are fixed on purpose — they
+     show what each theme looks like, not the current one. */
+  .theme-options{ display:grid; grid-template-columns:1fr 1fr; gap:.6rem; }
+  .theme-option{
+    border:1.5px solid var(--border); border-radius:10px; padding:.55rem; cursor:pointer;
+    background:var(--surface-hi); display:flex; flex-direction:column; gap:.5rem;
+    -webkit-user-select:none; user-select:none;
+  }
+  .theme-option.on{ border-color:var(--accent); background:var(--accent-dim); }
+  .theme-preview{ border-radius:7px; height:4.4rem; padding:.45rem; display:flex; flex-direction:column; gap:.3rem; border:1px solid; }
+  .theme-preview .tp-bar{ height:.55rem; width:55%; border-radius:3px; }
+  .theme-preview .tp-row{ display:flex; gap:.3rem; }
+  .theme-preview .tp-chip{ height:.75rem; flex:1; border-radius:999px; }
+  .theme-preview .tp-btn{ height:.9rem; border-radius:4px; margin-top:auto; }
+  .theme-option-label{ font-size:var(--fs-base); text-align:center; font-weight:500; }
 
   .chart-card{
     background:var(--surface-hi); border:1px solid var(--border); border-radius:10px;
@@ -542,7 +603,7 @@
     position:absolute; transform:translate(-50%,-100%); margin-top:-8px;
     background:var(--surface); border:1px solid var(--border); border-radius:6px;
     padding:.3rem .55rem; font-size:var(--fs-xs); color:var(--text); white-space:nowrap;
-    pointer-events:none; box-shadow:0 2px 10px rgba(0,0,0,.4); z-index:2;
+    pointer-events:none; box-shadow:var(--shadow-sm); z-index:2;
   }
 </style>
 </head>
@@ -615,6 +676,7 @@
       </button>
       <div class="more-tab-menu" id="moreTabMenu">
         <button type="button" class="more-tab-menu-item" id="tabDataBtn" onclick="switchTab('data')">Data</button>
+        <button type="button" class="more-tab-menu-item" id="tabAppearanceBtn" onclick="switchTab('appearance')">Appearance</button>
         <button type="button" class="more-tab-menu-item" id="tabInfoBtn" onclick="switchTab('info')">Info</button>
       </div>
     </div>
@@ -623,6 +685,7 @@
     <div id="tabProgress"></div>
     <div id="tabTimer"></div>
     <div id="tabData"></div>
+    <div id="tabAppearance"></div>
     <div id="tabInfo"></div>
     <div class="settings-footer">
       <button type="button" class="footer-link" onclick="openContact()">Contact</button>
@@ -717,7 +780,7 @@
 </dialog>
 
 <script>
-const APP_VERSION = '2.9.31';
+const APP_VERSION = '2.9.32';
 const STORE_KEY = 'liftlog_data_v2';
 
 // Some browsers (notably iOS Safari, especially when added to the home screen)
@@ -730,6 +793,7 @@ if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 // Keep only the 10 most recent versions here, newest first, whenever a new version is published.
 const CHANGELOG = [
+  { version: '2.9.32', notes: ['New light theme: Settings → ••• → Appearance lets you switch between the original dark look and a regular light one. Your choice is saved and applied instantly (and before the app even appears on the next launch, so there\'s no dark flash)'] },
   { version: '2.9.31', notes: ['The rest timer now grows noticeably bigger, with a soft pop animation, while it\'s counting down (or paused mid-count, or just finished) — it\'s the most important thing on screen at that moment, so it shrinks back to its small corner size only once it\'s reset to idle'] },
   { version: '2.9.30', notes: ['Added a "+ Add" chip at the end of the template row on the home screen (same style as the exercise row\'s), which jumps straight to creating a new template'] },
   { version: '2.9.29', notes: ['The "+ Add" chip at the end of the exercise row now behaves differently depending on what\'s selected: with "All" selected it still creates a brand-new exercise, but with a specific template selected it instead jumps to that template\'s edit screen in Settings, so you can add an exercise that already exists to it — the "+ New exercise" button is still right there if it truly doesn\'t exist yet'] },
@@ -739,7 +803,6 @@ const CHANGELOG = [
   { version: '2.9.25', notes: ['Fixed the Data/Info "•••" menu opening underneath the exercise tag filter chips on the Exercises tab — it now floats above the whole settings panel instead of being anchored inside the tab row'] },
   { version: '2.9.24', notes: ['Reworked Settings navigation: Exercises, Templates, Progress and Timer now sit as four equal tabs that always fit without scrolling, with Data and Info moved behind a "•••" menu next to them — no more scroll hints needed at all'] },
   { version: '2.9.23', notes: ['Fixed the "more tabs" hint badge letting a scrolled-under tab\'s text show through it instead of staying solid on top — an iOS Safari quirk with the scrollable tab row\'s own rendering layer'] },
-  { version: '2.9.22', notes: ['Fixed the "more tabs" hint in Settings not showing up the moment the panel opens (it needed a scroll or tap first before it would appear)'] },
 ];
 
 const DEFAULT_EXERCISES = [
@@ -893,6 +956,9 @@ function ensureSettings(){
   if(!data.settings) data.settings = { restSeconds: 90 };
   if(typeof data.settings.restSeconds !== 'number' || isNaN(data.settings.restSeconds) || data.settings.restSeconds <= 0){
     data.settings.restSeconds = 90;
+  }
+  if(data.settings.theme !== 'light' && data.settings.theme !== 'dark'){
+    data.settings.theme = 'dark';
   }
   if(typeof data.settings.backupEmail !== 'string'){
     data.settings.backupEmail = '';
@@ -1753,13 +1819,15 @@ function renderSettings(){
   document.getElementById('tabProgressBtn').classList.toggle('active', settingsTab === 'progress');
   document.getElementById('tabTimerBtn').classList.toggle('active', settingsTab === 'timer');
   document.getElementById('tabDataBtn').classList.toggle('active', settingsTab === 'data');
+  document.getElementById('tabAppearanceBtn').classList.toggle('active', settingsTab === 'appearance');
   document.getElementById('tabInfoBtn').classList.toggle('active', settingsTab === 'info');
-  document.getElementById('moreTabBtn').classList.toggle('active', settingsTab === 'data' || settingsTab === 'info');
+  document.getElementById('moreTabBtn').classList.toggle('active', settingsTab === 'data' || settingsTab === 'appearance' || settingsTab === 'info');
   document.getElementById('tabExercises').style.display = settingsTab === 'exercises' ? 'block' : 'none';
   document.getElementById('tabTemplates').style.display = settingsTab === 'templates' ? 'block' : 'none';
   document.getElementById('tabProgress').style.display = settingsTab === 'progress' ? 'block' : 'none';
   document.getElementById('tabTimer').style.display = settingsTab === 'timer' ? 'block' : 'none';
   document.getElementById('tabData').style.display = settingsTab === 'data' ? 'block' : 'none';
+  document.getElementById('tabAppearance').style.display = settingsTab === 'appearance' ? 'block' : 'none';
   document.getElementById('tabInfo').style.display = settingsTab === 'info' ? 'block' : 'none';
 
   renderExerciseSettings();
@@ -1767,7 +1835,61 @@ function renderSettings(){
   renderProgressSettings();
   renderTimerSettings();
   renderDataSettings();
+  renderAppearanceSettings();
   renderInfoSettings();
+}
+
+// Settings → Appearance: dark (default) or light theme. Stored with the rest
+// of the settings, applied by switching a data-theme attribute on <html> —
+// all colours come from the CSS tokens, so that one attribute re-skins
+// everything at once.
+function renderAppearanceSettings(){
+  const el = document.getElementById('tabAppearance');
+  if(!el) return;
+  ensureSettings();
+  const t = data.settings.theme;
+  const preview = (bg, border, surface, chip, accent) => `
+    <div class="theme-preview" style="background:${bg};border-color:${border};">
+      <div class="tp-bar" style="background:${surface};"></div>
+      <div class="tp-row">
+        <div class="tp-chip" style="background:${chip};"></div>
+        <div class="tp-chip" style="background:${accent};"></div>
+        <div class="tp-chip" style="background:${chip};"></div>
+      </div>
+      <div class="tp-btn" style="background:${accent};"></div>
+    </div>`;
+  el.innerHTML = `
+    <div class="section-title">Theme</div>
+    <div class="theme-options">
+      <div class="theme-option ${t === 'dark' ? 'on' : ''}" onclick="setTheme('dark')" role="button" aria-pressed="${t === 'dark'}">
+        ${preview('#14161A', '#33383F', '#1E2127', '#262A31', '#E8543E')}
+        <div class="theme-option-label">Dark</div>
+      </div>
+      <div class="theme-option ${t === 'light' ? 'on' : ''}" onclick="setTheme('light')" role="button" aria-pressed="${t === 'light'}">
+        ${preview('#F4F5F7', '#D8DBE0', '#FFFFFF', '#ECEEF1', '#E0492F')}
+        <div class="theme-option-label">Light</div>
+      </div>
+    </div>
+  `;
+}
+const THEME_BAR_COLORS = { dark: '#14161A', light: '#F4F5F7' };
+function applyTheme(){
+  const t = (data.settings && data.settings.theme === 'light') ? 'light' : 'dark';
+  if(t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  else document.documentElement.removeAttribute('data-theme');
+  const tc = document.querySelector('meta[name="theme-color"]');
+  if(tc) tc.setAttribute('content', THEME_BAR_COLORS[t]);
+  // White status-bar text (black-translucent) disappears on a light page;
+  // iOS only reads this on launch, so a home-screen app picks it up next open.
+  const sb = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+  if(sb) sb.setAttribute('content', t === 'light' ? 'default' : 'black-translucent');
+}
+function setTheme(t){
+  ensureSettings();
+  data.settings.theme = (t === 'light') ? 'light' : 'dark';
+  saveData();
+  applyTheme();
+  renderAppearanceSettings();
 }
 
 // Settings → Info: a simple menu of the app's "about" actions — the same
@@ -3197,6 +3319,7 @@ if(settingsDialogBodyEl){
 
 ensureSelectedExercise();
 initRestTimer();
+applyTheme();
 render();
 // Mark the walkthrough as seen however the dialog closes (Skip, Got it, the ✕,
 // or a tap/swipe outside it), so it only ever shows once per device.
