@@ -48,6 +48,7 @@
     --trend-up:#6FCF97; --trend-up-bg:#6FCF9726;
     --trend-flat:#F2994A; --trend-flat-bg:#F2994A26;
     --trend-down:#EB5757; --trend-down-bg:#EB575726;
+    --glow:#FFE2DB;
     color-scheme:dark;
     /* Shared text-size scale. Replaces ~20 near-duplicate one-off rem values
        with a consistent set of steps, one per functional role. 16px on form
@@ -84,6 +85,7 @@
     --trend-up:#23965A; --trend-up-bg:#23965A1F;
     --trend-flat:#D9822B; --trend-flat-bg:#D9822B1F;
     --trend-down:#E04848; --trend-down-bg:#E048481F;
+    --glow:#FFFFFF;
     color-scheme:light;
   }
   /* Dark text on the (deeper) light-theme blue is too low-contrast; white reads better. */
@@ -159,6 +161,23 @@
   }
   .chip.active{ background:var(--accent-dim); border-color:var(--accent); color:var(--text); }
   .chip.add{ color:var(--accent); border-style:dashed; }
+  /* After Save session: a small light with a tail runs once around the
+     newly selected exercise's outline, then fades — "you've moved on to
+     this one". Drawn inside the chip's own box, so the horizontally
+     scrolling row can't clip it. */
+  @property --trace{ syntax:'<angle>'; inherits:false; initial-value:0deg; }
+  .chip.fx-trace::after{
+    content:''; position:absolute; inset:-1px; border-radius:inherit; padding:2px; pointer-events:none;
+    background:conic-gradient(from var(--trace), transparent 0deg 250deg, var(--accent) 310deg, var(--glow) 350deg, transparent 360deg);
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask-composite:exclude;
+    animation:chipTrace 1.1s cubic-bezier(.45,.05,.35,1) 1 forwards;
+  }
+  @keyframes chipTrace{
+    0%{ --trace:0deg; opacity:1; }
+    85%{ opacity:1; }
+    100%{ --trace:360deg; opacity:0; }
+  }
   .chip:active{ background:var(--surface-hi); }
   .chip.active:active{ background:var(--accent-dim); }
 
@@ -851,7 +870,7 @@
 </dialog>
 
 <script>
-const APP_VERSION = '3.0.0';
+const APP_VERSION = '3.0.4';
 const STORE_KEY = 'liftlog_data_v2';
 
 // Some browsers (notably iOS Safari, especially when added to the home screen)
@@ -864,16 +883,16 @@ if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 // Keep only the 10 most recent versions here, newest first, whenever a new version is published.
 const CHANGELOG = [
+  { version: '3.0.4', notes: ['Brought back the original, subtler light that runs around the next exercise after Save session — it still waits until that button is actually on screen before it starts'] },
+  { version: '3.0.3', notes: ['The light that runs around the next exercise after Save session now waits until that button is actually on screen before it starts'] },
+  { version: '3.0.2', notes: ['After Save session, a small light now runs once around the outline of the next exercise\'s button, so it\'s clear the app has moved on to it'] },
+  { version: '3.0.1', notes: ['After Save session the page now scrolls back to the top, so you can see it has moved on to the next exercise'] },
   { version: '3.0.0', notes: ['Lift Log 3.0 — a milestone release bringing together everything added recently: choose per exercise whether to track weight, reps and/or duration; tick off sets as you go with the rest timer starting (and growing) automatically; compare last time with the session before at a glance with a trend icon; a light theme next to the dark one; tag suggestions while typing; and one-tap in-app updates that keep all your data'] },
   { version: '2.9.40', notes: ['Swapped the two sides of the Last time panel: the session before is now on the left and last time on the right, so it reads from older to newer'] },
   { version: '2.9.39', notes: ['Last time and the session before it now sit side by side, with the trend icon between them, in compact rows — so the panel takes about as much height as before and the Today logging isn\'t pushed down'] },
   { version: '2.9.38', notes: ['The Last time panel now also shows the session before that (smaller, underneath), plus a trend icon next to the heading: a green line going up if last time was more than the time before, an orange flat line if it was the same, and a red line going down if it was less (based on total volume for weight + reps, total reps, or total time)'] },
   { version: '2.9.37', notes: ['New "Check for updates" in Settings → ••• → Info: it looks online for a newer version and, if there is one, installs it with one tap — no need to remove and re-add the home-screen icon anymore, and all your exercises, templates and history stay where they are'] },
   { version: '2.9.36', notes: ['Tick off sets as you go: the set number in Today is now a round button — tap it when a set is done and it turns green with a check, the next set to do gets an orange ring, and the rest timer automatically restarts and grows into the big clock. Your ticks survive switching exercises or closing the app, and reset the next day'] },
-  { version: '2.9.35', notes: ['Long numbers in the set fields (like 142.5) now shrink just enough to fit between the + and − buttons instead of being cut off, and grow back to normal size when there\'s room — the buttons themselves keep their full size'] },
-  { version: '2.9.34', notes: ['Exercises that track weight, reps and duration no longer squeeze three inputs into one row (which hid the typed value) — the third one now sits on its own line under the first'] },
-  { version: '2.9.33', notes: ['Tag suggestions when adding or editing an exercise: after typing two letters, existing tags that start with them appear under the field — tap one to use it. A tag typed with different capitals than an existing one ("triceps" vs "Triceps") is now also saved as that existing tag instead of creating a near-duplicate'] },
-  { version: '2.9.32', notes: ['New light theme: Settings → ••• → Appearance lets you switch between the original dark look and a regular light one. Your choice is saved and applied instantly (and before the app even appears on the next launch, so there\'s no dark flash)'] },
 ];
 
 const DEFAULT_EXERCISES = [
@@ -1877,7 +1896,8 @@ function saveSession(){
   // put and show the values that were saved.
   const visible = visibleExerciseNames();
   const idx = visible.indexOf(selectedExercise);
-  if(idx >= 0 && idx < visible.length - 1){
+  const movedOn = idx >= 0 && idx < visible.length - 1;
+  if(movedOn){
     selectedExercise = visible[idx + 1];
     loadTodayState(selectedExercise);
     historyOpen = false;
@@ -1895,6 +1915,45 @@ function saveSession(){
       setTimeout(() => { check.classList.remove('show'); }, 300);
     });
   }
+  // Once the save check has flashed, glide back to the top so the next
+  // exercise (now selected in the chip row) is actually in view instead of
+  // off-screen above the Save button.
+  setTimeout(() => {
+    try{ window.scrollTo({ top: 0, behavior: 'smooth' }); }catch(e){ window.scrollTo(0, 0); }
+  }, 350);
+  // Then, once that scroll has settled and the chip is in view, trace a
+  // light around the newly selected exercise. Skipped when there was no next
+  // exercise, and for anyone with "Reduce Motion" turned on.
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(movedOn && !reduceMotion){
+    setTimeout(() => {
+      const chip = document.querySelector('#exerciseRow .chip.active');
+      if(chip) whenFullyVisible(chip, () => traceChipOutline(chip), 6000);
+    }, 800);
+  }
+}
+
+// Runs cb once el is (nearly) fully on screen — right away if it already
+// is. Uses the real on-screen viewport, so it also works when the app is
+// shown inside another page that does its own scrolling. Gives up quietly
+// after `timeout` ms so a light never starts long after the fact.
+function whenFullyVisible(el, cb, timeout){
+  if(!('IntersectionObserver' in window)){ cb(); return; }
+  let done = false;
+  const io = new IntersectionObserver(entries => {
+    if(!done && entries.some(e => e.isIntersecting && e.intersectionRatio >= 0.9)){
+      done = true; io.disconnect(); cb();
+    }
+  }, { threshold: [0.9] });
+  io.observe(el);
+  setTimeout(() => { if(!done){ done = true; io.disconnect(); } }, timeout);
+}
+function traceChipOutline(chip){
+  if(!chip.isConnected) return;
+  chip.classList.remove('fx-trace');
+  void chip.offsetWidth;
+  chip.classList.add('fx-trace');
+  setTimeout(() => chip.classList.remove('fx-trace'), 1300);
 }
 
 /* ---------- Settings ---------- */
