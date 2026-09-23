@@ -812,7 +812,7 @@
 </dialog>
 
 <script>
-const APP_VERSION = '2.9.36';
+const APP_VERSION = '2.9.37';
 const STORE_KEY = 'liftlog_data_v2';
 
 // Some browsers (notably iOS Safari, especially when added to the home screen)
@@ -825,6 +825,7 @@ if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 // Keep only the 10 most recent versions here, newest first, whenever a new version is published.
 const CHANGELOG = [
+  { version: '2.9.37', notes: ['New "Check for updates" in Settings → ••• → Info: it looks online for a newer version and, if there is one, installs it with one tap — no need to remove and re-add the home-screen icon anymore, and all your exercises, templates and history stay where they are'] },
   { version: '2.9.36', notes: ['Tick off sets as you go: the set number in Today is now a round button — tap it when a set is done and it turns green with a check, the next set to do gets an orange ring, and the rest timer automatically restarts and grows into the big clock. Your ticks survive switching exercises or closing the app, and reset the next day'] },
   { version: '2.9.35', notes: ['Long numbers in the set fields (like 142.5) now shrink just enough to fit between the + and − buttons instead of being cut off, and grow back to normal size when there\'s room — the buttons themselves keep their full size'] },
   { version: '2.9.34', notes: ['Exercises that track weight, reps and duration no longer squeeze three inputs into one row (which hid the typed value) — the third one now sits on its own line under the first'] },
@@ -834,7 +835,6 @@ const CHANGELOG = [
   { version: '2.9.30', notes: ['Added a "+ Add" chip at the end of the template row on the home screen (same style as the exercise row\'s), which jumps straight to creating a new template'] },
   { version: '2.9.29', notes: ['The "+ Add" chip at the end of the exercise row now behaves differently depending on what\'s selected: with "All" selected it still creates a brand-new exercise, but with a specific template selected it instead jumps to that template\'s edit screen in Settings, so you can add an exercise that already exists to it — the "+ New exercise" button is still right there if it truly doesn\'t exist yet'] },
   { version: '2.9.28', notes: ['Style-guide cleanup: destructive actions (delete exercise/template, "delete permanently") now use a distinct red instead of the same orange as primary buttons; every numeric value — including the exercise history list — now consistently uses the app\'s number font; and the ~20 near-duplicate text sizes across the app were consolidated into one shared size scale (no visual layout changes intended)'] },
-  { version: '2.9.27', notes: ['Settings → Progress now shows a second line on the reps chart for total reps logged that day (all sets added together), next to the existing top-set line, with a small legend underneath so it\'s clear which line is which'] },
 ];
 
 const DEFAULT_EXERCISES = [
@@ -2064,6 +2064,63 @@ function setTheme(t){
 // a way to replay the one-time "Add to Home Screen" walkthrough on demand
 // (for anyone who dismissed it too fast, or for checking it in a preview
 // where the automatic first-visit trigger doesn't apply).
+// "Check for updates": a home-screen app on iPhone keeps showing the version
+// it was installed with (the page is cached and often just resumed, never
+// reloaded), and re-adding it to the home screen starts with empty storage.
+// This fetches the published page fresh, reads its APP_VERSION, and — if it's
+// newer — reloads onto it via a one-off ?v= URL that no cache has seen yet.
+// localStorage belongs to the site, not the page, so all exercises, templates
+// and history carry straight over.
+let updateCheck = { status: 'idle', version: null }; // idle | checking | latest | available | error
+function appPageUrl(){ return location.href.split('#')[0].split('?')[0]; }
+function compareVersions(a, b){
+  const pa = String(a).split('.').map(Number), pb = String(b).split('.').map(Number);
+  for(let i = 0; i < Math.max(pa.length, pb.length); i++){
+    const d = (pa[i] || 0) - (pb[i] || 0);
+    if(d) return d > 0 ? 1 : -1;
+  }
+  return 0;
+}
+function updateRowTitle(){
+  return updateCheck.status === 'available' ? `Install update (v${escAttr(updateCheck.version)})` : 'Check for updates';
+}
+function updateRowMeta(){
+  switch(updateCheck.status){
+    case 'checking': return 'Checking…';
+    case 'latest': return `You're on the latest version (v${APP_VERSION})`;
+    case 'available': return `You have v${APP_VERSION}. Tap to update — your exercises and history stay saved`;
+    case 'error': return 'Couldn\'t reach the app online right now. Try again later';
+    default: return `Currently v${APP_VERSION}`;
+  }
+}
+async function onUpdateRowClick(){
+  if(updateCheck.status === 'checking') return;
+  if(updateCheck.status === 'available'){
+    const ok = await showConfirm(`Update to v${updateCheck.version} now?\n\nYour exercises, templates and history stay saved. Anything typed in Today but not yet saved will be cleared.`);
+    if(ok) location.replace(appPageUrl() + '?v=' + Date.now());
+    return;
+  }
+  updateCheck = { status: 'checking', version: null };
+  renderInfoSettings();
+  try{
+    const res = await fetch(appPageUrl() + '?check=' + Date.now(), { cache: 'no-store' });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    const m = text.match(/const APP_VERSION = '([\d.]+)'/);
+    if(!m) throw new Error('No version found');
+    updateCheck = compareVersions(m[1], APP_VERSION) > 0
+      ? { status: 'available', version: m[1] }
+      : { status: 'latest', version: m[1] };
+  }catch(e){
+    updateCheck = { status: 'error', version: null };
+  }
+  renderInfoSettings();
+}
+// After updating, tidy the one-off ?v= off the address so it doesn't stick around.
+if(/[?&]v=\d+/.test(location.search)){
+  try{ history.replaceState(null, '', appPageUrl() + location.hash); }catch(e){}
+}
+
 function renderInfoSettings(){
   const el = document.getElementById('tabInfo');
   if(!el) return;
@@ -2077,6 +2134,13 @@ function renderInfoSettings(){
     <div class="settings-row" style="cursor:pointer;" onclick="openChangelog()">
       <div class="ex-info"><span class="name">Changelog</span></div>
       <span class="icon-btn" aria-hidden="true" style="color:var(--text-dim);">${chevronRight}</span>
+    </div>
+    <div class="settings-row" style="cursor:pointer;" onclick="onUpdateRowClick()">
+      <div class="ex-info">
+        <span class="name">${updateRowTitle()}</span>
+        <span class="ex-meta" id="updateRowMeta">${updateRowMeta()}</span>
+      </div>
+      <span class="icon-btn" aria-hidden="true" style="color:${updateCheck.status === 'available' ? 'var(--accent)' : 'var(--text-dim)'};">${chevronRight}</span>
     </div>
     <div class="settings-row" style="cursor:pointer;" onclick="openA2hs()">
       <div class="ex-info">
