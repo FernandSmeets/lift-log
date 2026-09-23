@@ -208,13 +208,38 @@
   .prev-val .num{ color:var(--text); font-size:var(--fs-lg); }
   .empty-prev{ color:var(--text-dim); font-size:var(--fs-base); padding:.3rem 0; }
 
-  .today-panel .set-row{ grid-template-columns:1.6rem 1fr 1fr 2.5rem; }
+  .today-panel .set-row{ grid-template-columns:2.4rem 1fr 1fr 1.8rem; }
+  .today-panel .set-row .icon-btn.remove-set{ width:100%; }
+  /* Tick-off circle per set (replaces the plain set number in Today). The
+     next set still to do gets an accent ring so it's obvious where you are;
+     done sets turn green with a check and their inputs fade back a little
+     (still editable). Ticking a set also starts the rest timer. */
+  .set-check{
+    width:2.3rem; height:2.3rem; border-radius:50%; padding:0; cursor:pointer;
+    border:1.5px solid var(--border); background:var(--surface-hi); color:var(--text-dim);
+    font-family:'Oswald',sans-serif; font-size:var(--fs-base); font-weight:600;
+    display:flex; align-items:center; justify-content:center;
+    -webkit-user-select:none; user-select:none;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+  }
+  .set-check.next{ border-color:var(--accent); color:var(--text); }
+  .set-check.done{ background:var(--good); border-color:var(--good); color:#14161A; }
+  .set-check svg{ width:1.15rem; height:1.15rem; stroke-width:3; }
+  .set-check.pop{ animation: setCheckPop .32s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes setCheckPop{ 0%{ transform:scale(.75); } 100%{ transform:scale(1); } }
+  .set-row.is-done .set-cell{ opacity:.5; transition:opacity .2s ease; }
   input.field{
     width:100%; min-width:0; background:var(--surface-hi); border:1px solid var(--border);
-    color:var(--text); border-radius:8px; padding:.65rem .3rem;
+    color:var(--text); border-radius:8px; padding:.65rem .15rem;
     font-family:'Oswald',sans-serif; font-size:16px; text-align:center;
     font-variant-numeric:tabular-nums; min-height:2.6rem;
+    -moz-appearance:textfield; appearance:textfield;
   }
+  /* Desktop browsers reserve room for tiny up/down arrows inside number
+     fields, which pushed the value off-centre and clipped it. The app's own
+     big +/− buttons already do that job, so the built-in arrows are hidden. */
+  input.field::-webkit-inner-spin-button,
+  input.field::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
   input.field:focus{ outline:none; border-color:var(--accent); }
   input.field::placeholder{ color:var(--text-dim); opacity:.6; }
   .unit{ font-size:var(--fs-2xs); color:var(--text-dim); display:block; margin-top:.15rem; text-align:center; }
@@ -416,6 +441,13 @@
     white-space:nowrap;
   }
   .reorder-btns{ display:flex; flex-direction:column; gap:1px; }
+  .tag-suggest{ display:flex; flex-wrap:wrap; gap:.35rem; margin:-.35rem 0 .6rem; }
+  .tag-suggest:empty{ display:none; }
+  .tag-suggest-pill{
+    border:none; cursor:pointer; font-family:inherit; font-size:var(--fs-xs);
+    padding:.4rem .75rem; min-height:2rem; -webkit-user-select:none; user-select:none;
+  }
+  .tag-suggest-pill:active{ filter:brightness(.92); }
 
   .contact-logo-wrap{
     background:transparent; padding:.3rem 0;
@@ -780,7 +812,7 @@
 </dialog>
 
 <script>
-const APP_VERSION = '2.9.32';
+const APP_VERSION = '2.9.36';
 const STORE_KEY = 'liftlog_data_v2';
 
 // Some browsers (notably iOS Safari, especially when added to the home screen)
@@ -793,16 +825,16 @@ if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 // Keep only the 10 most recent versions here, newest first, whenever a new version is published.
 const CHANGELOG = [
+  { version: '2.9.36', notes: ['Tick off sets as you go: the set number in Today is now a round button — tap it when a set is done and it turns green with a check, the next set to do gets an orange ring, and the rest timer automatically restarts and grows into the big clock. Your ticks survive switching exercises or closing the app, and reset the next day'] },
+  { version: '2.9.35', notes: ['Long numbers in the set fields (like 142.5) now shrink just enough to fit between the + and − buttons instead of being cut off, and grow back to normal size when there\'s room — the buttons themselves keep their full size'] },
+  { version: '2.9.34', notes: ['Exercises that track weight, reps and duration no longer squeeze three inputs into one row (which hid the typed value) — the third one now sits on its own line under the first'] },
+  { version: '2.9.33', notes: ['Tag suggestions when adding or editing an exercise: after typing two letters, existing tags that start with them appear under the field — tap one to use it. A tag typed with different capitals than an existing one ("triceps" vs "Triceps") is now also saved as that existing tag instead of creating a near-duplicate'] },
   { version: '2.9.32', notes: ['New light theme: Settings → ••• → Appearance lets you switch between the original dark look and a regular light one. Your choice is saved and applied instantly (and before the app even appears on the next launch, so there\'s no dark flash)'] },
   { version: '2.9.31', notes: ['The rest timer now grows noticeably bigger, with a soft pop animation, while it\'s counting down (or paused mid-count, or just finished) — it\'s the most important thing on screen at that moment, so it shrinks back to its small corner size only once it\'s reset to idle'] },
   { version: '2.9.30', notes: ['Added a "+ Add" chip at the end of the template row on the home screen (same style as the exercise row\'s), which jumps straight to creating a new template'] },
   { version: '2.9.29', notes: ['The "+ Add" chip at the end of the exercise row now behaves differently depending on what\'s selected: with "All" selected it still creates a brand-new exercise, but with a specific template selected it instead jumps to that template\'s edit screen in Settings, so you can add an exercise that already exists to it — the "+ New exercise" button is still right there if it truly doesn\'t exist yet'] },
   { version: '2.9.28', notes: ['Style-guide cleanup: destructive actions (delete exercise/template, "delete permanently") now use a distinct red instead of the same orange as primary buttons; every numeric value — including the exercise history list — now consistently uses the app\'s number font; and the ~20 near-duplicate text sizes across the app were consolidated into one shared size scale (no visual layout changes intended)'] },
   { version: '2.9.27', notes: ['Settings → Progress now shows a second line on the reps chart for total reps logged that day (all sets added together), next to the existing top-set line, with a small legend underneath so it\'s clear which line is which'] },
-  { version: '2.9.26', notes: ['You can now choose what to track per exercise — Weight, Reps and/or Duration — from the edit-exercise screen. Planks and wall-sits can be set to duration-only, push-ups and pull-ups to reps-only, and the today panel, history, PRs, progress charts and CSV backup all follow that choice'] },
-  { version: '2.9.25', notes: ['Fixed the Data/Info "•••" menu opening underneath the exercise tag filter chips on the Exercises tab — it now floats above the whole settings panel instead of being anchored inside the tab row'] },
-  { version: '2.9.24', notes: ['Reworked Settings navigation: Exercises, Templates, Progress and Timer now sit as four equal tabs that always fit without scrolling, with Data and Info moved behind a "•••" menu next to them — no more scroll hints needed at all'] },
-  { version: '2.9.23', notes: ['Fixed the "more tabs" hint badge letting a scrolled-under tab\'s text show through it instead of staying solid on top — an iOS Safari quirk with the scrollable tab row\'s own rendering layer'] },
 ];
 
 const DEFAULT_EXERCISES = [
@@ -1030,6 +1062,44 @@ let editingTemplateExercises = []; // ordered list of exercise names for the tem
 let templateExerciseTagFilter = null; // muscle-group tag filter for the exercise picker in the template dialog
 
 const todayStr = () => new Date().toISOString().slice(0,10);
+
+// Which of today's sets have been ticked off, per exercise. Kept apart from
+// the logged session data (it's "where am I in this workout", not a result)
+// but saved to its own localStorage key for today only, so closing and
+// reopening the app mid-workout doesn't lose your place. Resets each day.
+const SET_DONE_KEY = 'liftlog_setdone_v1';
+let setDoneState = null; // { date, byExercise: { name: [bool, ...] } }
+let lastTickedSetIdx = null; // just-ticked row, so only that circle animates
+function setDoneFlags(){
+  const today = todayStr();
+  if(!setDoneState){
+    try{ setDoneState = JSON.parse(localStorage.getItem(SET_DONE_KEY) || 'null'); }catch(e){ setDoneState = null; }
+  }
+  if(!setDoneState || setDoneState.date !== today || typeof setDoneState.byExercise !== 'object'){
+    setDoneState = { date: today, byExercise: {} };
+  }
+  const key = selectedExercise || '';
+  let arr = setDoneState.byExercise[key];
+  if(!Array.isArray(arr)) arr = setDoneState.byExercise[key] = [];
+  while(arr.length < todaySets.length) arr.push(false);
+  return arr;
+}
+function saveSetDoneState(){
+  try{ localStorage.setItem(SET_DONE_KEY, JSON.stringify(setDoneState)); }catch(e){}
+}
+function toggleSetDone(i){
+  const flags = setDoneFlags();
+  flags[i] = !flags[i];
+  saveSetDoneState();
+  if(flags[i]){
+    lastTickedSetIdx = i;
+    // A finished set means rest time: (re)start the timer from the full
+    // rest period, which also makes it grow into the big clock.
+    resetRestTimer();
+    startRestTimer();
+  }
+  renderContent();
+}
 const fmtDate = (iso) => {
   const d = new Date(iso + 'T00:00:00');
   return d.toLocaleDateString(undefined, {month:'short', day:'numeric'});
@@ -1324,10 +1394,55 @@ function renderNewExerciseTags(){
   el.innerHTML = newExerciseTagInputs.map((val, i) => `
     <div style="display:flex; gap:.4rem; margin-bottom:.4rem; align-items:center;">
       <input type="text" class="plain-input" style="flex:1;" placeholder="e.g. Triceps" maxlength="24"
-        value="${escAttr(val)}" oninput="newExerciseTagInputs[${i}] = this.value">
+        id="tagInput_${i}" autocomplete="off" autocapitalize="words"
+        value="${escAttr(val)}" oninput="onExerciseTagInput(${i}, this.value)">
       ${newExerciseTagInputs.length > 1 ? `<button type="button" class="icon-btn" onclick="removeExerciseTagField(${i})" aria-label="Remove tag">${trashIcon}</button>` : ''}
     </div>
+    <div class="tag-suggest" id="tagSuggest_${i}"></div>
   `).join('');
+}
+
+// Every tag currently in use on any exercise, de-duplicated case-insensitively
+// (first spelling wins) and sorted — the pool that tag suggestions and
+// save-time spelling matching draw from.
+function existingExerciseTags(){
+  const seen = new Map();
+  data.exercises.forEach(ex => (ex.tags || []).forEach(t => {
+    const key = t.trim().toLowerCase();
+    if(key && !seen.has(key)) seen.set(key, t.trim());
+  }));
+  return [...seen.values()].sort((a, b) => a.localeCompare(b));
+}
+// Once two or more letters are typed, show existing tags that start with
+// them (or have a word that does, e.g. "de" → "Rear Delts"), so picking the
+// existing tag is one tap instead of guessing its exact spelling.
+function onExerciseTagInput(i, value){
+  newExerciseTagInputs[i] = value;
+  renderTagSuggestions(i);
+}
+function renderTagSuggestions(i){
+  const el = document.getElementById('tagSuggest_' + i);
+  if(!el) return;
+  const q = (newExerciseTagInputs[i] || '').trim().toLowerCase();
+  if(q.length < 2){ el.innerHTML = ''; return; }
+  const usedElsewhere = new Set(newExerciseTagInputs
+    .filter((_, j) => j !== i).map(t => t.trim().toLowerCase()).filter(Boolean));
+  const typedExact = (newExerciseTagInputs[i] || '').trim();
+  const matches = existingExerciseTags().filter(t => {
+    const lt = t.toLowerCase();
+    if(t === typedExact || usedElsewhere.has(lt)) return false;
+    return lt.startsWith(q) || lt.split(/\s+/).some(w => w.startsWith(q));
+  }).sort((a, b) => (b.toLowerCase().startsWith(q) - a.toLowerCase().startsWith(q)) || a.localeCompare(b))
+    .slice(0, 6);
+  el.innerHTML = matches.map(t =>
+    `<button type="button" class="tag-pill tag-suggest-pill" data-tag="${escAttr(t)}" onclick="pickTagSuggestion(${i}, this.dataset.tag)">${escAttr(t)}</button>`
+  ).join('');
+}
+function pickTagSuggestion(i, tag){
+  newExerciseTagInputs[i] = tag;
+  const input = document.getElementById('tagInput_' + i);
+  if(input) input.value = tag;
+  renderTagSuggestions(i);
 }
 function addExerciseTagField(){
   newExerciseTagInputs.push('');
@@ -1340,7 +1455,12 @@ function removeExerciseTagField(i){
 
 function confirmAddExercise(){
   const name = document.getElementById('newExerciseName').value.trim();
-  const tags = newExerciseTagInputs.map(t => t.trim()).filter(Boolean);
+  // A tag typed with different capitalisation than an existing one
+  // ("triceps" vs "Triceps") is saved as the existing tag, so the two never
+  // split into separate filters. Duplicates within this exercise are dropped.
+  const knownTags = new Map(existingExerciseTags().map(t => [t.toLowerCase(), t]));
+  const tags = [...new Map(newExerciseTagInputs.map(t => t.trim()).filter(Boolean)
+    .map(t => [t.toLowerCase(), knownTags.get(t.toLowerCase()) || t])).values()];
   const metrics = ['weight','reps','duration'].filter(m => newExerciseMetrics.includes(m));
   if(!name){ document.getElementById('addExerciseDialog').close(); return; }
 
@@ -1412,23 +1532,33 @@ function renderContent(){
     lastHtml = `<div class="panel"><h2>Last time</h2><div class="empty-prev">No previous session yet for ${selectedExercise}.</div></div>`;
   }
 
+  // At most two steppers side by side — three in one row squeezes the input
+  // so narrow the typed value no longer fits. A third metric wraps to a
+  // second line under the first one, keeping every stepper the same width,
+  // with the remove button pinned to the end of the first line.
+  const todayCols = Math.min(activeMetrics.length, 2);
+  const wraps = activeMetrics.length > 2;
+  const doneFlags = setDoneFlags();
+  const nextIdx = doneFlags.slice(0, todaySets.length).indexOf(false);
   const todayRows = todaySets.map((s, i) => {
     const v = parseFloat(s[primary]);
     const isPr = best !== null && !isNaN(v) && v > best;
+    const done = !!doneFlags[i];
+    const checkCls = 'set-check' + (done ? ' done' : (i === nextIdx ? ' next' : '')) + (done && i === lastTickedSetIdx ? ' pop' : '');
     return `
-    <div class="set-row" style="grid-template-columns:1.6rem repeat(${activeMetrics.length},1fr) 2.5rem;">
-      <span class="set-idx">${i+1}</span>
-      ${activeMetrics.map(m => `
-      <div>
+    <div class="set-row${done ? ' is-done' : ''}" style="grid-template-columns:2.4rem repeat(${todayCols},1fr) 1.8rem;">
+      <button type="button" class="${checkCls}" onclick="toggleSetDone(${i})" aria-pressed="${done}" aria-label="${done ? 'Unmark' : 'Mark'} set ${i+1} as done">${done ? checkIcon : (i+1)}</button>
+      ${activeMetrics.map((m, mi) => `
+      <div class="set-cell"${wraps && mi >= 2 ? ` style="grid-column:${2 + (mi - 2)}; grid-row:2;"` : ''}>
         <div class="stepper">
           <button class="stepper-btn" onclick="stepValue(${i},'${m}',-${metricStep(m)})" aria-label="Decrease ${metricLabel(m).toLowerCase()}">−</button>
           <input class="field" type="number" inputmode="${m === 'weight' ? 'decimal' : 'numeric'}" placeholder="${last && last.sets[i] ? (last.sets[i][m] || '0') : '0'}"
-            value="${s[m]}" oninput="updateSet(${i},'${m}',this.value)">
+            value="${s[m]}" oninput="updateSet(${i},'${m}',this.value); fitFieldText(this)">
           <button class="stepper-btn" onclick="stepValue(${i},'${m}',${metricStep(m)})" aria-label="Increase ${metricLabel(m).toLowerCase()}">+</button>
         </div>
         <span class="unit">${metricUnit(m)}</span>
       </div>`).join('')}
-      <button class="icon-btn" onclick="removeSet(${i})" aria-label="Remove set">✕</button>
+      <button class="icon-btn remove-set" onclick="removeSet(${i})" aria-label="Remove set"${wraps ? ` style="grid-column:${todayCols + 2}; grid-row:1;"` : ''}>✕</button>
       ${isPr ? `<span class="pr-badge">PR</span>` : ''}
     </div>`;
   }).join('');
@@ -1460,7 +1590,41 @@ function renderContent(){
   `;
 
   if(historyOpen) renderHistory();
+  fitAllSetFields();
+  lastTickedSetIdx = null;
 }
+
+// Long numbers ("142.5") don't fit the stepper field between the + and −
+// buttons, which stay big on purpose for easy tapping. Instead the number
+// itself shrinks, 1px at a time, just until it fits — and grows back to the
+// normal 16px as soon as there's room again. Measured with a canvas using the
+// field's own font, so it works the same in every browser. Placeholders
+// (last time's value) are fitted too. The page's maximum-scale=1 keeps iOS
+// from zooming in on a field that ends up below 16px.
+const FIELD_FONT_MAX = 16, FIELD_FONT_MIN = 10;
+let fieldMeasureCtx = null;
+function fitFieldText(input){
+  if(!input) return;
+  const text = input.value || input.placeholder || '';
+  const cs = getComputedStyle(input);
+  const avail = input.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 2;
+  if(avail <= 0) return;
+  if(!fieldMeasureCtx) fieldMeasureCtx = document.createElement('canvas').getContext('2d');
+  let size = FIELD_FONT_MAX;
+  while(size > FIELD_FONT_MIN){
+    fieldMeasureCtx.font = `${cs.fontStyle} ${cs.fontWeight} ${size}px ${cs.fontFamily}`;
+    if(fieldMeasureCtx.measureText(text).width <= avail) break;
+    size -= 1;
+  }
+  input.style.fontSize = size + 'px';
+}
+function fitAllSetFields(){
+  document.querySelectorAll('.today-panel input.field').forEach(fitFieldText);
+}
+// Re-fit once the number font has actually loaded (the first render may have
+// been measured with the fallback font) and whenever the screen width changes.
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitAllSetFields);
+window.addEventListener('resize', fitAllSetFields);
 
 function toggleHistory(){ historyOpen = !historyOpen; editingHistoryIdx = null; render(); }
 function formatSetCompact(set, metrics){
@@ -1567,8 +1731,11 @@ async function removeSet(i){
   // Only ask for confirmation when there's actually something to lose — an
   // empty, never-touched row can just be removed right away.
   if(hasData && !(await showConfirm('Delete this set? The values you entered for it will be lost.'))) return;
+  const flags = setDoneFlags();
   todaySets.splice(i,1);
+  flags.splice(i,1);
   if(todaySets.length === 0) todaySets = [emptySet()];
+  saveSetDoneState();
   render();
 }
 
