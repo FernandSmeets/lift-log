@@ -45,6 +45,9 @@
     --shadow-fab:0 4px 16px rgba(0,0,0,.4);
     --shadow-fab-big:0 6px 24px rgba(0,0,0,.45);
     --backdrop:rgba(0,0,0,.55);
+    --trend-up:#6FCF97; --trend-up-bg:#6FCF9726;
+    --trend-flat:#F2994A; --trend-flat-bg:#F2994A26;
+    --trend-down:#EB5757; --trend-down-bg:#EB575726;
     color-scheme:dark;
     /* Shared text-size scale. Replaces ~20 near-duplicate one-off rem values
        with a consistent set of steps, one per functional role. 16px on form
@@ -78,6 +81,9 @@
     --shadow-fab:0 4px 14px rgba(20,22,26,.22);
     --shadow-fab-big:0 6px 22px rgba(20,22,26,.26);
     --backdrop:rgba(20,22,26,.35);
+    --trend-up:#23965A; --trend-up-bg:#23965A1F;
+    --trend-flat:#D9822B; --trend-flat-bg:#D9822B1F;
+    --trend-down:#E04848; --trend-down-bg:#E048481F;
     color-scheme:light;
   }
   /* Dark text on the (deeper) light-theme blue is too low-contrast; white reads better. */
@@ -197,6 +203,39 @@
   }
   .panel h2{ font-size:var(--fs-sm); color:var(--text-dim); margin:0 0 .7rem; font-weight:500; letter-spacing:.02em; }
   .panel h2 .when{ color:var(--text-dim); }
+  /* "Last time" panel: trend icon on the right of the heading when there's
+     only one earlier session; with two, they sit side by side (see .lt-*
+     below) so the panel doesn't push the Today logging further down. */
+  .last-head{ display:flex; align-items:center; justify-content:space-between; gap:.5rem; }
+  .trend-icon{
+    flex:0 0 auto; width:1.75rem; height:1.75rem; border-radius:7px;
+    display:inline-flex; align-items:center; justify-content:center;
+  }
+  .trend-icon svg{ width:1.15rem; height:1.15rem; }
+  .trend-icon.up{ background:var(--trend-up-bg); color:var(--trend-up); }
+  .trend-icon.flat{ background:var(--trend-flat-bg); color:var(--trend-flat); }
+  .trend-icon.down{ background:var(--trend-down-bg); color:var(--trend-down); }
+  /* Side-by-side: the one before | trend icon + divider | last session
+     (reads left to right, oldest to newest).
+     Compact rows (no dividers, tighter spacing) keep it about as tall as the
+     old single-session panel. */
+  .lt-grid{ display:grid; grid-template-columns:1fr 1.75rem 1fr; column-gap:.55rem; }
+  .lt-col{ min-width:0; }
+  .lt-head{
+    font-size:var(--fs-xs); color:var(--text-dim); letter-spacing:.02em;
+    min-height:1.75rem; display:flex; align-items:center; flex-wrap:wrap; gap:.1rem .35rem;
+    margin-bottom:.3rem;
+  }
+  .lt-head strong{ color:var(--text); font-weight:500; }
+  .lt-head .feel-badge{ margin-left:0; }
+  .lt-mid{ display:flex; flex-direction:column; align-items:center; }
+  .lt-mid .lt-line{ flex:1; width:1px; background:var(--border); margin-top:.35rem; }
+  .lt-row{ display:grid; column-gap:.35rem; align-items:baseline; padding:.18rem 0; }
+  .lt-idx{ color:var(--text-dim); font-size:var(--fs-sm); }
+  .lt-val{ white-space:nowrap; font-size:var(--fs-xs); color:var(--text-dim); overflow:hidden; text-overflow:ellipsis; }
+  .lt-val .num{ font-size:1rem; color:var(--text); }
+  .lt-col.older .lt-val .num{ color:var(--text-dim); }
+  .lt-units{ font-size:var(--fs-2xs); color:var(--text-dim); padding:0; }
 
   .set-row{
     display:grid; grid-template-columns:1.6rem 1fr 1fr; gap:.6rem;
@@ -812,7 +851,7 @@
 </dialog>
 
 <script>
-const APP_VERSION = '2.9.37';
+const APP_VERSION = '3.0.0';
 const STORE_KEY = 'liftlog_data_v2';
 
 // Some browsers (notably iOS Safari, especially when added to the home screen)
@@ -825,16 +864,16 @@ if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 // Keep only the 10 most recent versions here, newest first, whenever a new version is published.
 const CHANGELOG = [
+  { version: '3.0.0', notes: ['Lift Log 3.0 — a milestone release bringing together everything added recently: choose per exercise whether to track weight, reps and/or duration; tick off sets as you go with the rest timer starting (and growing) automatically; compare last time with the session before at a glance with a trend icon; a light theme next to the dark one; tag suggestions while typing; and one-tap in-app updates that keep all your data'] },
+  { version: '2.9.40', notes: ['Swapped the two sides of the Last time panel: the session before is now on the left and last time on the right, so it reads from older to newer'] },
+  { version: '2.9.39', notes: ['Last time and the session before it now sit side by side, with the trend icon between them, in compact rows — so the panel takes about as much height as before and the Today logging isn\'t pushed down'] },
+  { version: '2.9.38', notes: ['The Last time panel now also shows the session before that (smaller, underneath), plus a trend icon next to the heading: a green line going up if last time was more than the time before, an orange flat line if it was the same, and a red line going down if it was less (based on total volume for weight + reps, total reps, or total time)'] },
   { version: '2.9.37', notes: ['New "Check for updates" in Settings → ••• → Info: it looks online for a newer version and, if there is one, installs it with one tap — no need to remove and re-add the home-screen icon anymore, and all your exercises, templates and history stay where they are'] },
   { version: '2.9.36', notes: ['Tick off sets as you go: the set number in Today is now a round button — tap it when a set is done and it turns green with a check, the next set to do gets an orange ring, and the rest timer automatically restarts and grows into the big clock. Your ticks survive switching exercises or closing the app, and reset the next day'] },
   { version: '2.9.35', notes: ['Long numbers in the set fields (like 142.5) now shrink just enough to fit between the + and − buttons instead of being cut off, and grow back to normal size when there\'s room — the buttons themselves keep their full size'] },
   { version: '2.9.34', notes: ['Exercises that track weight, reps and duration no longer squeeze three inputs into one row (which hid the typed value) — the third one now sits on its own line under the first'] },
   { version: '2.9.33', notes: ['Tag suggestions when adding or editing an exercise: after typing two letters, existing tags that start with them appear under the field — tap one to use it. A tag typed with different capitals than an existing one ("triceps" vs "Triceps") is now also saved as that existing tag instead of creating a near-duplicate'] },
   { version: '2.9.32', notes: ['New light theme: Settings → ••• → Appearance lets you switch between the original dark look and a regular light one. Your choice is saved and applied instantly (and before the app even appears on the next launch, so there\'s no dark flash)'] },
-  { version: '2.9.31', notes: ['The rest timer now grows noticeably bigger, with a soft pop animation, while it\'s counting down (or paused mid-count, or just finished) — it\'s the most important thing on screen at that moment, so it shrinks back to its small corner size only once it\'s reset to idle'] },
-  { version: '2.9.30', notes: ['Added a "+ Add" chip at the end of the template row on the home screen (same style as the exercise row\'s), which jumps straight to creating a new template'] },
-  { version: '2.9.29', notes: ['The "+ Add" chip at the end of the exercise row now behaves differently depending on what\'s selected: with "All" selected it still creates a brand-new exercise, but with a specific template selected it instead jumps to that template\'s edit screen in Settings, so you can add an exercise that already exists to it — the "+ New exercise" button is still right there if it truly doesn\'t exist yet'] },
-  { version: '2.9.28', notes: ['Style-guide cleanup: destructive actions (delete exercise/template, "delete permanently") now use a distinct red instead of the same orange as primary buttons; every numeric value — including the exercise history list — now consistently uses the app\'s number font; and the ~20 near-duplicate text sizes across the app were consolidated into one shared size scale (no visual layout changes intended)'] },
 ];
 
 const DEFAULT_EXERCISES = [
@@ -1128,6 +1167,47 @@ function getLastSession(exercise){
   if(past.length === 0) return null;
   return past[past.length - 1];
 }
+// The session before the last one (both excluding today), for the
+// "Before that" comparison in the Last time panel.
+function getPrevSession(exercise){
+  const list = data.sessions[exercise] || [];
+  const past = list.filter(s => s.date !== todayStr());
+  return past.length >= 2 ? past[past.length - 2] : null;
+}
+// One number per session to decide "better / same / worse" for the trend
+// icon, based on what the exercise tracks: total volume (kg × reps) for
+// weight+reps (falling back to total reps for bodyweight sets logged as 0 kg),
+// total reps for reps-only, total time for duration-only, heaviest set for
+// weight-only.
+function sessionScore(session, metrics){
+  const sets = (session && session.sets) || [];
+  const num = v => parseFloat(v) || 0;
+  const sum = f => sets.reduce((a, s) => a + f(s), 0);
+  if(metrics.includes('weight') && metrics.includes('reps')){
+    const vol = sum(s => num(s.weight) * num(s.reps));
+    return { value: vol, label: 'total volume', unit: 'kg', fallbackReps: sum(s => num(s.reps)) };
+  }
+  if(metrics.includes('reps')) return { value: sum(s => num(s.reps)), label: 'total reps', unit: 'reps' };
+  if(metrics.includes('duration')) return { value: sum(s => num(s.duration)), label: 'total time', unit: 'sec' };
+  return { value: Math.max(0, ...sets.map(s => num(s.weight))), label: 'heaviest set', unit: 'kg' };
+}
+const TREND_ICONS = {
+  up: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>`,
+  flat: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"/></svg>`,
+  down: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 7 9 13 13 9 21 17"/><polyline points="15 17 21 17 21 11"/></svg>`
+};
+function trendIconHtml(last, prev, metrics){
+  if(!last || !prev) return '';
+  const a = sessionScore(last, metrics), b = sessionScore(prev, metrics);
+  let x = a.value, y = b.value, label = a.label, unit = a.unit;
+  if(x === 0 && y === 0 && a.fallbackReps !== undefined){ x = a.fallbackReps; y = b.fallbackReps; label = 'total reps'; unit = 'reps'; }
+  const r = v => Math.round(v * 10) / 10;
+  const dir = r(x) > r(y) ? 'up' : (r(x) < r(y) ? 'down' : 'flat');
+  const word = { up: 'More than', flat: 'Same as', down: 'Less than' }[dir];
+  const tip = `${word} the time before (${label}: ${r(y)} → ${r(x)} ${unit})`;
+  return `<span class="trend-icon ${dir}" title="${escAttr(tip)}" aria-label="${escAttr(tip)}" role="img">${TREND_ICONS[dir]}</span>`;
+}
+
 function hasSessionToday(exercise){
   const list = data.sessions[exercise] || [];
   return list.some(s => s.date === todayStr());
@@ -1518,14 +1598,40 @@ function renderContent(){
   let lastHtml = '';
   if(last){
     const lastFeelBadge = last.feel ? feelBadgeHtml(last.feel) : '';
-    lastHtml = `<div class="panel">
-      <h2>Last time <span class="when">· ${fmtDate(last.date)}</span>${lastFeelBadge}</h2>
-      ${last.sets.map((s,i) => `
-        <div class="set-row" style="grid-template-columns:1.6rem repeat(${activeMetrics.length},1fr);">
+    const prev = getPrevSession(selectedExercise);
+    const setRows = (sess, extraCls) => sess.sets.map((s,i) => `
+        <div class="set-row${extraCls}" style="grid-template-columns:1.6rem repeat(${activeMetrics.length},1fr);">
           <span class="set-idx">${i+1}</span>
           ${activeMetrics.map(m => `<span class="prev-val"><span class="num">${s[m] || '—'}</span> ${metricUnit(m)}</span>`).join('')}
         </div>
-      `).join('')}
+      `).join('');
+    // With three metrics per half there's no room for "kg"/"reps"/"sec"
+    // after every number, so the units move to one small label row on top.
+    const ltCols = `grid-template-columns:.9rem repeat(${activeMetrics.length},minmax(0,1fr));`;
+    const unitsOnTop = activeMetrics.length > 2;
+    const ltRows = sess => (unitsOnTop ? `
+        <div class="lt-row lt-units" style="${ltCols}"><span></span>${activeMetrics.map(m => `<span>${metricUnit(m)}</span>`).join('')}</div>` : '') +
+      sess.sets.map((s,i) => `
+        <div class="lt-row" style="${ltCols}">
+          <span class="lt-idx">${i+1}</span>
+          ${activeMetrics.map(m => `<span class="lt-val"><span class="num">${s[m] || '—'}</span>${unitsOnTop ? '' : ' ' + metricUnit(m)}</span>`).join('')}
+        </div>`).join('');
+    lastHtml = prev ? `<div class="panel">
+      <div class="lt-grid">
+        <div class="lt-col older">
+          <div class="lt-head"><strong>Before</strong><span>${fmtDate(prev.date)}</span></div>
+          ${ltRows(prev)}
+        </div>
+        <div class="lt-mid">${trendIconHtml(last, prev, activeMetrics)}<div class="lt-line"></div></div>
+        <div class="lt-col">
+          <div class="lt-head"><strong>Last time</strong><span>${fmtDate(last.date)}</span>${lastFeelBadge}</div>
+          ${ltRows(last)}
+        </div>
+      </div>
+      ${last.note ? `<div class="last-note">"${escAttr(last.note)}"</div>` : ''}
+    </div>` : `<div class="panel">
+      <h2>Last time <span class="when">· ${fmtDate(last.date)}</span>${lastFeelBadge}</h2>
+      ${setRows(last, '')}
       ${last.note ? `<div class="last-note">"${escAttr(last.note)}"</div>` : ''}
     </div>`;
   } else {
