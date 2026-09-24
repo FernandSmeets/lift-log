@@ -49,6 +49,7 @@
     --trend-flat:#F2994A; --trend-flat-bg:#F2994A26;
     --trend-down:#EB5757; --trend-down-bg:#EB575726;
     --glow:#FFE2DB;
+    --heat0:#33383F; --heat1:#5A2A22; --heat2:#9A3E2E; --heat3:#E8543E;
     color-scheme:dark;
     /* Shared text-size scale. Replaces ~20 near-duplicate one-off rem values
        with a consistent set of steps, one per functional role. 16px on form
@@ -86,6 +87,7 @@
     --trend-flat:#D9822B; --trend-flat-bg:#D9822B1F;
     --trend-down:#E04848; --trend-down-bg:#E048481F;
     --glow:#FFFFFF;
+    --heat0:#DCDFE3; --heat1:#F6C9BF; --heat2:#EE9A86; --heat3:#E0492F;
     color-scheme:light;
   }
   /* Dark text on the (deeper) light-theme blue is too low-contrast; white reads better. */
@@ -122,6 +124,46 @@
     width:1.4rem; height:1.4rem; border-radius:6px; flex:0 0 auto; display:block;
   }
   header .date{ color:var(--text-dim); font-size:var(--fs-md); }
+  /* Week strip in the header (replaces the date line): Mon–Sun, filled on
+     days with a saved workout, ring on today, count of this week's workouts. */
+  .week-strip{ display:flex; align-items:center; gap:.55rem; margin-top:.2rem; }
+  .week-days{ display:flex; gap:4px; }
+  .week-day{
+    width:1.3rem; height:1.3rem; border-radius:50%; background:var(--surface-hi); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-size:.6rem; font-weight:600; color:var(--text-dim); line-height:1;
+  }
+  .week-day.done{ background:var(--accent); border-color:var(--accent); color:#14161A; }
+  .week-day.today{ box-shadow:0 0 0 1.5px var(--bg), 0 0 0 3px var(--text-dim); }
+  .week-count{ font-size:var(--fs-sm); color:var(--text-dim); white-space:nowrap; }
+  .week-count .num{ color:var(--text); font-size:1rem; }
+
+  /* Settings → Progress: this week vs last week + 12-week calendar */
+  .wk-card{ background:var(--surface-hi); border:1px solid var(--border); border-radius:10px; padding:.75rem .7rem .6rem; margin-bottom:.7rem; }
+  .wk-card-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.55rem; font-size:var(--fs-sm); color:var(--text-dim); }
+  .wk-stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:.4rem; margin-bottom:.7rem; }
+  .wk-stat{ background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:.4rem .5rem; min-width:0; }
+  .wk-stat .num{ display:block; font-size:1.2rem; font-weight:600; line-height:1.15; white-space:nowrap; }
+  .wk-stat .lbl{ font-size:var(--fs-2xs); color:var(--text-dim); }
+  .wk-delta{ font-family:'Inter',sans-serif; font-size:var(--fs-2xs); font-weight:600; margin-left:.2rem; }
+  .wk-delta.up{ color:var(--good); } .wk-delta.down{ color:var(--feel-hard); } .wk-delta.flat{ color:var(--text-dim); }
+  .wk-bars{ display:grid; grid-template-columns:repeat(7,1fr); gap:.3rem; align-items:end; height:5rem; }
+  .wk-bar{ display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:.2rem; height:100%; min-width:0; }
+  .wk-bar i{ display:block; width:100%; border-radius:4px 4px 2px 2px; background:var(--accent); }
+  .wk-bar i.empty{ background:var(--border); }
+  .wk-bar.today span{ color:var(--text); font-weight:600; }
+  .wk-bar span{ font-size:var(--fs-2xs); color:var(--text-dim); }
+  .wk-bar em{ font-style:normal; font-size:.58rem; color:var(--text-dim); white-space:nowrap; }
+  .cal-grid{ display:grid; grid-template-columns:1.3rem repeat(12, 1fr); gap:3px; }
+  .cal-dl{ font-size:.58rem; color:var(--text-dim); display:flex; align-items:center; }
+  .cal-cell{ aspect-ratio:1; border-radius:3px; background:var(--heat0); }
+  .cal-cell.l1{ background:var(--heat1); } .cal-cell.l2{ background:var(--heat2); } .cal-cell.l3{ background:var(--heat3); }
+  .cal-cell.future{ background:transparent; border:1px dashed var(--border); }
+  .cal-cell.today{ outline:1.5px solid var(--text-dim); outline-offset:1px; }
+  .cal-foot{ display:flex; justify-content:space-between; align-items:center; gap:.5rem; flex-wrap:wrap; margin-top:.5rem; font-size:var(--fs-2xs); color:var(--text-dim); }
+  .cal-foot .num{ color:var(--text); font-size:.9rem; }
+  .cal-legend{ display:flex; align-items:center; gap:3px; }
+  .cal-legend .cal-cell{ width:.65rem; height:.65rem; aspect-ratio:auto; }
   .cog-btn{
     background:var(--surface); border:1px solid var(--border); border-radius:11px;
     width:2.95rem; height:2.95rem; display:flex; align-items:center; justify-content:center;
@@ -161,6 +203,63 @@
   }
   .chip.active{ background:var(--accent-dim); border-color:var(--accent); color:var(--text); }
   .chip.add{ color:var(--accent); border-style:dashed; }
+  /* Collapsed "All" (once the app is in use): a compact square chip with a
+     list icon. Tapping it grows it back into "All". */
+  .chip.all-collapsed{ width:2.75rem; padding:0; justify-content:center; }
+  .chip.all-collapsed svg{ width:1.15rem; height:1.15rem; }
+  .chip.all-expanding{ overflow:hidden; animation:allExpand .28s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes allExpand{ from{ max-width:2.75rem; } to{ max-width:6rem; } }
+  .app-toast{
+    position:fixed; left:50%; bottom:calc(6rem + env(safe-area-inset-bottom)); transform:translate(-50%, 1rem);
+    max-width:min(26rem, calc(100vw - 2rem)); z-index:60; pointer-events:none;
+    background:var(--surface-hi); color:var(--text); border:1px solid var(--border); border-radius:10px;
+    padding:.7rem .95rem; font-size:var(--fs-base); line-height:1.45; box-shadow:var(--shadow-menu);
+    opacity:0; transition:opacity .25s ease, transform .25s ease;
+  }
+  .app-toast.show{ opacity:1; transform:translate(-50%, 0); }
+  .update-msg{ font-size:var(--fs-md); line-height:1.6; margin:0 0 .9rem; }
+  .ex-field-grid{ display:grid; grid-template-columns:1fr 1fr; gap:.6rem; }
+  .ex-field-grid > div:only-child{ grid-column:1 / -1; }
+  /* Target for today (above the Today sets) */
+  .target-line{
+    display:flex; align-items:flex-start; gap:.5rem; background:var(--accent-dim); border-radius:8px;
+    padding:.45rem .6rem; margin:-.2rem 0 .6rem; font-size:var(--fs-sm); line-height:1.35;
+  }
+  .target-line svg{ flex:0 0 auto; width:1rem; height:1rem; margin-top:.1rem; color:var(--accent); }
+  .target-line strong{ font-weight:600; color:var(--text); }
+  .target-line .why{ display:block; color:var(--text-dim); font-size:var(--fs-xs); }
+  input.field.target-up{ border-color:var(--accent); }
+  .target-line{ cursor:pointer; -webkit-user-select:none; user-select:none; }
+  .target-line .chev{ margin-left:auto; flex:0 0 auto; width:.95rem; height:.95rem; color:var(--text-dim); transition:transform .15s ease; }
+  .target-line.open .chev{ transform:rotate(180deg); }
+  .target-info{ margin:-.35rem 0 .7rem; padding:.55rem .65rem .6rem; border-radius:0 0 8px 8px; background:var(--surface-hi); font-size:var(--fs-xs); color:var(--text-dim); line-height:1.5; }
+  .target-info ol{ margin:.1rem 0 .45rem; padding-left:1.1rem; }
+  .target-info li + li{ margin-top:.1rem; }
+  .target-info li.hit{ color:var(--text); font-weight:600; }
+  .target-info button{ background:none; border:none; padding:0; font:inherit; font-weight:600; color:var(--accent); cursor:pointer; }
+  .settings-h{ font-family:'Oswald',sans-serif; font-weight:500; font-size:1.05rem; margin:0 0 .25rem; color:var(--text); }
+  .unit.target-up{ color:var(--accent); font-weight:600; }
+  .update-msg .num{ color:var(--text); }
+  .update-status{ font-size:var(--fs-sm); color:var(--good); margin:-.4rem 0 .9rem; min-height:1.2em; }
+  .update-status.warn{ color:var(--feel-hard); }
+  .update-actions{ display:flex; flex-direction:column; gap:.5rem; }
+  /* Workout summary (after the last exercise of a workout) */
+  .ws-lead{ font-size:var(--fs-md); margin:0 0 .8rem; color:var(--text-dim); }
+  .ws-lead strong{ color:var(--text); font-weight:600; }
+  .ws-stats{ display:grid; grid-template-columns:repeat(2, 1fr); gap:.5rem; margin-bottom:.9rem; }
+  .ws-stat{ background:var(--surface-hi); border-radius:9px; padding:.55rem .7rem; }
+  .ws-stat .num{ display:block; font-size:1.45rem; font-weight:600; line-height:1.15; color:var(--text); }
+  .ws-stat .num small{ font-family:'Inter',sans-serif; font-size:var(--fs-xs); font-weight:500; color:var(--text-dim); margin-left:.2rem; }
+  .ws-stat-label{ font-size:var(--fs-xs); color:var(--text-dim); letter-spacing:.02em; }
+  .ws-list-title{ font-size:var(--fs-xs); color:var(--text-dim); letter-spacing:.02em; margin:0 0 .3rem; display:flex; align-items:center; gap:.4rem; }
+  .ws-list{ list-style:none; margin:0 0 .85rem; padding:0; }
+  .ws-list li{ display:flex; justify-content:space-between; gap:.6rem; padding:.28rem 0; font-size:var(--fs-base); border-top:1px solid var(--border); }
+  .ws-list li:first-child{ border-top:none; }
+  .ws-list li span:last-child{ color:var(--text-dim); white-space:nowrap; font-size:var(--fs-sm); }
+  .ws-pr{ color:var(--good); font-weight:600; }
+  .ws-note{ font-size:var(--fs-sm); color:var(--text-dim); margin:0 0 .8rem; }
+  .update-actions .btn{ width:100%; }
+  .update-later{ background:none; border:none; color:var(--text-dim); font:inherit; font-size:var(--fs-sm); padding:.55rem; cursor:pointer; }
   /* After Save session: a small light with a tail runs once around the
      newly selected exercise's outline, then fades — "you've moved on to
      this one". Drawn inside the chip's own box, so the horizontally
@@ -702,7 +801,7 @@
 <header>
   <div class="titles">
     <h1><img class="brand-mark" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAWfmNhQlgAABZ+anVtYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAAFlhqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjBmNjJhYWQ4LTcwZjQtNDA0My1hYTMxLWM0ZjQzNTRiM2Q4NQAAAAOTanVtYgAAAClqdW1kYzJhcwARABCAAACqADibcQNjMnBhLmFzc2VydGlvbnMAAAAAuGp1bWIAAABEanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5pbmdyZWRpZW50LnYzAAAAABhjMnNoOBlaoYAoDpjmk0fR6p7RoQAAAGxjYm9yo2lkYzpmb3JtYXRpaW1hZ2UvcG5namluc3RhbmNlSUR4LHhtcDppaWQ6ODEyODMwMDUtOGQ4Ni00ODE4LTk5Y2YtNDYzOTRjODZjZmJibHJlbGF0aW9uc2hpcGhwYXJlbnRPZgAAAeJqdW1iAAAAQWp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuYWN0aW9ucy52MgAAAAAYYzJzaB4UGB1A6VxyNU6Aa5eGQv8AAAGZY2JvcqJnYWN0aW9uc4KiZmFjdGlvbmtjMnBhLm9wZW5lZGpwYXJhbWV0ZXJzoWtpbmdyZWRpZW50c4GiY3VybHgtc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5pbmdyZWRpZW50LnYzZGhhc2hYIKzUTKJ1VJQV2lH8+BPuBDaij1k7eO/CsuZaDv7e7QOSpGZhY3Rpb254HWNvbS5hbnRocm9waWMuY2xhdWRlLnByb3ZpZGVkanBhcmFtZXRlcnOheB9jb20uYW50aHJvcGljLm9yaWdpbi1jb25maWRlbmNlZ3Vua25vd25rZGVzY3JpcHRpb254ZkNsYXVkZSBwcm92aWRlZCB0aGlzIGZpbGUgYXQgdGhlIHJlcXVlc3Qgb2YgYSB1c2VyIGFuZCBtYXkgaGF2ZSBjcmVhdGVkIG9yIG1vZGlmaWVkIHRoZSBmaWxlIGNvbnRlbnRzLm1zb2Z0d2FyZUFnZW50oWRuYW1lZkNsYXVkZXJhbGxBY3Rpb25zSW5jbHVkZWT1AAAAyGp1bWIAAABAanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5oYXNoLmRhdGEAAAAAGGMyc2gHmlQ8vw7Ge2Ws+rBuxs84AAAAgGNib3KlY2FsZ2ZzaGEyNTZjcGFkTQAAAAAAAAAAAAAAAABkaGFzaFggCBgiUoL1FyMRkmIFZ39199RDGMjCNL1VavOw7TKNEjRkbmFtZW5qdW1iZiBtYW5pZmVzdGpleGNsdXNpb25zgaJlc3RhcnQYIWZsZW5ndGgZFooAAAI+anVtYgAAACdqdW1kYzJjbAARABCAAACqADibcQNjMnBhLmNsYWltLnYyAAAAAg9jYm9ypWNhbGdmc2hhMjU2aXNpZ25hdHVyZXhNc2VsZiNqdW1iZj0vYzJwYS91cm46YzJwYTowZjYyYWFkOC03MGY0LTQwNDMtYWEzMS1jNGY0MzU0YjNkODUvYzJwYS5zaWduYXR1cmVqaW5zdGFuY2VJRHgseG1wOmlpZDpmNjA4YzU2Yi04ODhmLTRkMmYtODU1MS00M2M1Y2FkOWE2NjZyY3JlYXRlZF9hc3NlcnRpb25zg6JjdXJseC1zZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmluZ3JlZGllbnQudjNkaGFzaFggrNRMonVUlBXaUfz4E+4ENqKPWTt478Ky5loO/t7tA5KiY3VybHgqc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5hY3Rpb25zLnYyZGhhc2hYIG0gJP5/dFOqomJvs9QmiHVNfvDQ16i1855uQ/MueNQSomN1cmx4KXNlbGYjanVtYmY9YzJwYS5hc3NlcnRpb25zL2MycGEuaGFzaC5kYXRhZGhhc2hYIF0wFZFOELrW1cNtSiAwHted6sGJeQmIgg7bRI2h7L9fdGNsYWltX2dlbmVyYXRvcl9pbmZvo2RuYW1lb0FudGhyb3BpYyBGaWxlc2d2ZXJzaW9uZTEuMC4wa3NwZWNWZXJzaW9uZTIuNC4wAAAQOGp1bWIAAAAoanVtZGMyY3MAEQAQgAAAqgA4m3EDYzJwYS5zaWduYXR1cmUAAAAQCGNib3LShFkCEqIBJhghWQIKMIICBjCCAY2gAwIBAgIUQOWgCu7COdC+uIP6BkIFPWdVEwAwCgYIKoZIzj0EAwMwSTEXMBUGA1UEChMOQW50aHJvcGljLCBQQkMxLjAsBgNVBAMTJUFudGhyb3BpYyBDb250ZW50IENyZWRlbnRpYWxzIFJvb3QgQ0EwHhcNMjYwODA3MTg0MzU2WhcNMjgwODA2MTk0MzU2WjBEMRcwFQYDVQQKEw5BbnRocm9waWMsIFBCQzEpMCcGA1UEAxMgQW50aHJvcGljIENsYXVkZSBDb250ZW50IFNpZ25pbmcwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASYegpry1AYBRTVNL1CpTlbROnY3dey+UrsF9C3phYrATN3ZHf93Mo8RQN0KOUuOn19P4oWNFWe5n2/She9N7eTo1gwVjAOBgNVHQ8BAf8EBAMCB4AwFQYDVR0lBA4wDAYKKwYBBAGD6F4CATAMBgNVHRMBAf8EAjAAMB8GA1UdIwQYMBaAFM5R4gSBTmRbI/jjxM+aPpzB11zCMAoGCCqGSM49BAMDA2cAMGQCMDFzHRSeAXrSy1WOzkbhPZ6Km2wGTmZ/2gK18k8BQGXyqz88Rdrz6CTX9flAnYNVxgIwcF9c3fVhqmJKpi+UhasNUMko69cyX6STPfta3Q8EjyzDjzoyrol46FP6VFHhvUcJoWNwYWRZDZ4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2WEC9ZWE3+ZYmD/aKeTwr8pa4c1IfppSkGJ1Veh397tk1Hdm3u8rwx0pgKqHLmJdFMoKILvGeFhDap4w/6k+6dOuqrJoNEAAACJ5JREFUeNptVmmQVNUVPufct/U60wwyG8sMyrBEBsuEmSQqlSpCSYJGVGJiFK0YUmoqm4lKjIoayyqtxB38YQkaYkxCATohCygQFbHASLQiM4igAw7L7D3dPd39tntOfryeJSb317td933fed+5fb4Pk6k0ACAiiyTiiVQqbZimoQxAEBFEAEARgfElICCIOLYDECAEzez7frFYKBWLSCQCIoIgmExXRQRTMjWJZFKEw1Az8xicQESCiEgRIDMLAAKIAIAggAAgIillEJXL5ezIsLAAgAhjKl0NIOecU2s7ThD4EXMFHTHaKCLX84rFoiISkUQiYZrm+DEZ+y4ABATTMALfHx4ejOgNZl1dnbFs2/M8QBTmqMZxERCxWCw2NTVd++1rPM8fHR3d8Ze/9vf3m5YZlTn2qQKIIOD5nmmYqXRVfiSLRGRZthOLe74vIswsIiwcPbOIiPi+n8lkfnnX2o+OHd+zdy8CPPTgryzL0qGuHGPW0VlmYQaBIAhM0zZMi5kNx4mJCLAGASCa1DoBEVJUKBQuv2zFG2+8uX7DM1Nrag4efGdddZVt267rGoYhFXEAiUQEEUFYBITIsizf9wxlGKy1q1kQpTQKSERoWRZLpZ9EVCgUOruOnDN1qmVb6VQ6DMN8Po9E0V0QECLleh4zA7NYjkFga02kAIAIoay5JWHc2Zx45JGHt23d0tIyp1wuE5GIaGZmzhcK586e7bquW3abm5tnzJgxWiwiIDMDiCJVLpXmz5vX8fL2B+9fd9d5iRmOcrUmQgAkBHBZ1jYYrRcuXnXj6uc3PreotdUwDM/zmJmQEolEV9cRwzCqqqtzubzj2P0DA8KsFBGR7we+78disXlz527dsuX6W29pnTPntkazyIggAELlkBttaoTAu+CS7qPHNj3//PGPP66qrkqlUkqp4Ww21PrTnh5mXV9ft2rV1VddufKJJ54ipXL5fKFQmFJTYzuOZVnHjh9/9rmN2cFsYX77HAqqSXzNIGBopBXtF/p972dmzf746NHa+ob29rb71t3bMue83bv37tu/3zLNDz882tbWtnPXqz/98Y++unTpxk0vrFx5hSKKx+M33rA6FnN27XrtcFdXV1dX3+lTdl2jhbTyKxe9uOsfiECmbTfXTXODwEml+/t6FyxYEAZhXW0tIj32+BMjIyOZTOa+dfck4jHLMn+7+XcbN216/NFf102bls/n//DHP/195866urpisZiIJxrq60dGskY8Ebpey6yZSATChu/7PadOXyDglkuWZb333vsDA4Pfuuab1163uqWl5ZGHH6qrq+vo2LH6hu/OmDXjtd17zp09e9Gi1pkzZ2Yy1S/+/qU1a74/b+7ckVxu2/aXe8+esS17aHQUSR0/cVKHISBR6Ll7333fUSrbezZTUzMyPPDF9rYgDDo7O3+x9o6f3Pbz3bv3vLB5c6oqzZpjjvONyy87cODgRRdf8krHn6+/7juL29q3bX/56quu7O7uDnUYS6VKZ05pzR2v7zcIRQSn1TVopB3NNLDixplX39DeuvDNN984cuTDw52dDQ0Nt99xZ119faFQiMdiIpJMptKpZG9fX7FYRMQHH7i/qbmpo2PHpo3PfqHtS6P53N/2v9259mb+4J+rPnGnkBRGCyqVTOWCsCyUHBnINp6HOlyx4utHj3509913bd22/fDhTqWUYajoP2HZVn//gIjYtl0slhYtav3Brbf4vmfbVrFYCsOwJpXq2775ucGgz9MGQhD4yoknbYLDZd7fn9vy0kuL2xYvXbq0ubnpyafWP73hmenTp39t+fJDh/5lWZYAhEFgmsZILnfxRV9uaprV8UpHqVxefumyTCaTy+WfXL/htV07X836Z3yJKdDCYRAQIohADIFIAWIQBOl0+u577v3NY48vWrjwZHd3e/viZcuWjeRy0az2PK922rTbf3ZbT0+PE4s9vX7Dzbf+sL9/INSh57poWAaRjSACCAgAKp5IQcUxwA+CxoaGbDb77w8+WHj++V1HjpTd8slPP11+6bJ9+94yTZOIstnsmjU3nT3Tu3XrtnQycUHrQsu2y2752LHj7x465MTsih0hAkAY+CqeSEVDXVgs2+4+cWJgcMjzvIMH3wmCwHFivb291Zkpvb1nPc9XSvlB8Ln5898+cGAoO1wS+uiTExAGJ0727N6zN+Y4Ew7xGQIEiEzYUMbp06f7BwYd20ZCZrYsS2seHBqMBrNjGrl8YXBoKAjCKxpSi6em3jo1ONjXFzUJx6Z99BAG3phEUnE8AbFMyzQMFgbAqJBcbgSYFSEL5Bn8QmGwVH6gZepjF9ZWg2w+XUzblfEOOPYOoogEgU8AEqFLxcOBhcdNHwGEWbMuaxnyNYvc1JB8fcms5dOSaQWsORcwRCYIExYtFQcFADB4DH6ygUdLIYQsLMKC56edz2ecvf3FRxdMTabstEKXgRBpMiqOeyFgNK0BjMnQ49oBAApkAz3FVCHCkkxsa/t0HYZLBkeH3DAWM4KKl1WaCSCAkygi0SPTFeHIf8dikESBqcx8XUNq35JZ986pqTKVrWDY0yBggihERaQQEYBk/N0x0AovRhsKw3Ai2ciEPlrge43JuWlTa50v+54felo8lhKRH7Ib6lIQBpqLIVcYZJIOIALAOgQAjMUTTizxX+EQAABYoMqktEFZL/QF6mOGr6XXDWpjpgVw1gsdRVNMlQt0NmRV0QfHiQjJLRdFBG3bsWzHMK3/5QhFtICBSAA+MwKYhAGLAFgKmSEUUYgGVuJjJauJIFEY+L7vERE6sbgw205cGaYITybASniMqqtcNkREAJ64DjJZHwRAIq1Dzy0hEhIpMxqTYUBISimslIEIkzsyNq0QYfKPE8AYxWNADIPA98pIhEhIqCzbQUAACQOPWQMiEiHiZ/VChP+zJvIriGitfa8cBB4pRUQR438AhoAPChDsiosAAAAASUVORK5CYII=" alt="">Lift Log</h1>
-    <div class="date" id="dateLabel"></div>
+    <div class="week-strip" id="weekStrip" aria-label="This week"></div>
   </div>
   <button class="cog-btn" onclick="openSettings()" aria-label="Settings">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
@@ -728,8 +827,8 @@
 </main>
 
 <div class="rest-fab-wrap">
-  <button class="rest-reset-btn" id="restResetBtn" onclick="resetRestTimer()" aria-label="Reset rusttimer" style="display:none;"></button>
-  <button class="rest-fab" id="restFab" onclick="toggleRestTimer()" aria-label="Start rusttimer">
+  <button class="rest-reset-btn" id="restResetBtn" onclick="resetRestTimer()" aria-label="Reset rest timer" style="display:none;"></button>
+  <button class="rest-fab" id="restFab" onclick="toggleRestTimer()" aria-label="Start rest timer">
     <span id="restFabIcon" class="rest-fab-icon"></span>
     <span id="restFabText" class="rest-fab-text" style="display:none;"></span>
   </button>
@@ -742,6 +841,18 @@
     <input type="text" class="plain-input" id="newExerciseName" placeholder="e.g. Romanian Deadlift" maxlength="40">
     <div class="section-title" style="margin-top:.8rem;">What do you track?</div>
     <div class="checklist" id="newExerciseMetrics"></div>
+    <div class="ex-field-grid">
+      <div id="targetRepsField">
+        <div class="section-title" style="margin-top:.8rem;">Target reps</div>
+        <input type="number" inputmode="numeric" min="3" max="50" class="plain-input" id="newExerciseTargetReps" placeholder="12">
+        <div class="ex-meta" style="margin-top:-.45rem;">Top of the rep range</div>
+      </div>
+      <div>
+        <div class="section-title" style="margin-top:.8rem;">Rest time (sec)</div>
+        <input type="number" inputmode="numeric" min="5" max="900" step="5" class="plain-input" id="newExerciseRest" placeholder="90">
+        <div class="ex-meta" style="margin-top:-.45rem;" id="newExerciseRestHint">Empty = default</div>
+      </div>
+    </div>
     <div class="section-title" style="margin-top:.8rem;">Muscle group tags (optional)</div>
     <div id="newExerciseTags"></div>
     <button type="button" class="add-set-btn" onclick="addExerciseTagField()">+ Add another tag</button>
@@ -760,7 +871,7 @@
       <div class="tab" id="tabExercisesBtn" onclick="switchTab('exercises')">Exercises</div>
       <div class="tab" id="tabTemplatesBtn" onclick="switchTab('templates')">Templates</div>
       <div class="tab" id="tabProgressBtn" onclick="switchTab('progress')">Progress</div>
-      <div class="tab" id="tabTimerBtn" onclick="switchTab('timer')">Timer</div>
+      <div class="tab" id="tabTimerBtn" onclick="switchTab('timer')">Workout</div>
       <button type="button" class="more-tab-btn" id="moreTabBtn" onclick="toggleMoreTabMenu(event)" aria-label="More">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.4" fill="currentColor" stroke="none"/></svg>
       </button>
@@ -810,6 +921,18 @@
     <p id="customAlertMsg" style="white-space:pre-wrap; font-size:var(--fs-md); line-height:1.6; margin:0 0 .9rem;"></p>
     <button type="button" class="btn primary" style="width:100%;" id="customAlertOk">OK</button>
   </div>
+</dialog>
+
+<!-- End-of-workout backup prompt (see maybeAskWorkoutBackup()) -->
+<dialog id="workoutBackupDialog">
+  <div class="dialog-head"><h3 id="workoutBackupTitle">Workout done</h3><button class="dialog-close" onclick="document.getElementById('workoutBackupDialog').close()">✕</button></div>
+  <div class="dialog-body" id="workoutBackupBody"></div>
+</dialog>
+
+<!-- New-version popup (see checkForUpdateOnLaunch()) -->
+<dialog id="updateDialog">
+  <div class="dialog-head"><h3>Update available</h3><button class="dialog-close" onclick="closeUpdateDialog()">✕</button></div>
+  <div class="dialog-body" id="updateDialogBody"></div>
 </dialog>
 
 <dialog id="customConfirmDialog">
@@ -870,7 +993,7 @@
 </dialog>
 
 <script>
-const APP_VERSION = '3.0.4';
+const APP_VERSION = '3.0.15';
 const STORE_KEY = 'liftlog_data_v2';
 
 // Some browsers (notably iOS Safari, especially when added to the home screen)
@@ -883,16 +1006,16 @@ if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 // Keep only the 10 most recent versions here, newest first, whenever a new version is published.
 const CHANGELOG = [
-  { version: '3.0.4', notes: ['Brought back the original, subtler light that runs around the next exercise after Save session — it still waits until that button is actually on screen before it starts'] },
-  { version: '3.0.3', notes: ['The light that runs around the next exercise after Save session now waits until that button is actually on screen before it starts'] },
-  { version: '3.0.2', notes: ['After Save session, a small light now runs once around the outline of the next exercise\'s button, so it\'s clear the app has moved on to it'] },
-  { version: '3.0.1', notes: ['After Save session the page now scrolls back to the top, so you can see it has moved on to the next exercise'] },
-  { version: '3.0.0', notes: ['Lift Log 3.0 — a milestone release bringing together everything added recently: choose per exercise whether to track weight, reps and/or duration; tick off sets as you go with the rest timer starting (and growing) automatically; compare last time with the session before at a glance with a trend icon; a light theme next to the dark one; tag suggestions while typing; and one-tap in-app updates that keep all your data'] },
-  { version: '2.9.40', notes: ['Swapped the two sides of the Last time panel: the session before is now on the left and last time on the right, so it reads from older to newer'] },
-  { version: '2.9.39', notes: ['Last time and the session before it now sit side by side, with the trend icon between them, in compact rows — so the panel takes about as much height as before and the Today logging isn\'t pushed down'] },
-  { version: '2.9.38', notes: ['The Last time panel now also shows the session before that (smaller, underneath), plus a trend icon next to the heading: a green line going up if last time was more than the time before, an orange flat line if it was the same, and a red line going down if it was less (based on total volume for weight + reps, total reps, or total time)'] },
-  { version: '2.9.37', notes: ['New "Check for updates" in Settings → ••• → Info: it looks online for a newer version and, if there is one, installs it with one tap — no need to remove and re-add the home-screen icon anymore, and all your exercises, templates and history stay where they are'] },
-  { version: '2.9.36', notes: ['Tick off sets as you go: the set number in Today is now a round button — tap it when a set is done and it turns green with a check, the next set to do gets an orange ring, and the rest timer automatically restarts and grows into the big clock. Your ticks survive switching exercises or closing the app, and reset the next day'] },
+  { version: '3.0.15', notes: ['Each exercise can now have its own target reps (12 by default, so the range is 8–12) and its own rest time (the default from Settings → Workout, 90 s, when left empty) — both in the exercise\'s edit screen. The rest timer switches to the selected exercise\'s rest time automatically, and both settings are included in CSV backups'] },
+  { version: '3.0.14', notes: ['The Timer settings tab is now called Workout, with two sections: Rest timer and Target for today. Tap the target above your sets to see how it was worked out (the rule that applied is highlighted), with a shortcut to turn targets off'] },
+  { version: '3.0.13', notes: ['The last few Dutch texts (rest time settings and the rest timer button labels) are now in English, like the rest of the app'] },
+  { version: '3.0.12', notes: ['Target for today: each exercise now opens with a small step up from last time already filled in — build reps from 8 to 12, then +2.5 kg and back to 8 — paced by how last time felt (Hard repeats, Easy adds weight). What went up is marked in orange, with the reason above the sets. Can be turned off in Settings → Workout'] },
+  { version: '3.0.11', notes: ['Week overview: the header now shows this week as seven dots (filled on days you trained) with a count of this week\'s workouts. Settings → Progress opens with this week vs last week (workouts, sets and volume, plus a bar per day) and a 12-week calendar of your training days'] },
+  { version: '3.0.10', notes: ['A workout summary now appears after the last exercise of a workout: how long it took, how many exercises and sets you did, your total volume, any new PRs, and which exercises went up compared with last time — with the backup button right below it'] },
+  { version: '3.0.9', notes: ['Templates you create yourself now appear at the top of the template list (and at the front of the template row) instead of at the bottom'] },
+  { version: '3.0.8', notes: ['Once you\'ve saved your first workout, "All" folds into a small list button at the start of the template row, and the app opens on the template you trained longest ago (or the one you\'re doing today) — so a rotating schedule lines up your next workout by itself. Tap the list button to show all exercises; picking a template or reopening the app folds it away again'] },
+  { version: '3.0.7', notes: ['After saving the last exercise of a workout, the app asks once whether you want to save a backup (CSV file). Not shown if Dropbox or GitHub backup is set up, since those already back up on every save'] },
+  { version: '3.0.6', notes: ['The app now checks for a new version by itself when it opens (and when you come back to it after a while). If there is one, a popup offers to back up first — to Dropbox/GitHub if you\'ve set that up, otherwise as a CSV file — and then update with one tap'] },
 ];
 
 const DEFAULT_EXERCISES = [
@@ -1106,6 +1229,13 @@ ensureDefaultExerciseTags();
 ensureDefaultExerciseMetrics();
 ensureSuggestedLibrary();
 let currentTemplate = 'All';
+// "All" collapses into a small list-icon chip once the app is in use (at
+// least one saved session) and there are templates to choose from. Tapping
+// it expands it and selects All for now; picking another template — or
+// reopening the app — collapses it again.
+let allExpanded = false;
+let allJustExpanded = false;
+const ALL_COLLAPSE_HINT_KEY = 'liftlog_all_collapse_hint_seen';
 let selectedExercise = null;
 let todaySets = [emptySet()];
 let todayFeel = '';
@@ -1145,11 +1275,30 @@ function setDoneFlags(){
 function saveSetDoneState(){
   try{ localStorage.setItem(SET_DONE_KEY, JSON.stringify(setDoneState)); }catch(e){}
 }
+// When today's workout started: the first set ticked off or the first
+// session saved, whichever comes first. Used for the duration in the
+// end-of-workout summary. Per day, in its own localStorage key.
+const WORKOUT_START_KEY = 'liftlog_workout_start';
+function markWorkoutStart(){
+  try{
+    const raw = JSON.parse(localStorage.getItem(WORKOUT_START_KEY) || 'null');
+    if(raw && raw.date === todayStr()) return;
+    localStorage.setItem(WORKOUT_START_KEY, JSON.stringify({ date: todayStr(), at: Date.now() }));
+  }catch(e){}
+}
+function workoutStartedAt(){
+  try{
+    const raw = JSON.parse(localStorage.getItem(WORKOUT_START_KEY) || 'null');
+    if(raw && raw.date === todayStr() && typeof raw.at === 'number') return raw.at;
+  }catch(e){}
+  return null;
+}
 function toggleSetDone(i){
   const flags = setDoneFlags();
   flags[i] = !flags[i];
   saveSetDoneState();
   if(flags[i]){
+    markWorkoutStart();
     lastTickedSetIdx = i;
     // A finished set means rest time: (re)start the timer from the full
     // rest period, which also makes it grow into the big clock.
@@ -1163,8 +1312,126 @@ const fmtDate = (iso) => {
   return d.toLocaleDateString(undefined, {month:'short', day:'numeric'});
 };
 
-document.getElementById('dateLabel').textContent =
-  new Date().toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric'});
+// ---------- Week overview ----------
+// Dates are the app's own YYYY-MM-DD strings; date maths is done in UTC so
+// it never shifts by a day around midnight or daylight-saving changes.
+// A "workout day" is any day with at least one saved exercise. Weeks start
+// on Monday.
+const WEEK_LETTERS = ['M','T','W','T','F','S','S'];
+function addDaysStr(d, n){
+  const t = new Date(d + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() + n);
+  return t.toISOString().slice(0, 10);
+}
+function mondayOf(d){
+  const dow = (new Date(d + 'T00:00:00Z').getUTCDay() + 6) % 7;
+  return addDaysStr(d, -dow);
+}
+// date -> { sets, volume } across all exercises.
+function dailyTotals(){
+  const map = {};
+  Object.entries(data.sessions || {}).forEach(([name, list]) => {
+    if(!Array.isArray(list)) return;
+    const m = exerciseMetricsByName(name);
+    const vol = m.includes('weight') && m.includes('reps');
+    list.forEach(s => {
+      const e = map[s.date] || (map[s.date] = { sets: 0, volume: 0 });
+      (s.sets || []).forEach(st => {
+        e.sets++;
+        if(vol) e.volume += (parseFloat(st.weight) || 0) * (parseFloat(st.reps) || 0);
+      });
+    });
+  });
+  return map;
+}
+function weekTotals(monday, totals){
+  const r = { workouts: 0, sets: 0, volume: 0, days: [] };
+  for(let i = 0; i < 7; i++){
+    const d = addDaysStr(monday, i), t = totals[d];
+    r.days.push({ date: d, sets: t ? t.sets : 0, volume: t ? t.volume : 0 });
+    if(t && t.sets){ r.workouts++; r.sets += t.sets; r.volume += t.volume; }
+  }
+  return r;
+}
+function renderWeekStrip(){
+  const el = document.getElementById('weekStrip');
+  if(!el) return;
+  const today = todayStr();
+  const wk = weekTotals(mondayOf(today), dailyTotals());
+  el.title = new Date().toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric'});
+  el.innerHTML = `<div class="week-days">${wk.days.map((d, i) =>
+    `<span class="week-day${d.sets ? ' done' : ''}${d.date === today ? ' today' : ''}" aria-label="${d.date}${d.sets ? ', trained' : ''}">${WEEK_LETTERS[i]}</span>`).join('')}</div>
+    <span class="week-count"><span class="num">${wk.workouts}</span> this week</span>`;
+}
+function fmtKg(v){
+  return v >= 10000 ? (Math.round(v / 100) / 10) + 'k' : String(Math.round(v));
+}
+function deltaHtml(cur, prev, pct){
+  if(!prev && !cur) return '';
+  if(pct){
+    if(!prev) return '';
+    const p = Math.round((cur - prev) / prev * 100);
+    return `<span class="wk-delta ${p > 0 ? 'up' : p < 0 ? 'down' : 'flat'}">${p > 0 ? '+' : ''}${p}%</span>`;
+  }
+  const d = cur - prev;
+  return `<span class="wk-delta ${d > 0 ? 'up' : d < 0 ? 'down' : 'flat'}">${d > 0 ? '+' : ''}${d}</span>`;
+}
+function weekOverviewHtml(){
+  const today = todayStr(), totals = dailyTotals(), mon = mondayOf(today);
+  const cur = weekTotals(mon, totals), prev = weekTotals(addDaysStr(mon, -7), totals);
+  const fmtShort = iso => new Date(iso + 'T00:00:00Z').toLocaleDateString(undefined, { month:'short', day:'numeric', timeZone:'UTC' });
+  const maxVol = Math.max(1, ...cur.days.map(d => d.volume));
+  const maxSets = Math.max(1, ...cur.days.map(d => d.sets));
+  const useVol = cur.days.some(d => d.volume > 0);
+  const bars = cur.days.map((d, i) => {
+    const v = useVol ? d.volume : d.sets;
+    const h = v ? Math.max(8, v / (useVol ? maxVol : maxSets) * 72) : 3;
+    const lbl = v ? (useVol ? fmtKg(v) : v + ' sets') : '';
+    return `<div class="wk-bar${d.date === today ? ' today' : ''}"><em>${lbl}</em><i class="${v ? '' : 'empty'}" style="height:${h}%"></i><span>${WEEK_LETTERS[i]}</span></div>`;
+  }).join('');
+
+  // 12-week calendar: columns are weeks (oldest left), rows are Mon–Sun.
+  const firstMon = addDaysStr(mon, -7 * 11);
+  const vols = [];
+  for(let i = 0; i < 84; i++){ const t = totals[addDaysStr(firstMon, i)]; if(t && t.sets) vols.push(t.volume || t.sets); }
+  vols.sort((a, b) => a - b);
+  const q = f => vols.length ? vols[Math.min(vols.length - 1, Math.floor(vols.length * f))] : 0;
+  const t1 = q(1/3), t2 = q(2/3);
+  let cal = '', count = 0;
+  for(let r = 0; r < 7; r++){
+    cal += `<span class="cal-dl">${r % 2 === 0 ? WEEK_LETTERS[r] : ''}</span>`;
+    for(let w = 0; w < 12; w++){
+      const d = addDaysStr(firstMon, w * 7 + r);
+      const t = totals[d];
+      let cls = 'cal-cell';
+      if(d > today) cls += ' future';
+      else if(t && t.sets){
+        const v = t.volume || t.sets;
+        cls += v <= t1 ? ' l1' : (v <= t2 ? ' l2' : ' l3');
+        count++;
+      }
+      if(d === today) cls += ' today';
+      cal += `<span class="${cls}" title="${d}${t && t.sets ? ` · ${t.sets} sets${t.volume ? ' · ' + fmtKg(t.volume) + ' kg' : ''}` : ''}"></span>`;
+    }
+  }
+  return `
+    <div class="wk-card">
+      <div class="wk-card-head"><span>This week · ${fmtShort(mon)} – ${fmtShort(addDaysStr(mon, 6))}</span><span>vs last week</span></div>
+      <div class="wk-stats">
+        <div class="wk-stat"><span class="num">${cur.workouts}${deltaHtml(cur.workouts, prev.workouts)}</span><span class="lbl">Workouts</span></div>
+        <div class="wk-stat"><span class="num">${cur.sets}${deltaHtml(cur.sets, prev.sets)}</span><span class="lbl">Sets</span></div>
+        <div class="wk-stat"><span class="num">${fmtKg(cur.volume)}${deltaHtml(cur.volume, prev.volume, true)}</span><span class="lbl">Volume (kg)</span></div>
+      </div>
+      <div class="wk-bars">${bars}</div>
+    </div>
+    <div class="wk-card">
+      <div class="wk-card-head"><span>Last 12 weeks</span></div>
+      <div class="cal-grid">${cal}</div>
+      <div class="cal-foot">
+        <span><span class="num">${count}</span> workout${count === 1 ? '' : 's'} in 12 weeks</span>
+        <span class="cal-legend">Less <span class="cal-cell"></span><span class="cal-cell l1"></span><span class="cal-cell l2"></span><span class="cal-cell l3"></span> More</span>
+      </div>
+    </div>`;
+}
 
 function visibleExerciseNames(){
   // When a specific template is selected, its own exercise order (set via the
@@ -1262,6 +1529,21 @@ function emptySet(){
 function setHasData(s){
   return !!s && (s.weight !== '' || s.reps !== '' || s.duration !== '');
 }
+// Per-exercise target reps (top of the rep range; the bottom is 4 lower)
+// and rest time. Empty = the defaults: 12 reps, and the rest time set in
+// Settings → Workout (90 s unless changed).
+const DEFAULT_TARGET_REPS = 12;
+function exerciseByName(name){ return data.exercises.find(e => e.name === name); }
+function repRangeFor(name){
+  const ex = exerciseByName(name);
+  const max = (ex && Number.isFinite(ex.targetReps) && ex.targetReps > 0) ? ex.targetReps : DEFAULT_TARGET_REPS;
+  return { min: Math.max(1, max - 4), max };
+}
+function restSecondsFor(name){
+  const ex = name ? exerciseByName(name) : null;
+  if(ex && Number.isFinite(ex.restSeconds) && ex.restSeconds > 0) return ex.restSeconds;
+  return (data.settings && data.settings.restSeconds) || 90;
+}
 function getBestValue(exercise, metric){
   const list = data.sessions[exercise] || [];
   let best = null;
@@ -1272,20 +1554,75 @@ function getBestValue(exercise, metric){
   return best;
 }
 
+function appInUse(){
+  return Object.values(data.sessions || {}).some(list => Array.isArray(list) && list.length > 0);
+}
+function visibleTemplates(){ return data.templates.filter(t => !t.hidden); }
+function allShouldCollapse(){
+  return appInUse() && visibleTemplates().length > 0 && !allExpanded && currentTemplate !== 'All';
+}
+// Most recent date a template was trained: recorded on Save session, or —
+// for sessions saved before this existed — the latest session of any of its
+// exercises. '' = never.
+function templateLastDone(t){
+  const rec = data.templateLastDone && data.templateLastDone[t.name];
+  if(rec) return rec;
+  let latest = '';
+  t.exercises.forEach(n => (data.sessions[n] || []).forEach(s => { if(s.date > latest) latest = s.date; }));
+  return latest;
+}
+// Template to open with: one trained today (you're mid-workout), otherwise
+// the one done longest ago (or never), so a rotating schedule lines up the
+// next workout by itself. Ties go to the order in the row.
+function pickStartupTemplate(){
+  const list = visibleTemplates();
+  if(!list.length) return 'All';
+  const today = todayStr();
+  const withDates = list.map(t => ({ name: t.name, last: templateLastDone(t) }));
+  const doingToday = withDates.find(x => x.last === today);
+  if(doingToday) return doingToday.name;
+  return withDates.reduce((a, b) => (b.last < a.last ? b : a)).name;
+}
+function showToast(msg, ms){
+  let el = document.getElementById('appToast');
+  if(!el){ el = document.createElement('div'); el.id = 'appToast'; el.className = 'app-toast'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
+  el.textContent = msg;
+  requestAnimationFrame(() => el.classList.add('show'));
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => el.classList.remove('show'), ms || 4500);
+}
+const listIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="8" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1" fill="currentColor" stroke="none"/></svg>`;
+
 function renderTemplateChips(){
   const row = document.getElementById('templateRow');
   row.innerHTML = '';
   const allChip = document.createElement('div');
-  allChip.className = 'chip' + (currentTemplate === 'All' ? ' active' : '');
-  allChip.textContent = 'All';
-  allChip.onclick = () => { currentTemplate = 'All'; ensureSelectedExercise(); render(); };
+  if(allShouldCollapse()){
+    allChip.className = 'chip all-collapsed';
+    allChip.innerHTML = listIcon;
+    allChip.setAttribute('role', 'button');
+    allChip.setAttribute('aria-label', 'Show all exercises');
+    allChip.title = 'Show all exercises';
+    allChip.onclick = () => { allExpanded = true; allJustExpanded = true; currentTemplate = 'All'; ensureSelectedExercise(); render(); };
+    try{
+      if(!localStorage.getItem(ALL_COLLAPSE_HINT_KEY)){
+        localStorage.setItem(ALL_COLLAPSE_HINT_KEY, '1');
+        setTimeout(() => showToast('"All" is now folded into the small list button at the start of the row — tap it to see all exercises.'), 900);
+      }
+    }catch(e){}
+  } else {
+    allChip.className = 'chip' + (currentTemplate === 'All' ? ' active' : '') + (allJustExpanded ? ' all-expanding' : '');
+    allChip.textContent = 'All';
+    allChip.onclick = () => { currentTemplate = 'All'; ensureSelectedExercise(); render(); };
+    allJustExpanded = false;
+  }
   row.appendChild(allChip);
 
-  data.templates.filter(t => !t.hidden).forEach(t => {
+  visibleTemplates().forEach(t => {
     const chip = document.createElement('div');
     chip.className = 'chip' + (currentTemplate === t.name ? ' active' : '');
     chip.textContent = t.name;
-    chip.onclick = () => { currentTemplate = t.name; ensureSelectedExercise(); render(); };
+    chip.onclick = () => { currentTemplate = t.name; allExpanded = false; ensureSelectedExercise(); render(); };
     row.appendChild(chip);
   });
 
@@ -1308,7 +1645,90 @@ function ensureSelectedExercise(){
   }
 }
 
+// ---------- Target for today (double progression) ----------
+// Suggests what to try today, based on last time: build reps up to 12, then
+// add 2.5 kg (1 kg below 10 kg) and drop back to 8 reps. How last time felt
+// sets the pace. The first matching rule wins:
+//   1. last time was lower than the time before → match the time before
+//   2. felt Hard → repeat last time
+//   3. every set at 12+ reps → more weight, back to 8 reps
+//   4. felt Easy → more weight, same reps (reps-only: +1 rep every set;
+//      duration-only: +10 s every set)
+//   5. otherwise → +1 rep on the weakest set (duration-only: +5 s per set;
+//      weight-only: more weight)
+// The suggested values replace last time's values as the pre-filled inputs;
+// what went up is marked. Can be turned off in Settings → Workout.
+// Rep range per exercise: see repRangeFor() (default 8–12).
+let todayTarget = null; // { exercise, head, why, base: [sets of last time] }
+function targetsEnabled(){ return !(data.settings && data.settings.targets === false); }
+function weightStep(w){ return w < 10 ? 1 : 2.5; }
+function roundW(v){ return String(Math.round(v * 100) / 100); }
+function computeTarget(last, prev, metrics, range){
+  const TARGET_REP_MIN = range.min, TARGET_REP_MAX = range.max;
+  const copy = sets => sets.map(s => ({ weight: s.weight || '', reps: s.reps || '', duration: s.duration || '' }));
+  const has = m => metrics.includes(m);
+  const num = v => parseFloat(v) || 0;
+  const feel = last.feel || '';
+  const feelWhy = feel ? `Last time felt ${feelLabel(feel)}` : `Adding one rep at a time (${TARGET_REP_MIN}–${TARGET_REP_MAX})`;
+  const sets = copy(last.sets);
+  if(prev){
+    const a = sessionScore(last, metrics).value, b = sessionScore(prev, metrics).value;
+    if(Math.round(a * 10) < Math.round(b * 10)){
+      return { rule: 1, sets: copy(prev.sets), head: 'Match the session before', why: 'Last time was lower than the time before' };
+    }
+  }
+  if(feel === 'hard') return { rule: 2, sets, head: 'Repeat last time', why: 'Last time felt Hard' };
+  const addWeight = () => { sets.forEach(s => { const w = num(s.weight); if(w > 0) s.weight = roundW(w + weightStep(w)); }); };
+  const topWeight = () => Math.max(...sets.map(s => num(s.weight)));
+  const hasWeight = has('weight') && sets.some(s => num(s.weight) > 0);
+  if(has('weight') && has('reps') && hasWeight && sets.every(s => num(s.reps) >= TARGET_REP_MAX)){
+    addWeight(); sets.forEach(s => { s.reps = String(TARGET_REP_MIN); });
+    return { rule: 3, sets, head: `Up to ${topWeight()} kg, back to ${TARGET_REP_MIN} reps`, why: `All sets reached ${TARGET_REP_MAX} reps` };
+  }
+  if(feel === 'easy'){
+    if(hasWeight){ addWeight(); return { rule: 4, sets, head: `Up to ${topWeight()} kg`, why: feelWhy }; }
+    if(has('reps')){ sets.forEach(s => { s.reps = String(num(s.reps) + 1); }); return { rule: 4, sets, head: '+1 rep on every set', why: feelWhy }; }
+    if(has('duration')){ sets.forEach(s => { s.duration = String(num(s.duration) + 10); }); return { rule: 4, sets, head: '+10 sec per set', why: feelWhy }; }
+  }
+  if(has('reps')){
+    let wi = 0;
+    sets.forEach((s, i) => { if(num(s.reps) < num(sets[wi].reps)) wi = i; });
+    sets[wi].reps = String(num(sets[wi].reps) + 1);
+    return { rule: 5, sets, head: sets.length > 1 ? `+1 rep on set ${wi + 1}` : '+1 rep', why: feelWhy };
+  }
+  if(has('duration')){
+    sets.forEach(s => { s.duration = String(num(s.duration) + 5); });
+    return { rule: 5, sets, head: '+5 sec per set', why: feel ? feelWhy : 'Adding a little time each session' };
+  }
+  if(hasWeight){ addWeight(); return { rule: 5, sets, head: `Up to ${topWeight()} kg`, why: feel ? feelWhy : 'A small step up' }; }
+  return { rule: 0, sets, head: 'Repeat last time', why: '' };
+}
+let targetInfoOpen = false;
+function toggleTargetInfo(){ targetInfoOpen = !targetInfoOpen; renderContent(); }
+function openTargetSettings(){
+  openSettings();
+  switchTab('timer');
+  setTimeout(() => { const el = document.getElementById('targetSettings'); if(el) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 50);
+}
+function targetInfoHtml(rule, range){
+  const TARGET_REP_MIN = range.min, TARGET_REP_MAX = range.max;
+  const rules = [
+    'Last time lower than the time before → match that session first',
+    'Felt Hard → repeat last time',
+    `Every set at ${TARGET_REP_MAX} reps → +2.5 kg (1 kg under 10 kg), back to ${TARGET_REP_MIN} reps`,
+    'Felt Easy → more weight, same reps',
+    'Otherwise → +1 rep on the weakest set'
+  ];
+  return `<div class="target-info">
+    The first rule that fits sets today's target:
+    <ol>${rules.map((r, i) => `<li${rule === i + 1 ? ' class="hit"' : ''}>${escAttr(r)}</li>`).join('')}</ol>
+    Target reps for this exercise: ${TARGET_REP_MAX} (change it in the exercise's edit screen). Change any number if it's too much. <button type="button" onclick="openTargetSettings()">Turn off in settings</button>
+  </div>`;
+}
+const targetIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg>`;
+
 function loadTodayState(exerciseName){
+  todayTarget = null;
   const list = data.sessions[exerciseName] || [];
   const todaysExisting = list.find(s => s.date === todayStr());
   if(todaysExisting){
@@ -1320,6 +1740,13 @@ function loadTodayState(exerciseName){
   const last = getLastSession(exerciseName);
   if(last && last.sets.length){
     todaySets = last.sets.map(s => ({ weight: s.weight || '', reps: s.reps || '', duration: s.duration || '' }));
+    if(targetsEnabled()){
+      const metrics = ['weight','reps','duration'].filter(m => exerciseMetricsByName(exerciseName).includes(m));
+      const range = repRangeFor(exerciseName);
+      const t = computeTarget(last, getPrevSession(exerciseName), metrics, range);
+      todayTarget = { exercise: exerciseName, range, rule: t.rule, head: t.head, why: t.why, base: last.sets, pre: t.sets.map(s => ({ ...s })) };
+      todaySets = t.sets;
+    }
   } else {
     todaySets = [emptySet()];
   }
@@ -1353,12 +1780,7 @@ function renderExerciseChips(){
   addChip.textContent = '+ Add';
   addChip.onclick = () => {
     if(currentTemplate === 'All'){
-      editingExerciseIndex = null;
-      document.getElementById('exerciseDialogTitle').textContent = 'Add exercise';
-      document.getElementById('exerciseDialogConfirmBtn').textContent = 'Add';
-      document.getElementById('newExerciseName').value = '';
-      resetExerciseTagFields();
-      document.getElementById('addExerciseDialog').showModal();
+      openAddExerciseFromSettings();
     } else {
       // With a specific template selected, "+ Add" adds an *existing*
       // exercise to that template rather than creating a brand-new one —
@@ -1446,7 +1868,24 @@ function openAddExerciseFromSettings(){
   resetExerciseTagFields();
   newExerciseMetrics = ['weight','reps'];
   renderNewExerciseMetrics();
+  fillExerciseExtraFields(null);
   document.getElementById('addExerciseDialog').showModal();
+}
+function fillExerciseExtraFields(ex){
+  document.getElementById('newExerciseTargetReps').value = ex && Number.isFinite(ex.targetReps) ? ex.targetReps : '';
+  document.getElementById('newExerciseRest').value = ex && Number.isFinite(ex.restSeconds) ? ex.restSeconds : '';
+  document.getElementById('newExerciseRest').placeholder = String((data.settings && data.settings.restSeconds) || 90);
+  document.getElementById('newExerciseRestHint').textContent = `Empty = default (${(data.settings && data.settings.restSeconds) || 90} s)`;
+  syncTargetRepsField();
+}
+// Target reps only means something when the exercise tracks reps.
+function syncTargetRepsField(){
+  const f = document.getElementById('targetRepsField');
+  if(f) f.style.display = newExerciseMetrics.includes('reps') ? '' : 'none';
+}
+function readPositiveInt(id, min, max){
+  const n = parseInt(document.getElementById(id).value, 10);
+  return (isNaN(n) || n < min) ? undefined : Math.min(n, max);
 }
 
 let editingExerciseIndex = null; // null = adding a new exercise, index = editing existing one
@@ -1461,6 +1900,7 @@ function openEditExercise(i){
   renderNewExerciseTags();
   newExerciseMetrics = exerciseMetrics(ex).slice();
   renderNewExerciseMetrics();
+  fillExerciseExtraFields(ex);
   document.getElementById('addExerciseDialog').showModal();
 }
 
@@ -1480,6 +1920,7 @@ function toggleNewExerciseMetric(m){
     newExerciseMetrics = newExerciseMetrics.concat(m);
   }
   renderNewExerciseMetrics();
+  syncTargetRepsField();
 }
 
 let newExerciseTagInputs = [''];
@@ -1561,6 +2002,8 @@ function confirmAddExercise(){
   const tags = [...new Map(newExerciseTagInputs.map(t => t.trim()).filter(Boolean)
     .map(t => [t.toLowerCase(), knownTags.get(t.toLowerCase()) || t])).values()];
   const metrics = ['weight','reps','duration'].filter(m => newExerciseMetrics.includes(m));
+  const targetReps = metrics.includes('reps') ? readPositiveInt('newExerciseTargetReps', 3, 50) : undefined;
+  const restSeconds = readPositiveInt('newExerciseRest', 5, 900);
   if(!name){ document.getElementById('addExerciseDialog').close(); return; }
 
   if(editingExerciseIndex !== null){
@@ -1584,12 +2027,18 @@ function confirmAddExercise(){
     }
     ex.tags = tags;
     ex.metrics = metrics;
+    ex.targetReps = targetReps; ex.restSeconds = restSeconds;
+    if(ex.targetReps === undefined) delete ex.targetReps;
+    if(ex.restSeconds === undefined) delete ex.restSeconds;
     saveData();
     render();
     renderExerciseSettings();
     renderTemplateSettings();
   } else if(!data.exercises.some(e => e.name === name)){
-    data.exercises.push({ name, hidden:false, tags, metrics });
+    const nex = { name, hidden:false, tags, metrics };
+    if(targetReps !== undefined) nex.targetReps = targetReps;
+    if(restSeconds !== undefined) nex.restSeconds = restSeconds;
+    data.exercises.push(nex);
     selectedExercise = name;
     todaySets = [emptySet()];
     todayFeel = '';
@@ -1665,10 +2114,20 @@ function renderContent(){
   const wraps = activeMetrics.length > 2;
   const doneFlags = setDoneFlags();
   const nextIdx = doneFlags.slice(0, todaySets.length).indexOf(false);
+  const tgt = (todayTarget && todayTarget.exercise === selectedExercise) ? todayTarget : null;
+  const raised = (i, m) => {
+    if(!tgt) return false;
+    const b = tgt.base[i];
+    const cur = parseFloat(todaySets[i][m]);
+    return !isNaN(cur) && (!b || cur > (parseFloat(b[m]) || 0));
+  };
   const todayRows = todaySets.map((s, i) => {
     const v = parseFloat(s[primary]);
-    const isPr = best !== null && !isNaN(v) && v > best;
     const done = !!doneFlags[i];
+    // A pre-filled target isn't a PR yet: only badge it once the set is
+    // ticked off or the value was changed by hand.
+    const untouchedTarget = tgt && tgt.pre[i] && !done && String(s[primary]) === String(tgt.pre[i][primary]);
+    const isPr = best !== null && !isNaN(v) && v > best && !untouchedTarget;
     const checkCls = 'set-check' + (done ? ' done' : (i === nextIdx ? ' next' : '')) + (done && i === lastTickedSetIdx ? ' pop' : '');
     return `
     <div class="set-row${done ? ' is-done' : ''}" style="grid-template-columns:2.4rem repeat(${todayCols},1fr) 1.8rem;">
@@ -1677,11 +2136,11 @@ function renderContent(){
       <div class="set-cell"${wraps && mi >= 2 ? ` style="grid-column:${2 + (mi - 2)}; grid-row:2;"` : ''}>
         <div class="stepper">
           <button class="stepper-btn" onclick="stepValue(${i},'${m}',-${metricStep(m)})" aria-label="Decrease ${metricLabel(m).toLowerCase()}">−</button>
-          <input class="field" type="number" inputmode="${m === 'weight' ? 'decimal' : 'numeric'}" placeholder="${last && last.sets[i] ? (last.sets[i][m] || '0') : '0'}"
+          <input class="field${raised(i, m) ? ' target-up' : ''}" type="number" inputmode="${m === 'weight' ? 'decimal' : 'numeric'}" placeholder="${last && last.sets[i] ? (last.sets[i][m] || '0') : '0'}"
             value="${s[m]}" oninput="updateSet(${i},'${m}',this.value); fitFieldText(this)">
           <button class="stepper-btn" onclick="stepValue(${i},'${m}',${metricStep(m)})" aria-label="Increase ${metricLabel(m).toLowerCase()}">+</button>
         </div>
-        <span class="unit">${metricUnit(m)}</span>
+        <span class="unit${raised(i, m) ? ' target-up' : ''}">${raised(i, m) ? '▲ ' : ''}${metricUnit(m)}</span>
       </div>`).join('')}
       <button class="icon-btn remove-set" onclick="removeSet(${i})" aria-label="Remove set"${wraps ? ` style="grid-column:${todayCols + 2}; grid-row:1;"` : ''}>✕</button>
       ${isPr ? `<span class="pr-badge">PR</span>` : ''}
@@ -1694,6 +2153,7 @@ function renderContent(){
     ${lastHtml}
     <div class="panel today-panel">
       <h2>Today</h2>
+      ${tgt ? `<div class="target-line${targetInfoOpen ? ' open' : ''}" role="button" aria-expanded="${targetInfoOpen}" onclick="toggleTargetInfo()">${targetIcon}<span><strong>Target: ${escAttr(tgt.head)}</strong>${tgt.why ? `<span class="why">${escAttr(tgt.why)}</span>` : ''}</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>${targetInfoOpen ? targetInfoHtml(tgt.rule, tgt.range) : ''}` : ''}
       ${todayRows}
       <button class="add-set-btn" onclick="addSet()">+ Add set</button>
       <div class="row-label" style="margin-top:.9rem;">How did it feel? (optional)</div>
@@ -1875,6 +2335,7 @@ function feelBadgeHtml(f){
 function saveSession(){
   const cleanSets = todaySets.filter(setHasData);
   if(cleanSets.length === 0) return;
+  markWorkoutStart();
 
   if(!data.sessions[selectedExercise]) data.sessions[selectedExercise] = [];
   const list = data.sessions[selectedExercise];
@@ -1886,6 +2347,10 @@ function saveSession(){
     list[existingIdx].note = trimmedNote;
   } else {
     list.push({ date: todayStr(), sets: cleanSets, feel: todayFeel, note: trimmedNote });
+  }
+  if(currentTemplate !== 'All'){
+    if(!data.templateLastDone || typeof data.templateLastDone !== 'object') data.templateLastDone = {};
+    data.templateLastDone[currentTemplate] = todayStr();
   }
   saveData();
   autoBackupAll();
@@ -1924,6 +2389,9 @@ function saveSession(){
   // Then, once that scroll has settled and the chip is in view, trace a
   // light around the newly selected exercise. Skipped when there was no next
   // exercise, and for anyone with "Reduce Motion" turned on.
+  // Saved the last exercise of the view (end of the workout): show the
+  // workout summary (with a backup offer).
+  if(!movedOn) setTimeout(maybeAskWorkoutBackup, 700);
   const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(movedOn && !reduceMotion){
     setTimeout(() => {
@@ -1931,6 +2399,118 @@ function saveSession(){
       if(chip) whenFullyVisible(chip, () => traceChipOutline(chip), 6000);
     }, 800);
   }
+}
+
+// After saving the last exercise of a template (or of "All"), ask once per
+// workout per day whether to save a backup. Skipped when Dropbox/GitHub is
+// set up — those already back up automatically on every save.
+const WORKOUT_BACKUP_ASKED_KEY = 'liftlog_workout_backup_asked';
+function maybeAskWorkoutBackup(){
+  if(document.querySelector('dialog[open]')) return;
+  const key = todayStr() + '|' + currentTemplate;
+  try{ if(localStorage.getItem(WORKOUT_BACKUP_ASKED_KEY) === key) return; }catch(e){}
+  try{ localStorage.setItem(WORKOUT_BACKUP_ASKED_KEY, key); }catch(e){}
+  workoutSummaryCache = buildWorkoutSummary();
+  renderWorkoutBackupDialog('ask');
+  document.getElementById('workoutBackupDialog').showModal();
+}
+
+// Everything logged today for the exercises in the current view, compared
+// with each exercise's history before today.
+let workoutSummaryCache = null;
+function buildWorkoutSummary(){
+  const today = todayStr();
+  const names = visibleExerciseNames();
+  const done = [];
+  let sets = 0, volume = 0, reps = 0, seconds = 0;
+  const prs = [], trends = [];
+  names.forEach(name => {
+    const list = data.sessions[name] || [];
+    const todays = list.find(s => s.date === today);
+    if(!todays) return;
+    const metrics = ['weight','reps','duration'].filter(m => exerciseMetricsByName(name).includes(m));
+    done.push(name);
+    sets += todays.sets.length;
+    todays.sets.forEach(st => {
+      const w = parseFloat(st.weight) || 0, r = parseFloat(st.reps) || 0, d = parseFloat(st.duration) || 0;
+      if(metrics.includes('weight') && metrics.includes('reps')) volume += w * r;
+      if(metrics.includes('reps')) reps += r;
+      if(metrics.includes('duration')) seconds += d;
+    });
+    // PR: best value of the main metric today beats every earlier session.
+    const primary = primaryMetric(metrics);
+    const past = list.filter(s => s.date !== today);
+    const bestOf = sess => sess.reduce((b, s) => s.sets.reduce((bb, st) => { const v = parseFloat(st[primary]); return !isNaN(v) && v > bb ? v : bb; }, b), -Infinity);
+    const todayBest = bestOf([todays]);
+    const pastBest = bestOf(past);
+    if(past.length && todayBest > pastBest && todayBest > 0){
+      prs.push({ name, value: todayBest, unit: metricUnit(primary) });
+    }
+    // Better / same / worse than the previous session of this exercise.
+    const prev = past.length ? past[past.length - 1] : null;
+    if(prev){
+      const a = sessionScore(todays, metrics).value, b = sessionScore(prev, metrics).value;
+      const r1 = v => Math.round(v * 10) / 10;
+      trends.push({ name, dir: r1(a) > r1(b) ? 'up' : (r1(a) < r1(b) ? 'down' : 'flat') });
+    }
+  });
+  const start = workoutStartedAt();
+  const minutes = start ? Math.round((Date.now() - start) / 60000) : null;
+  return { done, sets, volume, reps, seconds, prs, trends, minutes };
+}
+function fmtVolume(kg){
+  return kg >= 10000 ? (Math.round(kg / 100) / 10).toLocaleString('en-US') + 'k' : Math.round(kg).toLocaleString('en-US');
+}
+function fmtMinutes(m){
+  if(m < 60) return `${m}<small>min</small>`;
+  return `${Math.floor(m / 60)}<small>h</small> ${m % 60}<small>min</small>`;
+}
+function renderWorkoutBackupDialog(phase){
+  const el = document.getElementById('workoutBackupBody');
+  if(!el) return;
+  const close = `document.getElementById('workoutBackupDialog').close()`;
+  if(phase === 'done'){
+    el.innerHTML = `
+    <p class="update-msg">Backup file created. Make sure it's saved somewhere safe, like Files or iCloud Drive.</p>
+    <div class="update-actions"><button type="button" class="btn primary" onclick="${close}">Done</button></div>`;
+    return;
+  }
+  const s = workoutSummaryCache || buildWorkoutSummary();
+  const title = document.getElementById('workoutBackupTitle');
+  if(title) title.textContent = currentTemplate === 'All' ? 'Workout done' : `${currentTemplate} done`;
+  const tiles = [];
+  if(s.minutes !== null && s.minutes >= 1) tiles.push(`<div class="ws-stat"><span class="num">${fmtMinutes(s.minutes)}</span><span class="ws-stat-label">Duration</span></div>`);
+  tiles.push(`<div class="ws-stat"><span class="num">${s.done.length}</span><span class="ws-stat-label">Exercise${s.done.length === 1 ? '' : 's'}</span></div>`);
+  tiles.push(`<div class="ws-stat"><span class="num">${s.sets}</span><span class="ws-stat-label">Sets</span></div>`);
+  if(s.volume > 0) tiles.push(`<div class="ws-stat"><span class="num">${fmtVolume(s.volume)}<small>kg</small></span><span class="ws-stat-label">Total volume</span></div>`);
+  else if(s.reps > 0) tiles.push(`<div class="ws-stat"><span class="num">${s.reps}</span><span class="ws-stat-label">Total reps</span></div>`);
+  else if(s.seconds > 0) tiles.push(`<div class="ws-stat"><span class="num">${fmtTime(s.seconds)}</span><span class="ws-stat-label">Total time</span></div>`);
+  const up = s.trends.filter(t => t.dir === 'up');
+  const down = s.trends.filter(t => t.dir === 'down');
+  const prHtml = s.prs.length ? `
+    <div class="ws-list-title"><span class="ws-pr">${s.prs.length} new PR${s.prs.length === 1 ? '' : 's'}</span></div>
+    <ul class="ws-list">${s.prs.map(p => `<li><span>${escAttr(p.name)}</span><span><span class="num">${p.value}</span> ${p.unit}</span></li>`).join('')}</ul>` : '';
+  const upHtml = up.length ? `
+    <div class="ws-list-title"><span class="trend-icon up" style="width:1.3rem;height:1.3rem;border-radius:5px;">${TREND_ICONS.up}</span>Better than last time</div>
+    <ul class="ws-list">${up.map(t => `<li><span>${escAttr(t.name)}</span><span></span></li>`).join('')}</ul>` : '';
+  const trendNote = s.trends.length
+    ? `<p class="ws-note">${up.length} of ${s.trends.length} exercises went up${down.length ? `, ${down.length} went down` : ''} compared with last time.</p>` : '';
+  const cloud = hasCloudBackup();
+  el.innerHTML = `
+    <p class="ws-lead"><strong>Nice work!</strong> Here's what you did today.</p>
+    <div class="ws-stats">${tiles.join('')}</div>
+    ${prHtml}${upHtml}${trendNote}
+    ${cloud ? `<p class="ws-note">Your data is backed up automatically.</p>` : ''}
+    <div class="update-actions">
+      ${cloud
+        ? `<button type="button" class="btn primary" onclick="${close}">Done</button>`
+        : `<button type="button" class="btn primary" onclick="workoutBackupNow()">Back up now (save CSV file)</button>
+           <button type="button" class="update-later" onclick="${close}">Close</button>`}
+    </div>`;
+}
+async function workoutBackupNow(){
+  await exportCSV();
+  renderWorkoutBackupDialog('done');
 }
 
 // Runs cb once el is (nearly) fully on screen — right away if it already
@@ -2258,28 +2838,123 @@ function updateRowMeta(){
     default: return `Currently v${APP_VERSION}`;
   }
 }
+// Reads the APP_VERSION of the page as it's currently published online.
+async function fetchPublishedVersion(){
+  const res = await fetch(appPageUrl() + '?check=' + Date.now(), { cache: 'no-store' });
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  const text = await res.text();
+  const m = text.match(/const APP_VERSION = '([\d.]+)'/);
+  if(!m) throw new Error('No version found');
+  return m[1];
+}
+function installUpdate(){ location.replace(appPageUrl() + '?v=' + Date.now()); }
+
 async function onUpdateRowClick(){
   if(updateCheck.status === 'checking') return;
   if(updateCheck.status === 'available'){
-    const ok = await showConfirm(`Update to v${updateCheck.version} now?\n\nYour exercises, templates and history stay saved. Anything typed in Today but not yet saved will be cleared.`);
-    if(ok) location.replace(appPageUrl() + '?v=' + Date.now());
+    openUpdateDialog(updateCheck.version);
     return;
   }
   updateCheck = { status: 'checking', version: null };
   renderInfoSettings();
   try{
-    const res = await fetch(appPageUrl() + '?check=' + Date.now(), { cache: 'no-store' });
-    if(!res.ok) throw new Error('HTTP ' + res.status);
-    const text = await res.text();
-    const m = text.match(/const APP_VERSION = '([\d.]+)'/);
-    if(!m) throw new Error('No version found');
-    updateCheck = compareVersions(m[1], APP_VERSION) > 0
-      ? { status: 'available', version: m[1] }
-      : { status: 'latest', version: m[1] };
+    const v = await fetchPublishedVersion();
+    updateCheck = compareVersions(v, APP_VERSION) > 0
+      ? { status: 'available', version: v }
+      : { status: 'latest', version: v };
   }catch(e){
     updateCheck = { status: 'error', version: null };
   }
   renderInfoSettings();
+}
+
+// Automatic check: when the app opens, and again when it comes back to the
+// foreground after a while (an iPhone home-screen app is usually resumed
+// rather than restarted). If a newer version is online, a popup offers to
+// back up first. Quiet when offline, when the check fails (e.g. in a
+// preview), and — for this app session — after "Later".
+const UPDATE_RECHECK_MS = 60 * 60 * 1000;
+let lastUpdateCheckAt = 0;
+let updatePopupDismissedFor = null;
+let updateDialogState = { version: null, phase: 'ask', status: '', warn: false }; // phase: ask | backing-up | backed-up
+async function checkForUpdateOnLaunch(){
+  if(navigator.onLine === false) return;
+  lastUpdateCheckAt = Date.now();
+  let v;
+  try{ v = await fetchPublishedVersion(); }catch(e){ return; }
+  if(compareVersions(v, APP_VERSION) <= 0) return;
+  updateCheck = { status: 'available', version: v };
+  if(updatePopupDismissedFor === v) return;
+  if(document.querySelector('dialog[open]')) return; // don't interrupt another dialog
+  openUpdateDialog(v);
+}
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible' && !restRunning && Date.now() - lastUpdateCheckAt > UPDATE_RECHECK_MS){
+    checkForUpdateOnLaunch();
+  }
+});
+function openUpdateDialog(version){
+  updateDialogState = { version, phase: 'ask', status: '', warn: false };
+  renderUpdateDialog();
+  const dlg = document.getElementById('updateDialog');
+  if(!dlg.open) dlg.showModal();
+}
+function closeUpdateDialog(){
+  updatePopupDismissedFor = updateDialogState.version;
+  document.getElementById('updateDialog').close();
+}
+function hasCloudBackup(){
+  ensureSettings();
+  return !!(data.settings.dropboxToken || '').trim() || (!!(data.settings.githubToken || '').trim() && !!parseGithubRepo());
+}
+function renderUpdateDialog(){
+  const el = document.getElementById('updateDialogBody');
+  if(!el) return;
+  const s = updateDialogState;
+  const backupLabel = hasCloudBackup() ? 'Back up first' : 'Back up first (save CSV file)';
+  el.innerHTML = `
+    <p class="update-msg">Version <span class="num">${escAttr(s.version)}</span> of Lift Log is ready (you have <span class="num">${APP_VERSION}</span>).
+    Your exercises, templates and history stay saved when you update — but a backup first is always a good idea.
+    Anything typed in Today but not yet saved will be cleared.</p>
+    <div class="update-status${s.warn ? ' warn' : ''}">${escAttr(s.status)}</div>
+    <div class="update-actions">
+      ${s.phase === 'backed-up'
+        ? `<button type="button" class="btn primary" onclick="installUpdate()">Update now</button>`
+        : `<button type="button" class="btn primary" onclick="backupBeforeUpdate()" ${s.phase === 'backing-up' ? 'disabled' : ''}>${s.phase === 'backing-up' ? 'Backing up…' : backupLabel}</button>
+           <button type="button" class="btn" onclick="installUpdate()">Update without backup</button>`}
+      <button type="button" class="update-later" onclick="closeUpdateDialog()">Later</button>
+    </div>`;
+}
+// Uses the cloud backup (Dropbox / GitHub) when one is set up; otherwise
+// saves a CSV file with the same export as Settings → Data.
+async function backupBeforeUpdate(){
+  updateDialogState.phase = 'backing-up';
+  updateDialogState.status = '';
+  renderUpdateDialog();
+  if(hasCloudBackup()){
+    const csv = buildCSV();
+    const tasks = [];
+    if((data.settings.dropboxToken || '').trim()) tasks.push(uploadToDropbox(csv).then(r => ({ service: 'Dropbox', ok: !!(r && r.ok) })).catch(() => ({ service: 'Dropbox', ok: false })));
+    if((data.settings.githubToken || '').trim() && parseGithubRepo()) tasks.push(uploadToGithub(csv).then(r => ({ service: 'GitHub', ok: !!(r && r.ok) })).catch(() => ({ service: 'GitHub', ok: false })));
+    const results = await Promise.all(tasks);
+    const ok = results.filter(r => r.ok).map(r => r.service);
+    const failed = results.filter(r => !r.ok).map(r => r.service);
+    if(failed.length && !ok.length){
+      updateDialogState.phase = 'ask';
+      updateDialogState.warn = true;
+      updateDialogState.status = `Backup to ${failed.join(' & ')} failed. Try again, or update without backup.`;
+    } else {
+      updateDialogState.phase = 'backed-up';
+      updateDialogState.warn = !!failed.length;
+      updateDialogState.status = `Backed up to ${ok.join(' & ')}.` + (failed.length ? ` (${failed.join(' & ')} failed.)` : '');
+    }
+  } else {
+    await exportCSV();
+    updateDialogState.phase = 'backed-up';
+    updateDialogState.warn = false;
+    updateDialogState.status = 'Backup file created — make sure it\'s saved, then tap Update now.';
+  }
+  renderUpdateDialog();
 }
 // After updating, tidy the one-off ?v= off the address so it doesn't stick around.
 if(/[?&]v=\d+/.test(location.search)){
@@ -2368,12 +3043,16 @@ function renderExerciseSettings(){
       const exMetrics = exerciseMetrics(ex);
       const metricsHtml = (exMetrics.length === 2 && exMetrics.includes('weight') && exMetrics.includes('reps'))
         ? '' : `<div class="ex-meta">Tracks: ${exMetrics.map(metricLabel).join(', ')}</div>`;
+      const customBits = [];
+      if(exMetrics.includes('reps') && Number.isFinite(ex.targetReps)) customBits.push(`Target ${ex.targetReps} reps`);
+      if(Number.isFinite(ex.restSeconds)) customBits.push(`Rest ${fmtTime(ex.restSeconds)}`);
+      const customHtml = customBits.length ? `<div class="ex-meta">${customBits.join(' · ')}</div>` : '';
       return `
       <div class="settings-row">
         <div class="ex-info">
           <span class="name ${ex.hidden ? 'hidden-ex' : ''}">${escAttr(ex.name)}${ex.builtin ? '<span class="builtin-dot" title="Built-in exercise"></span>' : ''}</span>
           ${tagsHtml}
-          ${metricsHtml}
+          ${metricsHtml}${customHtml}
           ${usedInHtml}
         </div>
         <button class="icon-btn edit-icon" onclick="openEditExercise(${i})" aria-label="Edit">✎</button>
@@ -2607,13 +3286,22 @@ function confirmSaveTemplate(){
 
   if(editingTemplateName){
     const t = data.templates.find(x => x.name === editingTemplateName);
-    if(t){ t.name = name; t.exercises = chosen; }
+    if(t){
+      if(t.name !== name && data.templateLastDone && data.templateLastDone[t.name]){
+        data.templateLastDone[name] = data.templateLastDone[t.name];
+        delete data.templateLastDone[t.name];
+      }
+      if(currentTemplate === t.name) currentTemplate = name;
+      t.name = name; t.exercises = chosen;
+    }
   } else {
     if(data.templates.some(t => t.name === name)){
       showAlert('A template with this name already exists.');
       return;
     }
-    data.templates.push({ name, exercises: chosen });
+    // New templates go to the top of the list (and so to the front of the
+    // template row on the home screen), where you're most likely to want them.
+    data.templates.unshift({ name, exercises: chosen });
   }
   saveData();
   document.getElementById('templateDialog').close();
@@ -2681,6 +3369,7 @@ function renderProgressSettings(){
       : data.exercises[0].name;
   }
   el.innerHTML = `
+    ${weekOverviewHtml()}
     <div class="row-label">Exercise</div>
     <select class="plain-input" id="progressExerciseSelect" onchange="setProgressExercise(this.value)">
       ${data.exercises.map(ex => `<option value="${escAttr(ex.name)}" ${ex.name === progressExercise ? 'selected' : ''}>${escAttr(ex.name)}</option>`).join('')}
@@ -2916,19 +3605,33 @@ function renderTimerSettings(){
   if(!el) return;
   ensureSettings();
   el.innerHTML = `
-    <div class="section-title">Standaard rusttijd tussen sets. Te starten via de klokknop rechtsonder.</div>
+    <h4 class="settings-h">Rest timer</h4>
+    <div class="ex-meta" style="margin-bottom:.5rem;">Default rest time between sets (90 s unless you change it). Exercises can have their own rest time in their edit screen. Start it with the clock button at the bottom right, or by ticking off a set.</div>
     <div class="checklist" style="margin-bottom:.9rem;">
       ${REST_PRESETS.map(s => `<div class="check-chip ${data.settings.restSeconds === s ? 'on' : ''}" onclick="setRestPreset(${s})">${fmtTime(s)}</div>`).join('')}
     </div>
-    <div class="row-label">Aangepast (seconden)</div>
+    <div class="row-label">Custom (seconds)</div>
     <input type="number" inputmode="numeric" min="5" max="900" step="5" class="plain-input" id="restSecondsInput"
       value="${data.settings.restSeconds}" oninput="setRestSecondsFromInput(this.value)">
+    <h4 class="settings-h" id="targetSettings" style="margin-top:1.3rem;padding-top:1rem;border-top:1px solid var(--border);">Target for today</h4>
+    <div class="ex-meta" style="margin-bottom:.5rem;">Pre-fills each exercise with a small step up from last time, based on how it felt: build up to the target reps (12 by default, 8–12), then +2.5 kg (1 kg under 10 kg) and back to 8. Set target reps per exercise in its edit screen.</div>
+    <div class="checklist">
+      <div class="check-chip ${targetsEnabled() ? 'on' : ''}" onclick="setTargetsEnabled(true)">On</div>
+      <div class="check-chip ${targetsEnabled() ? '' : 'on'}" onclick="setTargetsEnabled(false)">Off</div>
+    </div>
   `;
+}
+function setTargetsEnabled(on){
+  ensureSettings();
+  data.settings.targets = !!on;
+  saveData();
+  renderTimerSettings();
+  if(selectedExercise){ loadTodayState(selectedExercise); renderContent(); }
 }
 function setRestPreset(sec){
   data.settings.restSeconds = sec;
   saveData();
-  if(!restRunning) restRemaining = sec;
+  if(!restRunning && restRemaining === restBase){ restBase = restRemaining = restSecondsFor(selectedExercise); }
   renderTimerSettings();
   renderRestFab();
 }
@@ -2937,19 +3640,66 @@ function setRestSecondsFromInput(val){
   if(isNaN(n) || n <= 0) return;
   data.settings.restSeconds = n;
   saveData();
-  if(!restRunning) restRemaining = n;
+  if(!restRunning && restRemaining === restBase){ restBase = restRemaining = restSecondsFor(selectedExercise); }
   renderRestFab();
 }
 
 /* ---------- Rest timer (floating) ---------- */
 
 let restRemaining = 90;
+let restBase = 90; // full rest time of the current countdown (per exercise)
 let restRunning = false;
 let restInterval = null;
+let restEndAt = 0; // timestamp the running countdown hits 0
+
+// Keep the screen awake while the rest timer runs, so the phone doesn't
+// lock mid-countdown. Uses the browser's Screen Wake Lock (iPhone: iOS
+// 16.4+; in a home-screen app iOS 18.4+). The browser drops the lock by
+// itself when the app goes to the background, so it's re-requested on
+// return if the timer is still running. Where it isn't supported this
+// quietly does nothing.
+let screenWakeLock = null;
+async function keepScreenAwake(){
+  if(screenWakeLock || !('wakeLock' in navigator)) return;
+  try{
+    screenWakeLock = await navigator.wakeLock.request('screen');
+    screenWakeLock.addEventListener('release', () => { screenWakeLock = null; });
+    if(!restRunning) allowScreenSleep(); // timer stopped while we were waiting
+  }catch(e){ screenWakeLock = null; }
+}
+function allowScreenSleep(){
+  if(screenWakeLock){
+    const lock = screenWakeLock;
+    screenWakeLock = null;
+    lock.release().catch(() => {});
+  }
+}
+// The countdown works from the end time rather than counting ticks, so it
+// stays correct even if the phone was locked or the app was in the
+// background (timers are paused there).
+function tickRestTimer(){
+  if(!restRunning) return;
+  restRemaining = Math.max(0, Math.ceil((restEndAt - Date.now()) / 1000));
+  if(restRemaining <= 0){
+    restRemaining = 0;
+    restRunning = false;
+    clearInterval(restInterval);
+    restInterval = null;
+    allowScreenSleep();
+    restFinishedFlash();
+  }
+  renderRestFab();
+}
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible' && restRunning){
+    tickRestTimer();
+    if(restRunning) keepScreenAwake();
+  }
+});
 
 function initRestTimer(){
   ensureSettings();
-  restRemaining = data.settings.restSeconds;
+  restBase = restRemaining = restSecondsFor(selectedExercise);
   const icon = document.getElementById('restFabIcon');
   const resetBtn = document.getElementById('restResetBtn');
   if(icon) icon.innerHTML = timerIcon;
@@ -2971,7 +3721,7 @@ function renderRestFab(){
   const resetBtn = document.getElementById('restResetBtn');
   if(!fab) return;
   fab.classList.toggle('running', restRunning);
-  const isIdle = !restRunning && restRemaining === data.settings.restSeconds;
+  const isIdle = !restRunning && restRemaining === restBase;
   // Bigger clock whenever it's actually counting, paused mid-count, or just
   // finished — i.e. any time it's showing a number instead of the idle
   // clock icon. Only fully idle/reset shrinks it back down.
@@ -2986,39 +3736,33 @@ function renderRestFab(){
     text.innerHTML = (restRunning ? '' : '') + fmtTime(restRemaining);
     resetBtn.style.display = '';
   }
-  fab.setAttribute('aria-label', restRunning ? 'Pauzeer rusttimer' : (restRemaining > 0 && restRemaining < data.settings.restSeconds ? 'Hervat rusttimer' : 'Start rusttimer'));
+  fab.setAttribute('aria-label', restRunning ? 'Pause rest timer' : (restRemaining > 0 && restRemaining < restBase ? 'Resume rest timer' : 'Start rest timer'));
 }
 
 function toggleRestTimer(){
   if(restRunning){
     pauseRestTimer();
   } else {
-    if(restRemaining <= 0) restRemaining = data.settings.restSeconds;
+    if(restRemaining <= 0){ restBase = restRemaining = restSecondsFor(selectedExercise); }
     startRestTimer();
   }
 }
 
 function startRestTimer(){
   restRunning = true;
+  restEndAt = Date.now() + restRemaining * 1000;
   clearInterval(restInterval);
-  restInterval = setInterval(() => {
-    restRemaining -= 1;
-    if(restRemaining <= 0){
-      restRemaining = 0;
-      restRunning = false;
-      clearInterval(restInterval);
-      restInterval = null;
-      restFinishedFlash();
-    }
-    renderRestFab();
-  }, 1000);
+  restInterval = setInterval(tickRestTimer, 250);
+  keepScreenAwake();
   renderRestFab();
 }
 
 function pauseRestTimer(){
+  if(restRunning) restRemaining = Math.max(0, Math.ceil((restEndAt - Date.now()) / 1000));
   restRunning = false;
   clearInterval(restInterval);
   restInterval = null;
+  allowScreenSleep();
   renderRestFab();
 }
 
@@ -3026,8 +3770,16 @@ function resetRestTimer(){
   restRunning = false;
   clearInterval(restInterval);
   restInterval = null;
-  restRemaining = data.settings.restSeconds;
+  allowScreenSleep();
+  restBase = restRemaining = restSecondsFor(selectedExercise);
   renderRestFab();
+}
+// When the timer is idle, keep it on the selected exercise's rest time, so
+// the countdown you start is always the right one for that exercise.
+function syncRestToExercise(){
+  if(restRunning || restRemaining !== restBase) return;
+  const s = restSecondsFor(selectedExercise);
+  if(s !== restBase){ restBase = restRemaining = s; renderRestFab(); }
 }
 
 function restFinishedFlash(){
@@ -3088,7 +3840,7 @@ function buildCSV(){
   // with the session data, so backing up and restoring keeps those choices
   // instead of resetting them every time.
   data.exercises.forEach(ex => {
-    rows.push(['__meta__', '__exercise__', ex.name, ex.hidden ? 'hidden' : 'visible', '', exerciseMetrics(ex).join('|'), (ex.tags || []).join('|'), '']);
+    rows.push(['__meta__', '__exercise__', ex.name, ex.hidden ? 'hidden' : 'visible', Number.isFinite(ex.targetReps) ? String(ex.targetReps) : '', exerciseMetrics(ex).join('|'), (ex.tags || []).join('|'), Number.isFinite(ex.restSeconds) ? 'rest=' + ex.restSeconds : '']);
   });
   data.templates.forEach(t => {
     rows.push(['__meta__', '__template__', t.name, t.hidden ? 'hidden' : 'visible', '', '', '', '']);
@@ -3464,6 +4216,7 @@ async function importCSVText(text){
   const templateVisibility = {}; // template name -> hidden boolean, from meta rows
   const exerciseVisibility = {}; // exercise name -> hidden boolean, from meta rows
   const exerciseTags = {}; // exercise name -> tags array, from meta rows
+  const exerciseExtras = {}; // exercise name -> { targetReps, restSeconds } from meta rows
   const exerciseMetricsMap = {}; // exercise name -> metrics array, from meta rows (old files without this column leave exercises on the default)
   let skipped = 0;
   for(let i = 1; i < rows.length; i++){
@@ -3486,6 +4239,9 @@ async function importCSVText(text){
         exerciseTags[eName] = tagsVal ? tagsVal.split('|').map(t => t.trim()).filter(Boolean) : [];
         const parsedMetrics = metricsVal ? metricsVal.split('|').map(m => m.trim()).filter(m => ['weight','reps','duration'].includes(m)) : [];
         if(parsedMetrics.length) exerciseMetricsMap[eName] = parsedMetrics;
+        const tr = parseInt((r[idxReps] || '').trim(), 10);
+        const restM = idxNote >= 0 ? /rest=(\d+)/.exec(r[idxNote] || '') : null;
+        exerciseExtras[eName] = { targetReps: isNaN(tr) ? undefined : tr, restSeconds: restM ? parseInt(restM[1], 10) : undefined };
       }
       continue;
     }
@@ -3560,6 +4316,12 @@ async function importCSVText(text){
   Object.entries(exerciseMetricsMap).forEach(([eName, metrics]) => {
     const ex = data.exercises.find(x => x.name === eName);
     if(ex && metrics.length) ex.metrics = metrics;
+  });
+  Object.entries(exerciseExtras).forEach(([eName, x]) => {
+    const ex = data.exercises.find(e => e.name === eName);
+    if(!ex) return;
+    if(x.targetReps !== undefined) ex.targetReps = x.targetReps;
+    if(x.restSeconds !== undefined) ex.restSeconds = x.restSeconds;
   });
 
   saveData();
@@ -3685,6 +4447,8 @@ function emailCSV(){
 }
 
 function render(){
+  renderWeekStrip();
+  if(typeof restBase !== 'undefined') syncRestToExercise();
   renderTemplateChips();
   renderExerciseChips();
   renderContent();
@@ -3713,9 +4477,11 @@ if(settingsDialogBodyEl){
   });
 }
 
+if(appInUse()) currentTemplate = pickStartupTemplate();
 ensureSelectedExercise();
 initRestTimer();
 applyTheme();
+setTimeout(checkForUpdateOnLaunch, 1500);
 render();
 // Mark the walkthrough as seen however the dialog closes (Skip, Got it, the ✕,
 // or a tap/swipe outside it), so it only ever shows once per device.
