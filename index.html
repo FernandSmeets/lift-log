@@ -50,6 +50,7 @@
     --trend-down:#EB5757; --trend-down-bg:#EB575726;
     --glow:#FFE2DB;
     --heat0:#33383F; --heat1:#5A2A22; --heat2:#9A3E2E; --heat3:#E8543E;
+    --deload:#6FA8DC; --deload-dim:#6FA8DC29; --on-deload:#14161A;
     color-scheme:dark;
     /* Shared text-size scale. Replaces ~20 near-duplicate one-off rem values
        with a consistent set of steps, one per functional role. 16px on form
@@ -88,6 +89,7 @@
     --trend-down:#E04848; --trend-down-bg:#E048481F;
     --glow:#FFFFFF;
     --heat0:#DCDFE3; --heat1:#F6C9BF; --heat2:#EE9A86; --heat3:#E0492F;
+    --deload:#2F76BA; --deload-dim:#2F76BA1F; --on-deload:#FFFFFF;
     color-scheme:light;
   }
   /* Dark text on the (deeper) light-theme blue is too low-contrast; white reads better. */
@@ -181,6 +183,25 @@
   .row-label{ font-size:var(--fs-xs); color:var(--text-dim); margin:0 0 .4rem; letter-spacing:.02em; }
   .row-label-with-info{ display:flex; align-items:center; justify-content:space-between; margin:0 0 .4rem; }
   .row-label-with-info span{ font-size:var(--fs-xs); color:var(--text-dim); letter-spacing:.02em; }
+  /* Edit button that pops up over an exercise chip after a long press. */
+  .chip-edit-pop{
+    position:fixed; z-index:40; display:none; align-items:center; gap:.35rem;
+    background:var(--accent); color:#14161A; border:none; border-radius:999px;
+    padding:.5rem .95rem; min-height:2.4rem; font:inherit; font-size:var(--fs-base); font-weight:600;
+    box-shadow:var(--shadow-menu); cursor:pointer; transform-origin:50% 100%;
+    -webkit-user-select:none; user-select:none;
+  }
+  .chip-edit-pop.show{ display:flex; animation:editPopIn .18s cubic-bezier(.34,1.56,.64,1); }
+  .chip-edit-pop svg{ width:1rem; height:1rem; }
+  .chip-edit-pop::after{
+    content:''; position:absolute; left:50%; bottom:-5px; width:10px; height:10px; margin-left:-5px;
+    background:var(--accent); transform:rotate(45deg); border-radius:2px;
+  }
+  @keyframes editPopIn{ from{ opacity:0; transform:scale(.8) translateY(4px); } to{ opacity:1; transform:none; } }
+  /* Long-press an exercise chip to edit it: no iOS callout menu, and the
+     chip eases down slightly while held so you can tell something's coming. */
+  #exerciseRow .chip, #templateRow .chip{ -webkit-touch-callout:none; transition:background .12s, color .12s, border-color .12s, transform .45s ease; }
+  #exerciseRow .chip.pressing, #templateRow .chip.pressing{ transform:scale(.94); }
   .info-btn{
     background:none; border:1px solid var(--border); color:var(--text-dim);
     width:1.35rem; height:1.35rem; border-radius:50%; font-size:var(--fs-xs); line-height:1;
@@ -237,6 +258,18 @@
   .target-info li + li{ margin-top:.1rem; }
   .target-info li.hit{ color:var(--text); font-weight:600; }
   .target-info button{ background:none; border:none; padding:0; font:inherit; font-weight:600; color:var(--accent); cursor:pointer; }
+  /* Deload week: blue instead of the orange of building up */
+  .week-day.deload.done{ background:var(--deload); border-color:var(--deload); color:var(--on-deload); }
+  .week-day.deload:not(.done){ border-color:var(--deload); }
+  .deload-pill{ font-size:var(--fs-2xs); font-weight:600; padding:.15rem .55rem; border-radius:999px; background:var(--deload-dim); color:var(--deload); white-space:nowrap; }
+  .target-line.deload{ background:var(--deload-dim); }
+  .target-line.deload > svg:first-child{ color:var(--deload); }
+  .target-info.deload button{ color:var(--deload); }
+  .deload-tag{ font-size:var(--fs-2xs); font-weight:600; padding:.05rem .4rem; border-radius:999px; background:var(--deload-dim); color:var(--deload); }
+  .btn.deload-primary{ background:var(--deload); border-color:var(--deload); color:var(--on-deload); font-weight:600; }
+  .btn.deload-primary:active{ filter:brightness(.95); background:var(--deload); }
+  .cal-cell.dl{ box-shadow:inset 0 0 0 1.5px var(--deload); }
+  .cal-legend .dl-key{ display:inline-block; width:.65rem; height:.65rem; border-radius:3px; box-shadow:inset 0 0 0 1.5px var(--deload); margin-left:.5rem; }
   .settings-h{ font-family:'Oswald',sans-serif; font-weight:500; font-size:1.05rem; margin:0 0 .25rem; color:var(--text); }
   .unit.target-up{ color:var(--accent); font-weight:600; }
   .update-msg .num{ color:var(--text); }
@@ -923,6 +956,12 @@
   </div>
 </dialog>
 
+<!-- Deload suggestion (see maybeSuggestDeload()) -->
+<dialog id="deloadDialog">
+  <div class="dialog-head"><h3>Time for a deload week?</h3><button class="dialog-close" onclick="deloadChoice('later')">✕</button></div>
+  <div class="dialog-body" id="deloadBody"></div>
+</dialog>
+
 <!-- End-of-workout backup prompt (see maybeAskWorkoutBackup()) -->
 <dialog id="workoutBackupDialog">
   <div class="dialog-head"><h3 id="workoutBackupTitle">Workout done</h3><button class="dialog-close" onclick="document.getElementById('workoutBackupDialog').close()">✕</button></div>
@@ -993,7 +1032,7 @@
 </dialog>
 
 <script>
-const APP_VERSION = '3.0.15';
+const APP_VERSION = '3.0.21';
 const STORE_KEY = 'liftlog_data_v2';
 
 // Some browsers (notably iOS Safari, especially when added to the home screen)
@@ -1006,16 +1045,16 @@ if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 // Keep only the 10 most recent versions here, newest first, whenever a new version is published.
 const CHANGELOG = [
+  { version: '3.0.21', notes: ['Lift Log now also opens without a connection — in flight mode or without reception at the gym. The app keeps a copy of itself on your phone (needs the new sw.js file next to index.html), and still picks up new versions automatically when you\'re online. Settings → ••• → Info shows whether offline use is ready'] },
+  { version: '3.0.20', notes: ['Deload week: after 5 training weeks (or sooner if 3 workouts in a row felt Hard) the app suggests a lighter week — same weights, about half the sets, for 7 days. You choose: start it, ask again next week, or not now. During the week the target and week strip turn blue, and those workouts are left out of targets, trends and PRs, so building up continues where you left off. Change the interval (4/5/6 weeks or off) or start/end a deload yourself in Settings → Workout'] },
+  { version: '3.0.19', notes: ['Templates on the home screen work the same way now: hold a template button for half a second and an Edit button pops up above it to open that template\'s settings'] },
+  { version: '3.0.18', notes: ['Quicker exercise editing from the home screen: hold any exercise button for half a second and an Edit button pops up above it — tap it to open that exercise\'s settings. Tap anywhere else to dismiss it'] },
+  { version: '3.0.17', notes: ['First version of editing an exercise straight from the home screen'] },
+  { version: '3.0.16', notes: ['The exercise picker in Settings → Progress is now alphabetical, with the exercises you\'ve actually logged at the top — before, it followed the built-in order, so exercises added later (like Push-Ups) were buried far down the list'] },
   { version: '3.0.15', notes: ['Each exercise can now have its own target reps (12 by default, so the range is 8–12) and its own rest time (the default from Settings → Workout, 90 s, when left empty) — both in the exercise\'s edit screen. The rest timer switches to the selected exercise\'s rest time automatically, and both settings are included in CSV backups'] },
   { version: '3.0.14', notes: ['The Timer settings tab is now called Workout, with two sections: Rest timer and Target for today. Tap the target above your sets to see how it was worked out (the rule that applied is highlighted), with a shortcut to turn targets off'] },
   { version: '3.0.13', notes: ['The last few Dutch texts (rest time settings and the rest timer button labels) are now in English, like the rest of the app'] },
   { version: '3.0.12', notes: ['Target for today: each exercise now opens with a small step up from last time already filled in — build reps from 8 to 12, then +2.5 kg and back to 8 — paced by how last time felt (Hard repeats, Easy adds weight). What went up is marked in orange, with the reason above the sets. Can be turned off in Settings → Workout'] },
-  { version: '3.0.11', notes: ['Week overview: the header now shows this week as seven dots (filled on days you trained) with a count of this week\'s workouts. Settings → Progress opens with this week vs last week (workouts, sets and volume, plus a bar per day) and a 12-week calendar of your training days'] },
-  { version: '3.0.10', notes: ['A workout summary now appears after the last exercise of a workout: how long it took, how many exercises and sets you did, your total volume, any new PRs, and which exercises went up compared with last time — with the backup button right below it'] },
-  { version: '3.0.9', notes: ['Templates you create yourself now appear at the top of the template list (and at the front of the template row) instead of at the bottom'] },
-  { version: '3.0.8', notes: ['Once you\'ve saved your first workout, "All" folds into a small list button at the start of the template row, and the app opens on the template you trained longest ago (or the one you\'re doing today) — so a rotating schedule lines up your next workout by itself. Tap the list button to show all exercises; picking a template or reopening the app folds it away again'] },
-  { version: '3.0.7', notes: ['After saving the last exercise of a workout, the app asks once whether you want to save a backup (CSV file). Not shown if Dropbox or GitHub backup is set up, since those already back up on every save'] },
-  { version: '3.0.6', notes: ['The app now checks for a new version by itself when it opens (and when you come back to it after a while). If there is one, a popup offers to back up first — to Dropbox/GitHub if you\'ve set that up, otherwise as a CSV file — and then update with one tap'] },
 ];
 
 const DEFAULT_EXERCISES = [
@@ -1358,9 +1397,10 @@ function renderWeekStrip(){
   const today = todayStr();
   const wk = weekTotals(mondayOf(today), dailyTotals());
   el.title = new Date().toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric'});
+  const left = deloadDaysLeft();
   el.innerHTML = `<div class="week-days">${wk.days.map((d, i) =>
-    `<span class="week-day${d.sets ? ' done' : ''}${d.date === today ? ' today' : ''}" aria-label="${d.date}${d.sets ? ', trained' : ''}">${WEEK_LETTERS[i]}</span>`).join('')}</div>
-    <span class="week-count"><span class="num">${wk.workouts}</span> this week</span>`;
+    `<span class="week-day${d.sets ? ' done' : ''}${isDeloadDate(d.date) ? ' deload' : ''}${d.date === today ? ' today' : ''}" aria-label="${d.date}${d.sets ? ', trained' : ''}">${WEEK_LETTERS[i]}</span>`).join('')}</div>
+    ${left ? `<span class="deload-pill">Deload · ${left} day${left === 1 ? '' : 's'} left</span>` : `<span class="week-count"><span class="num">${wk.workouts}</span> this week</span>`}`;
 }
 function fmtKg(v){
   return v >= 10000 ? (Math.round(v / 100) / 10) + 'k' : String(Math.round(v));
@@ -1410,6 +1450,7 @@ function weekOverviewHtml(){
         count++;
       }
       if(d === today) cls += ' today';
+      if(d <= today && isDeloadDate(d)) cls += ' dl';
       cal += `<span class="${cls}" title="${d}${t && t.sets ? ` · ${t.sets} sets${t.volume ? ' · ' + fmtKg(t.volume) + ' kg' : ''}` : ''}"></span>`;
     }
   }
@@ -1428,7 +1469,7 @@ function weekOverviewHtml(){
       <div class="cal-grid">${cal}</div>
       <div class="cal-foot">
         <span><span class="num">${count}</span> workout${count === 1 ? '' : 's'} in 12 weeks</span>
-        <span class="cal-legend">Less <span class="cal-cell"></span><span class="cal-cell l1"></span><span class="cal-cell l2"></span><span class="cal-cell l3"></span> More</span>
+        <span class="cal-legend">Less <span class="cal-cell"></span><span class="cal-cell l1"></span><span class="cal-cell l2"></span><span class="cal-cell l3"></span> More${deloadData().periods.length ? '<span class="dl-key"></span>&nbsp;Deload' : ''}</span>
       </div>
     </div>`;
 }
@@ -1622,7 +1663,12 @@ function renderTemplateChips(){
     const chip = document.createElement('div');
     chip.className = 'chip' + (currentTemplate === t.name ? ' active' : '');
     chip.textContent = t.name;
-    chip.onclick = () => { currentTemplate = t.name; allExpanded = false; ensureSelectedExercise(); render(); };
+    chip.onclick = () => {
+      if(chip.dataset.longPressed){ delete chip.dataset.longPressed; return; }
+      currentTemplate = t.name; allExpanded = false; ensureSelectedExercise(); render();
+    };
+    // Hold for half a second → an Edit button pops up (same as exercises).
+    attachLongPress(chip, () => showChipEditPop(chip, t.name, () => openEditTemplate(t.name)));
     row.appendChild(chip);
   });
 
@@ -1643,6 +1689,130 @@ function ensureSelectedExercise(){
     if(selectedExercise) loadTodayState(selectedExercise);
     else { todaySets = [emptySet()]; todayFeel = ''; todayNote = ''; }
   }
+}
+
+// ---------- Deload week ----------
+// After a number of training weeks (default 5) the app suggests a lighter
+// week: same weights and reps as your last normal workout, about half the
+// sets, for 7 days. It's only ever a suggestion (popup with Start / Next
+// week / Not now), and can be started or ended by hand in Settings →
+// Workout. Deload periods are stored as { start, end } (end exclusive);
+// sessions on those dates are left out of the target, the trend icons, PRs
+// and the "better than last time" comparisons, so a lighter week never
+// reads as going backwards.
+const DELOAD_DAYS = 7;
+function deloadData(){
+  if(!data.deload || typeof data.deload !== 'object') data.deload = {};
+  if(!Array.isArray(data.deload.periods)) data.deload.periods = [];
+  return data.deload;
+}
+function deloadEvery(){
+  const v = data.settings && data.settings.deloadEvery;
+  return (v === 0 || v === 4 || v === 5 || v === 6) ? v : 5;
+}
+function isDeloadDate(d){ return deloadData().periods.some(p => p.start <= d && d < p.end); }
+function activeDeload(){ const t = todayStr(); return deloadData().periods.find(p => p.start <= t && t < p.end) || null; }
+function deloadDaysLeft(){ const a = activeDeload(); if(!a) return 0; return Math.round((new Date(a.end + 'T00:00:00Z') - new Date(todayStr() + 'T00:00:00Z')) / 86400000); }
+// Sessions that count for progress: everything outside deload weeks.
+function normalPastSessions(exercise){
+  const t = todayStr();
+  return (data.sessions[exercise] || []).filter(s => s.date !== t && !isDeloadDate(s.date));
+}
+function startDeload(){
+  const t = todayStr(), dd = deloadData();
+  if(activeDeload()) return;
+  dd.periods.push({ start: t, end: addDaysStr(t, DELOAD_DAYS) });
+  dd.snoozeUntil = '';
+  saveData();
+  if(selectedExercise && todayUntouched()) loadTodayState(selectedExercise);
+  render();
+}
+function endDeload(){
+  const t = todayStr(), a = activeDeload();
+  if(!a) return;
+  const dd = deloadData();
+  if(a.start === t) dd.periods = dd.periods.filter(p => p !== a);
+  else a.end = t;
+  saveData();
+  if(selectedExercise && todayUntouched()) loadTodayState(selectedExercise);
+  render();
+}
+// Workout days (dates with at least one saved session), oldest first.
+function workoutDays(){
+  const set = new Set();
+  Object.values(data.sessions || {}).forEach(l => (l || []).forEach(s => { if(s.sets && s.sets.length) set.add(s.date); }));
+  return [...set].sort();
+}
+// Why a deload is due right now, or null. Counts training weeks (Mon–Sun
+// weeks with a workout) since the last deload ended, current week excluded.
+function deloadReason(){
+  const every = deloadEvery();
+  if(!every || activeDeload()) return null;
+  const today = todayStr(), thisMon = mondayOf(today);
+  const lastEnd = deloadData().periods.reduce((m, p) => (p.end <= today && p.end > m ? p.end : m), '');
+  const days = workoutDays().filter(d => d >= lastEnd && d < today && !isDeloadDate(d));
+  const weeks = new Set(days.filter(d => d < thisMon).map(mondayOf)).size;
+  const since = lastEnd ? 'since your last lighter week' : 'since you started';
+  if(weeks >= every) return `You've trained ${weeks} weeks ${since}.`;
+  if(weeks < 2) return null;
+  // Early signals: the body asking for it sooner.
+  const recent = days.slice(-3);
+  const hardDay = d => Object.values(data.sessions).some(l => (l || []).some(s => s.date === d && s.feel === 'hard'));
+  if(recent.length === 3 && recent.every(hardDay)) return 'Your last 3 workouts felt Hard.';
+  const downDay = d => {
+    let n = 0, down = 0;
+    Object.entries(data.sessions).forEach(([name, l]) => {
+      const s = (l || []).find(x => x.date === d);
+      if(!s) return;
+      const before = (l || []).filter(x => x.date < d && !isDeloadDate(x.date));
+      const prev = before[before.length - 1];
+      if(!prev) return;
+      const m = ['weight','reps','duration'].filter(k => exerciseMetricsByName(name).includes(k));
+      n++;
+      if(sessionScore(s, m).value < sessionScore(prev, m).value) down++;
+    });
+    return n >= 2 && down / n >= 0.5;
+  };
+  const last2 = days.slice(-2);
+  if(last2.length === 2 && last2.every(downDay)) return 'Most exercises went down in your last 2 workouts.';
+  return null;
+}
+let deloadDismissedThisSession = false;
+function maybeSuggestDeload(){
+  if(deloadDismissedThisSession || document.querySelector('dialog[open]')) return;
+  const dd = deloadData(), today = todayStr();
+  if(dd.snoozeUntil && today < dd.snoozeUntil) return;
+  const why = deloadReason();
+  if(!why) return;
+  document.getElementById('deloadBody').innerHTML = `
+    <p class="update-msg">${escAttr(why)} Time for a lighter week: same weights, about half the sets, for ${DELOAD_DAYS} days. It helps you recover and usually makes the weights feel lighter afterwards.</p>
+    <div class="update-actions">
+      <button type="button" class="btn deload-primary" onclick="deloadChoice('start')">Start deload week</button>
+      <button type="button" class="btn" onclick="deloadChoice('next')">Next week</button>
+      <button type="button" class="update-later" onclick="deloadChoice('later')">Not now</button>
+    </div>`;
+  document.getElementById('deloadDialog').showModal();
+}
+function deloadChoice(c){
+  document.getElementById('deloadDialog').close();
+  if(c === 'start') startDeload();
+  else if(c === 'next'){ deloadData().snoozeUntil = addDaysStr(mondayOf(todayStr()), 7); saveData(); }
+  else deloadDismissedThisSession = true;
+}
+// Deload version of the target: last normal workout, about half the sets
+// (rounded up); a single set stays one set with ~30% fewer reps / seconds.
+function computeDeloadTarget(base, metrics){
+  const sets = base.sets.map(s => ({ weight: s.weight || '', reps: s.reps || '', duration: s.duration || '' }));
+  const n = sets.length;
+  if(n === 1){
+    const s = sets[0];
+    if(metrics.includes('reps') && parseFloat(s.reps)) s.reps = String(Math.max(1, Math.round(parseFloat(s.reps) * 0.7)));
+    else if(metrics.includes('duration') && parseFloat(s.duration)) s.duration = String(Math.max(5, Math.round(parseFloat(s.duration) * 0.7)));
+    return { sets, head: 'Deload: 1 set, about 30% fewer reps', why: 'Lighter week — no new records expected' };
+  }
+  const k = Math.ceil(n / 2);
+  const same = metrics.includes('weight') ? 'same weight' : (metrics.includes('reps') ? 'same reps' : 'same time');
+  return { sets: sets.slice(0, k), head: `Deload: ${k} of ${n} sets, ${same}`, why: 'Lighter week — no new records expected' };
 }
 
 // ---------- Target for today (double progression) ----------
@@ -1710,6 +1880,14 @@ function openTargetSettings(){
   switchTab('timer');
   setTimeout(() => { const el = document.getElementById('targetSettings'); if(el) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 50);
 }
+function deloadInfoHtml(){
+  const a = activeDeload();
+  const until = a ? new Date(a.end + 'T00:00:00Z').toLocaleDateString(undefined, { weekday:'long', month:'short', day:'numeric', timeZone:'UTC' }) : '';
+  return `<div class="target-info deload">
+    Deload week: the same weights and reps as your last normal workout, about half the sets. These workouts don't count towards targets, trends or PRs, so building up picks up where you left off.
+    ${until ? `<br>Back to normal on ${escAttr(until)}.` : ''} <button type="button" onclick="openTargetSettings()">End early in settings</button>
+  </div>`;
+}
 function targetInfoHtml(rule, range){
   const TARGET_REP_MIN = range.min, TARGET_REP_MAX = range.max;
   const rules = [
@@ -1727,6 +1905,16 @@ function targetInfoHtml(rule, range){
 }
 const targetIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg>`;
 
+// True while Today still shows exactly what the app pre-filled (target or
+// last time) and no set has been ticked off.
+function todayUntouched(){
+  const list = data.sessions[selectedExercise] || [];
+  if(list.some(s => s.date === todayStr())) return false;
+  if(setDoneFlags().some(Boolean)) return false;
+  const norm = sets => JSON.stringify((sets || []).map(s => [String(s.weight || ''), String(s.reps || ''), String(s.duration || '')]));
+  const pre = todayTarget && todayTarget.exercise === selectedExercise ? todayTarget.pre : ((getLastSession(selectedExercise) || {}).sets || [emptySet()]);
+  return norm(todaySets) === norm(pre);
+}
 function loadTodayState(exerciseName){
   todayTarget = null;
   const list = data.sessions[exerciseName] || [];
@@ -1740,11 +1928,17 @@ function loadTodayState(exerciseName){
   const last = getLastSession(exerciseName);
   if(last && last.sets.length){
     todaySets = last.sets.map(s => ({ weight: s.weight || '', reps: s.reps || '', duration: s.duration || '' }));
-    if(targetsEnabled()){
-      const metrics = ['weight','reps','duration'].filter(m => exerciseMetricsByName(exerciseName).includes(m));
+    const metrics = ['weight','reps','duration'].filter(m => exerciseMetricsByName(exerciseName).includes(m));
+    const normal = normalPastSessions(exerciseName);
+    const nLast = normal[normal.length - 1] || last, nPrev = normal.length >= 2 ? normal[normal.length - 2] : null;
+    if(activeDeload()){
+      const t = computeDeloadTarget(nLast, metrics);
+      todayTarget = { exercise: exerciseName, deload: true, head: t.head, why: t.why, base: nLast.sets, pre: t.sets.map(s => ({ ...s })) };
+      todaySets = t.sets;
+    } else if(targetsEnabled()){
       const range = repRangeFor(exerciseName);
-      const t = computeTarget(last, getPrevSession(exerciseName), metrics, range);
-      todayTarget = { exercise: exerciseName, range, rule: t.rule, head: t.head, why: t.why, base: last.sets, pre: t.sets.map(s => ({ ...s })) };
+      const t = computeTarget(nLast, nPrev, metrics, range);
+      todayTarget = { exercise: exerciseName, range, rule: t.rule, head: t.head, why: t.why, base: nLast.sets, pre: t.sets.map(s => ({ ...s })) };
       todaySets = t.sets;
     }
   } else {
@@ -1754,9 +1948,86 @@ function loadTodayState(exerciseName){
   todayNote = '';
 }
 
+// Hold a chip ~0.5 s to trigger `fn` (like long-pressing an app icon on the
+// iPhone). Moving the finger — e.g. to scroll the row — cancels it, and the
+// click that follows the release is swallowed so the chip isn't selected.
+const LONG_PRESS_MS = 500;
+function attachLongPress(el, fn){
+  let timer = null, sx = 0, sy = 0;
+  const cancel = () => { clearTimeout(timer); timer = null; el.classList.remove('pressing'); };
+  el.addEventListener('pointerdown', e => {
+    if(e.button !== undefined && e.button !== 0) return;
+    delete el.dataset.longPressed; // a fresh press is never the long-press's leftover click
+    sx = e.clientX; sy = e.clientY;
+    el.classList.add('pressing');
+    timer = setTimeout(() => {
+      timer = null;
+      el.classList.remove('pressing');
+      el.dataset.longPressed = '1';
+      setTimeout(() => { delete el.dataset.longPressed; }, 700);
+      fn();
+    }, LONG_PRESS_MS);
+  });
+  el.addEventListener('pointermove', e => { if(timer && Math.hypot(e.clientX - sx, e.clientY - sy) > 8) cancel(); });
+  ['pointerup','pointercancel','pointerleave'].forEach(t => el.addEventListener(t, () => { if(timer) cancel(); }));
+  el.addEventListener('contextmenu', e => e.preventDefault());
+}
+function openEditExerciseByName(name){
+  const i = data.exercises.findIndex(e => e.name === name);
+  if(i >= 0) openEditExercise(i);
+}
+// Long-pressing an exercise chip reveals a small "Edit" button above it;
+// tapping that opens the exercise's edit screen. Tapping anywhere else, or
+// scrolling, puts it away again.
+let chipEditPopFor = null; // what the Edit button edits: { label, open() }
+function chipEditPopEl(){
+  let el = document.getElementById('chipEditPop');
+  if(!el){
+    el = document.createElement('button');
+    el.type = 'button'; el.id = 'chipEditPop'; el.className = 'chip-edit-pop';
+    el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg><span>Edit</span>`;
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const target = chipEditPopFor;
+      hideChipEditPop();
+      if(target) target.open();
+    });
+    document.body.appendChild(el);
+  }
+  return el;
+}
+function showChipEditPop(chip, name, open){
+  const el = chipEditPopEl();
+  chipEditPopFor = { label: name, open: open || (() => openEditExerciseByName(name)) };
+  el.setAttribute('aria-label', `Edit ${name}`);
+  el.classList.remove('show');
+  el.style.visibility = 'hidden'; el.style.display = 'flex';
+  const r = chip.getBoundingClientRect(), w = el.offsetWidth, hgt = el.offsetHeight;
+  const left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2));
+  el.style.left = left + 'px';
+  el.style.top = Math.max(8, r.top - hgt - 10) + 'px';
+  el.style.display = ''; el.style.visibility = '';
+  void el.offsetWidth;
+  el.classList.add('show');
+}
+function hideChipEditPop(){
+  const el = document.getElementById('chipEditPop');
+  if(el) el.classList.remove('show');
+  chipEditPopFor = null;
+}
+document.addEventListener('pointerdown', e => {
+  if(!chipEditPopFor) return;
+  const el = document.getElementById('chipEditPop');
+  if(el && el.contains(e.target)) return;
+  hideChipEditPop();
+}, true);
+window.addEventListener('scroll', hideChipEditPop, { passive: true });
+document.addEventListener('scroll', e => { if(e.target && (e.target.id === 'exerciseRow' || e.target.id === 'templateRow')) hideChipEditPop(); }, { capture: true, passive: true });
+
 function renderExerciseChips(){
   const row = document.getElementById('exerciseRow');
   row.innerHTML = '';
+  hideChipEditPop();
   const visible = visibleExerciseNames();
   visible.forEach(name => {
     const chip = document.createElement('div');
@@ -1772,7 +2043,11 @@ function renderExerciseChips(){
       badge.innerHTML = checkIcon;
       chip.appendChild(badge);
     }
-    chip.onclick = () => { selectedExercise = name; loadTodayState(name); historyOpen=false; editingHistoryIdx=null; render(); };
+    chip.onclick = () => {
+      if(chip.dataset.longPressed){ delete chip.dataset.longPressed; return; }
+      selectedExercise = name; loadTodayState(name); historyOpen=false; editingHistoryIdx=null; render();
+    };
+    attachLongPress(chip, () => showChipEditPop(chip, name));
     row.appendChild(chip);
   });
   const addChip = document.createElement('div');
@@ -2031,6 +2306,9 @@ function confirmAddExercise(){
     if(ex.targetReps === undefined) delete ex.targetReps;
     if(ex.restSeconds === undefined) delete ex.restSeconds;
     saveData();
+    // New target reps / metrics should show up right away — but only
+    // re-fill Today if nothing was typed or ticked there yet.
+    if(ex.name === selectedExercise && todayUntouched()) loadTodayState(ex.name);
     render();
     renderExerciseSettings();
     renderTemplateSettings();
@@ -2087,18 +2365,18 @@ function renderContent(){
     lastHtml = prev ? `<div class="panel">
       <div class="lt-grid">
         <div class="lt-col older">
-          <div class="lt-head"><strong>Before</strong><span>${fmtDate(prev.date)}</span></div>
+          <div class="lt-head"><strong>Before</strong><span>${fmtDate(prev.date)}</span>${isDeloadDate(prev.date) ? '<span class="deload-tag">Deload</span>' : ''}</div>
           ${ltRows(prev)}
         </div>
-        <div class="lt-mid">${trendIconHtml(last, prev, activeMetrics)}<div class="lt-line"></div></div>
+        <div class="lt-mid">${(isDeloadDate(last.date) || isDeloadDate(prev.date)) ? '' : trendIconHtml(last, prev, activeMetrics)}<div class="lt-line"></div></div>
         <div class="lt-col">
-          <div class="lt-head"><strong>Last time</strong><span>${fmtDate(last.date)}</span>${lastFeelBadge}</div>
+          <div class="lt-head"><strong>Last time</strong><span>${fmtDate(last.date)}</span>${isDeloadDate(last.date) ? '<span class="deload-tag">Deload</span>' : ''}${lastFeelBadge}</div>
           ${ltRows(last)}
         </div>
       </div>
       ${last.note ? `<div class="last-note">"${escAttr(last.note)}"</div>` : ''}
     </div>` : `<div class="panel">
-      <h2>Last time <span class="when">· ${fmtDate(last.date)}</span>${lastFeelBadge}</h2>
+      <h2>Last time <span class="when">· ${fmtDate(last.date)}</span>${isDeloadDate(last.date) ? ' <span class="deload-tag">Deload</span>' : ''}${lastFeelBadge}</h2>
       ${setRows(last, '')}
       ${last.note ? `<div class="last-note">"${escAttr(last.note)}"</div>` : ''}
     </div>`;
@@ -2153,7 +2431,7 @@ function renderContent(){
     ${lastHtml}
     <div class="panel today-panel">
       <h2>Today</h2>
-      ${tgt ? `<div class="target-line${targetInfoOpen ? ' open' : ''}" role="button" aria-expanded="${targetInfoOpen}" onclick="toggleTargetInfo()">${targetIcon}<span><strong>Target: ${escAttr(tgt.head)}</strong>${tgt.why ? `<span class="why">${escAttr(tgt.why)}</span>` : ''}</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>${targetInfoOpen ? targetInfoHtml(tgt.rule, tgt.range) : ''}` : ''}
+      ${tgt ? `<div class="target-line${tgt.deload ? ' deload' : ''}${targetInfoOpen ? ' open' : ''}" role="button" aria-expanded="${targetInfoOpen}" onclick="toggleTargetInfo()">${targetIcon}<span><strong>${tgt.deload ? '' : 'Target: '}${escAttr(tgt.head)}</strong>${tgt.why ? `<span class="why">${escAttr(tgt.why)}</span>` : ''}</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>${targetInfoOpen ? (tgt.deload ? deloadInfoHtml() : targetInfoHtml(tgt.rule, tgt.range)) : ''}` : ''}
       ${todayRows}
       <button class="add-set-btn" onclick="addSet()">+ Add set</button>
       <div class="row-label" style="margin-top:.9rem;">How did it feel? (optional)</div>
@@ -2438,8 +2716,10 @@ function buildWorkoutSummary(){
       if(metrics.includes('duration')) seconds += d;
     });
     // PR: best value of the main metric today beats every earlier session.
+    // A deload day never counts: it's lighter on purpose.
     const primary = primaryMetric(metrics);
-    const past = list.filter(s => s.date !== today);
+    const past = list.filter(s => s.date !== today && !isDeloadDate(s.date));
+    if(isDeloadDate(today)) return;
     const bestOf = sess => sess.reduce((b, s) => s.sets.reduce((bb, st) => { const v = parseFloat(st[primary]); return !isNaN(v) && v > bb ? v : bb; }, b), -Infinity);
     const todayBest = bestOf([todays]);
     const pastBest = bestOf(past);
@@ -2456,7 +2736,7 @@ function buildWorkoutSummary(){
   });
   const start = workoutStartedAt();
   const minutes = start ? Math.round((Date.now() - start) / 60000) : null;
-  return { done, sets, volume, reps, seconds, prs, trends, minutes };
+  return { done, sets, volume, reps, seconds, prs, trends, minutes, deload: isDeloadDate(today) };
 }
 function fmtVolume(kg){
   return kg >= 10000 ? (Math.round(kg / 100) / 10).toLocaleString('en-US') + 'k' : Math.round(kg).toLocaleString('en-US');
@@ -2497,9 +2777,10 @@ function renderWorkoutBackupDialog(phase){
     ? `<p class="ws-note">${up.length} of ${s.trends.length} exercises went up${down.length ? `, ${down.length} went down` : ''} compared with last time.</p>` : '';
   const cloud = hasCloudBackup();
   el.innerHTML = `
-    <p class="ws-lead"><strong>Nice work!</strong> Here's what you did today.</p>
+    <p class="ws-lead"><strong>Nice work!</strong> Here's what you did today.${s.deload ? ` <span class="deload-tag">Deload week</span>` : ''}</p>
     <div class="ws-stats">${tiles.join('')}</div>
     ${prHtml}${upHtml}${trendNote}
+    ${s.deload ? `<p class="ws-note">Lighter by design this week, so no comparisons with last time. Building up continues after the deload.</p>` : ''}
     ${cloud ? `<p class="ws-note">Your data is backed up automatically.</p>` : ''}
     <div class="update-actions">
       ${cloud
@@ -2961,6 +3242,30 @@ if(/[?&]v=\d+/.test(location.search)){
   try{ history.replaceState(null, '', appPageUrl() + location.hash); }catch(e){}
 }
 
+// ---------- Offline start-up ----------
+// sw.js (next to index.html) keeps a copy of the app on the phone so it
+// also opens without a connection, e.g. in flight mode. Only works on a real
+// https site (or localhost), not in previews; there it quietly does nothing.
+let offlineStatus = 'checking'; // checking | ready | preparing | unavailable
+function registerOfflineSupport(){
+  const ok = 'serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+  if(!ok){ offlineStatus = 'unavailable'; return; }
+  try{
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      offlineStatus = navigator.serviceWorker.controller ? 'ready' : 'preparing';
+      navigator.serviceWorker.ready.then(() => { offlineStatus = 'ready'; if(settingsTab === 'info') renderInfoSettings(); });
+    }).catch(() => { offlineStatus = 'unavailable'; });
+  }catch(e){ offlineStatus = 'unavailable'; }
+}
+function offlineStatusText(){
+  return {
+    ready: 'Ready — Lift Log also opens without a connection',
+    preparing: 'Getting ready… open the app once more while online',
+    unavailable: 'Not available here (only on the installed web app)',
+    checking: 'Checking…'
+  }[offlineStatus];
+}
+
 function renderInfoSettings(){
   const el = document.getElementById('tabInfo');
   if(!el) return;
@@ -2981,6 +3286,12 @@ function renderInfoSettings(){
         <span class="ex-meta" id="updateRowMeta">${updateRowMeta()}</span>
       </div>
       <span class="icon-btn" aria-hidden="true" style="color:${updateCheck.status === 'available' ? 'var(--accent)' : 'var(--text-dim)'};">${chevronRight}</span>
+    </div>
+    <div class="settings-row">
+      <div class="ex-info">
+        <span class="name">Offline use</span>
+        <span class="ex-meta">${offlineStatusText()}</span>
+      </div>
     </div>
     <div class="settings-row" style="cursor:pointer;" onclick="openA2hs()">
       <div class="ex-info">
@@ -3356,6 +3667,18 @@ function escAttr(s){
   return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+// Exercise picker for the charts: exercises you've actually logged first,
+// then the rest — each group alphabetical. (It used to follow the internal
+// storage order, which put the built-in chest exercises first and buried
+// everything added later, like Push-Ups, far down a 40+ item list.)
+function progressExerciseOptions(){
+  const byName = (a, b) => a.name.localeCompare(b.name);
+  const logged = data.exercises.filter(ex => (data.sessions[ex.name] || []).length).sort(byName);
+  const rest = data.exercises.filter(ex => !(data.sessions[ex.name] || []).length).sort(byName);
+  const opt = ex => `<option value="${escAttr(ex.name)}" ${ex.name === progressExercise ? 'selected' : ''}>${escAttr(ex.name)}</option>`;
+  return (logged.length ? `<optgroup label="Logged">${logged.map(opt).join('')}</optgroup>` : '') +
+         (rest.length ? `<optgroup label="${logged.length ? 'Not logged yet' : 'All exercises'}">${rest.map(opt).join('')}</optgroup>` : '');
+}
 function renderProgressSettings(){
   const el = document.getElementById('tabProgress');
   if(!el) return;
@@ -3372,7 +3695,7 @@ function renderProgressSettings(){
     ${weekOverviewHtml()}
     <div class="row-label">Exercise</div>
     <select class="plain-input" id="progressExerciseSelect" onchange="setProgressExercise(this.value)">
-      ${data.exercises.map(ex => `<option value="${escAttr(ex.name)}" ${ex.name === progressExercise ? 'selected' : ''}>${escAttr(ex.name)}</option>`).join('')}
+      ${progressExerciseOptions()}
     </select>
     <div id="progressCharts"></div>
   `;
@@ -3619,7 +3942,23 @@ function renderTimerSettings(){
       <div class="check-chip ${targetsEnabled() ? 'on' : ''}" onclick="setTargetsEnabled(true)">On</div>
       <div class="check-chip ${targetsEnabled() ? '' : 'on'}" onclick="setTargetsEnabled(false)">Off</div>
     </div>
+    <h4 class="settings-h" id="deloadSettings" style="margin-top:1.3rem;padding-top:1rem;border-top:1px solid var(--border);">Deload week</h4>
+    <div class="ex-meta" style="margin-bottom:.5rem;">Suggest a lighter week after this many training weeks: same weights, about half the sets, for ${DELOAD_DAYS} days. Suggested earlier if 3 workouts in a row felt Hard.</div>
+    <div class="checklist" style="margin-bottom:.7rem;">
+      ${[4,5,6].map(n => `<div class="check-chip ${deloadEvery() === n ? 'on' : ''}" onclick="setDeloadEvery(${n})">${n} weeks</div>`).join('')}
+      <div class="check-chip ${deloadEvery() === 0 ? 'on' : ''}" onclick="setDeloadEvery(0)">Off</div>
+    </div>
+    ${activeDeload()
+      ? `<div class="ex-meta" style="margin-bottom:.4rem;"><span class="deload-tag">Deload</span> ${deloadDaysLeft()} day${deloadDaysLeft() === 1 ? '' : 's'} left.</div>
+         <button type="button" class="btn" style="width:100%;" onclick="endDeload(); renderTimerSettings();">End deload week</button>`
+      : `<button type="button" class="btn" style="width:100%;" onclick="startDeload(); renderTimerSettings();">Start deload week now</button>`}
   `;
+}
+function setDeloadEvery(n){
+  ensureSettings();
+  data.settings.deloadEvery = n;
+  saveData();
+  renderTimerSettings();
 }
 function setTargetsEnabled(on){
   ensureSettings();
@@ -3841,6 +4180,9 @@ function buildCSV(){
   // instead of resetting them every time.
   data.exercises.forEach(ex => {
     rows.push(['__meta__', '__exercise__', ex.name, ex.hidden ? 'hidden' : 'visible', Number.isFinite(ex.targetReps) ? String(ex.targetReps) : '', exerciseMetrics(ex).join('|'), (ex.tags || []).join('|'), Number.isFinite(ex.restSeconds) ? 'rest=' + ex.restSeconds : '']);
+  });
+  deloadData().periods.forEach(pd => {
+    rows.push(['__meta__', '__deload__', pd.start, pd.end, '', '', '', '']);
   });
   data.templates.forEach(t => {
     rows.push(['__meta__', '__template__', t.name, t.hidden ? 'hidden' : 'visible', '', '', '', '']);
@@ -4216,6 +4558,7 @@ async function importCSVText(text){
   const templateVisibility = {}; // template name -> hidden boolean, from meta rows
   const exerciseVisibility = {}; // exercise name -> hidden boolean, from meta rows
   const exerciseTags = {}; // exercise name -> tags array, from meta rows
+  const importedDeloads = []; // deload weeks from meta rows
   const exerciseExtras = {}; // exercise name -> { targetReps, restSeconds } from meta rows
   const exerciseMetricsMap = {}; // exercise name -> metrics array, from meta rows (old files without this column leave exercises on the default)
   let skipped = 0;
@@ -4223,6 +4566,11 @@ async function importCSVText(text){
     const r = rows[i];
     const exName = (r[idxEx] || '').trim();
     const date = (r[idxDate] || '').trim();
+    if(exName === '__meta__' && date === '__deload__'){
+      const ds = (r[idxSet] || '').trim(), de = (r[idxWeight] || '').trim();
+      if(/^\d{4}-\d{2}-\d{2}$/.test(ds) && /^\d{4}-\d{2}-\d{2}$/.test(de)) importedDeloads.push({ start: ds, end: de });
+      continue;
+    }
     if(exName === '__meta__' && date === '__template__'){
       const tName = (r[idxSet] || '').trim();
       const state = (r[idxWeight] || '').trim().toLowerCase();
@@ -4322,6 +4670,10 @@ async function importCSVText(text){
     if(!ex) return;
     if(x.targetReps !== undefined) ex.targetReps = x.targetReps;
     if(x.restSeconds !== undefined) ex.restSeconds = x.restSeconds;
+  });
+  importedDeloads.forEach(pd => {
+    const list = deloadData().periods;
+    if(!list.some(x => x.start === pd.start)) list.push(pd);
   });
 
   saveData();
@@ -4482,6 +4834,8 @@ ensureSelectedExercise();
 initRestTimer();
 applyTheme();
 setTimeout(checkForUpdateOnLaunch, 1500);
+registerOfflineSupport();
+setTimeout(maybeSuggestDeload, 3200); // after the update check, never on top of another popup
 render();
 // Mark the walkthrough as seen however the dialog closes (Skip, Got it, the ✕,
 // or a tap/swipe outside it), so it only ever shows once per device.
