@@ -492,6 +492,10 @@
     border-radius:9px; color:#14161A; font-weight:600; font-size:var(--fs-strong);
     cursor:pointer; margin-top:.25rem;
   }
+  .finish-btn{ display:block; width:100%; margin-top:.7rem; padding:.7rem 1rem; background:none; color:var(--text); border:1.5px solid var(--border); border-radius:12px; font:inherit; font-size:var(--fs-strong); font-weight:600; cursor:pointer; }
+  .finish-btn:active{ background:var(--surface-hi); }
+  .note-box{ background:var(--surface-hi); border:1px solid var(--border); border-radius:12px; padding:.7rem .85rem; font-size:var(--fs-sm); line-height:1.5; color:var(--text-dim); margin-bottom:.9rem; }
+  .note-box strong{ color:var(--text); font-weight:600; }
   .save-btn:disabled{ background:var(--surface-hi); color:var(--text-dim); cursor:default; }
   .save-btn:not(:disabled):active{ filter:brightness(.95); }
 
@@ -911,6 +915,7 @@
       <div class="more-tab-menu" id="moreTabMenu">
         <button type="button" class="more-tab-menu-item" id="tabDataBtn" onclick="switchTab('data')">Data</button>
         <button type="button" class="more-tab-menu-item" id="tabAppearanceBtn" onclick="switchTab('appearance')">Appearance</button>
+        <button type="button" class="more-tab-menu-item" id="tabNotifyBtn" onclick="switchTab('notifications')">Notifications</button>
         <button type="button" class="more-tab-menu-item" id="tabInfoBtn" onclick="switchTab('info')">Info</button>
       </div>
     </div>
@@ -920,6 +925,7 @@
     <div id="tabTimer"></div>
     <div id="tabData"></div>
     <div id="tabAppearance"></div>
+    <div id="tabNotifications"></div>
     <div id="tabInfo"></div>
     <div class="settings-footer">
       <button type="button" class="footer-link" onclick="openContact()">Contact</button>
@@ -1032,7 +1038,7 @@
 </dialog>
 
 <script>
-const APP_VERSION = '3.0.21';
+const APP_VERSION = '3.0.26';
 const STORE_KEY = 'liftlog_data_v2';
 
 // Some browsers (notably iOS Safari, especially when added to the home screen)
@@ -1045,16 +1051,16 @@ if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 // Keep only the 10 most recent versions here, newest first, whenever a new version is published.
 const CHANGELOG = [
+  { version: '3.0.26', notes: ['Notifications: when they are blocked, a Check again button (and returning from the Settings app) refreshes the screen, so you don\'t have to close and reopen Lift Log after turning them on'] },
+  { version: '3.0.25', notes: ['Notifications: when they are blocked, the message now lists the steps on iPhone (Settings → Notifications → Lift Log → Allow Notifications) and has an Open iPhone Settings button that tries to jump straight to the Settings app'] },
+  { version: '3.0.24', notes: ['New: Settings → ••• → Notifications. Allow notifications for Lift Log, send yourself a test, and choose the days and time for a training reminder. On iPhone this only works once Lift Log is on your Home Screen. The reminders themselves are sent by the Lift Log server, which is not connected yet, so for now only the test notification works. Needs the new sw.js file next to index.html'] },
+  { version: '3.0.23', notes: ['The workout summary no longer pops up by itself when you save the last exercise of a template, so you can do the exercises in any order. Instead, a "Finish workout" button now sits under the last exercise. If an exercise is still open, the app asks whether to finish anyway or go back to the workout'] },
+  { version: '3.0.22', notes: ['When you pick exercises for a template, the list is now in alphabetical order, so you can find an exercise quickly. The order in which the exercises appear in the workout is still set under "Order" below it'] },
   { version: '3.0.21', notes: ['Lift Log now also opens without a connection — in flight mode or without reception at the gym. The app keeps a copy of itself on your phone (needs the new sw.js file next to index.html), and still picks up new versions automatically when you\'re online. Settings → ••• → Info shows whether offline use is ready'] },
   { version: '3.0.20', notes: ['Deload week: after 5 training weeks (or sooner if 3 workouts in a row felt Hard) the app suggests a lighter week — same weights, about half the sets, for 7 days. You choose: start it, ask again next week, or not now. During the week the target and week strip turn blue, and those workouts are left out of targets, trends and PRs, so building up continues where you left off. Change the interval (4/5/6 weeks or off) or start/end a deload yourself in Settings → Workout'] },
   { version: '3.0.19', notes: ['Templates on the home screen work the same way now: hold a template button for half a second and an Edit button pops up above it to open that template\'s settings'] },
   { version: '3.0.18', notes: ['Quicker exercise editing from the home screen: hold any exercise button for half a second and an Edit button pops up above it — tap it to open that exercise\'s settings. Tap anywhere else to dismiss it'] },
   { version: '3.0.17', notes: ['First version of editing an exercise straight from the home screen'] },
-  { version: '3.0.16', notes: ['The exercise picker in Settings → Progress is now alphabetical, with the exercises you\'ve actually logged at the top — before, it followed the built-in order, so exercises added later (like Push-Ups) were buried far down the list'] },
-  { version: '3.0.15', notes: ['Each exercise can now have its own target reps (12 by default, so the range is 8–12) and its own rest time (the default from Settings → Workout, 90 s, when left empty) — both in the exercise\'s edit screen. The rest timer switches to the selected exercise\'s rest time automatically, and both settings are included in CSV backups'] },
-  { version: '3.0.14', notes: ['The Timer settings tab is now called Workout, with two sections: Rest timer and Target for today. Tap the target above your sets to see how it was worked out (the rule that applied is highlighted), with a shortcut to turn targets off'] },
-  { version: '3.0.13', notes: ['The last few Dutch texts (rest time settings and the rest timer button labels) are now in English, like the rest of the app'] },
-  { version: '3.0.12', notes: ['Target for today: each exercise now opens with a small step up from last time already filled in — build reps from 8 to 12, then +2.5 kg and back to 8 — paced by how last time felt (Hard repeats, Easy adds weight). What went up is marked in orange, with the reason above the sets. Can be turned off in Settings → Workout'] },
 ];
 
 const DEFAULT_EXERCISES = [
@@ -2447,6 +2453,7 @@ function renderContent(){
         <div class="save-check" id="saveCheck">✓</div>
       </div>
       <div class="saved-note" id="savedNote"></div>
+      ${isLastExerciseInView() ? `<button type="button" class="finish-btn" onclick="finishWorkout()">Finish workout</button>` : ''}
     </div>
     <div class="history-toggle" onclick="toggleHistory()">${historyOpen ? 'Hide' : 'Show'} full history</div>
     <div id="historyList"></div>
@@ -2667,9 +2674,6 @@ function saveSession(){
   // Then, once that scroll has settled and the chip is in view, trace a
   // light around the newly selected exercise. Skipped when there was no next
   // exercise, and for anyone with "Reduce Motion" turned on.
-  // Saved the last exercise of the view (end of the workout): show the
-  // workout summary (with a backup offer).
-  if(!movedOn) setTimeout(maybeAskWorkoutBackup, 700);
   const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(movedOn && !reduceMotion){
     setTimeout(() => {
@@ -2683,11 +2687,27 @@ function saveSession(){
 // workout per day whether to save a backup. Skipped when Dropbox/GitHub is
 // set up — those already back up automatically on every save.
 const WORKOUT_BACKUP_ASKED_KEY = 'liftlog_workout_backup_asked';
+function isLastExerciseInView(){
+  const visible = visibleExerciseNames();
+  return visible.length > 0 && visible[visible.length - 1] === selectedExercise;
+}
+// "Finish workout" under the last exercise. If something in this view has no
+// saved session today (skipped, or the machine was busy), ask first.
+async function finishWorkout(){
+  const today = todayStr();
+  const open = visibleExerciseNames().filter(n => !(data.sessions[n] || []).some(s => s.date === today));
+  if(open.length){
+    const shown = open.slice(0, 3).join(', ') + (open.length > 3 ? ` and ${open.length - 3} more` : '');
+    const msg = open.length === 1
+      ? `${shown} isn't done yet. Finish the workout anyway?`
+      : `${shown} aren't done yet. Finish the workout anyway?`;
+    const go = await showConfirm(msg, { title: 'Finish workout?', ok: 'Finish anyway', cancel: 'Back to workout' });
+    if(!go) return;
+  }
+  maybeAskWorkoutBackup();
+}
 function maybeAskWorkoutBackup(){
   if(document.querySelector('dialog[open]')) return;
-  const key = todayStr() + '|' + currentTemplate;
-  try{ if(localStorage.getItem(WORKOUT_BACKUP_ASKED_KEY) === key) return; }catch(e){}
-  try{ localStorage.setItem(WORKOUT_BACKUP_ASKED_KEY, key); }catch(e){}
   workoutSummaryCache = buildWorkoutSummary();
   renderWorkoutBackupDialog('ask');
   document.getElementById('workoutBackupDialog').showModal();
@@ -2984,12 +3004,17 @@ function showAlert(message){
     dlg.showModal();
   });
 }
-function showConfirm(message){
+function showConfirm(message, opts){
+  opts = opts || {};
   return new Promise(resolve => {
     const dlg = document.getElementById('customConfirmDialog');
     document.getElementById('customConfirmMsg').textContent = message;
     const okBtn = document.getElementById('customConfirmOk');
     const cancelBtn = document.getElementById('customConfirmCancel');
+    okBtn.textContent = opts.ok || 'OK';
+    cancelBtn.textContent = opts.cancel || 'Cancel';
+    const titleEl = dlg.querySelector('.dialog-head h3');
+    if(titleEl) titleEl.textContent = opts.title || 'Please confirm';
     let done = false;
     const cleanup = () => {
       okBtn.removeEventListener('click', onOk);
@@ -3014,7 +3039,8 @@ function renderSettings(){
   document.getElementById('tabDataBtn').classList.toggle('active', settingsTab === 'data');
   document.getElementById('tabAppearanceBtn').classList.toggle('active', settingsTab === 'appearance');
   document.getElementById('tabInfoBtn').classList.toggle('active', settingsTab === 'info');
-  document.getElementById('moreTabBtn').classList.toggle('active', settingsTab === 'data' || settingsTab === 'appearance' || settingsTab === 'info');
+  document.getElementById('tabNotifyBtn').classList.toggle('active', settingsTab === 'notifications');
+  document.getElementById('moreTabBtn').classList.toggle('active', settingsTab === 'data' || settingsTab === 'appearance' || settingsTab === 'notifications' || settingsTab === 'info');
   document.getElementById('tabExercises').style.display = settingsTab === 'exercises' ? 'block' : 'none';
   document.getElementById('tabTemplates').style.display = settingsTab === 'templates' ? 'block' : 'none';
   document.getElementById('tabProgress').style.display = settingsTab === 'progress' ? 'block' : 'none';
@@ -3022,6 +3048,7 @@ function renderSettings(){
   document.getElementById('tabData').style.display = settingsTab === 'data' ? 'block' : 'none';
   document.getElementById('tabAppearance').style.display = settingsTab === 'appearance' ? 'block' : 'none';
   document.getElementById('tabInfo').style.display = settingsTab === 'info' ? 'block' : 'none';
+  document.getElementById('tabNotifications').style.display = settingsTab === 'notifications' ? 'block' : 'none';
 
   renderExerciseSettings();
   renderTemplateSettings();
@@ -3029,6 +3056,7 @@ function renderSettings(){
   renderTimerSettings();
   renderDataSettings();
   renderAppearanceSettings();
+  renderNotifySettings();
   renderInfoSettings();
 }
 
@@ -3264,6 +3292,173 @@ function offlineStatusText(){
     unavailable: 'Not available here (only on the installed web app)',
     checking: 'Checking…'
   }[offlineStatus];
+}
+
+// ---------- Notifications (Settings → ••• → Notifications) ----------
+// Allow notifications, send yourself a test, choose reminder days and time.
+// Reminders are pushed by the Lift Log server (not built yet): fill in the
+// two values below once it exists. With PUSH_SERVER_URL empty, the app only
+// asks for permission and can show a test notification from sw.js.
+const PUSH_SERVER_URL = '';        // e.g. 'https://example.com/liftlog-api'
+const PUSH_VAPID_PUBLIC_KEY = '';  // public key of the server's VAPID pair
+const NOTIFY_DAYS = [[1,'Mon'],[2,'Tue'],[3,'Wed'],[4,'Thu'],[5,'Fri'],[6,'Sat'],[7,'Sun']];
+let notifyBusy = false, notifyServerError = false;
+
+function notifyPrefs(){
+  ensureSettings();
+  const n = data.settings.notify;
+  if(!n || typeof n !== 'object') data.settings.notify = { on: false, days: [], time: '18:00' };
+  const p = data.settings.notify;
+  p.on = !!p.on;
+  p.days = Array.isArray(p.days) ? p.days.filter(d => d >= 1 && d <= 7) : [];
+  if(!/^\d\d:\d\d$/.test(p.time || '')) p.time = '18:00';
+  return p;
+}
+function notifyEnv(){
+  const ua = navigator.userAgent || '';
+  const ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const standalone = window.navigator.standalone === true || !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  const swOk = 'serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+  const hasNotif = 'Notification' in window;
+  return { ios, standalone, swOk, hasNotif, perm: hasNotif ? Notification.permission : 'denied' };
+}
+// needs-install | unsupported | blocked | off | on
+function notifyState(){
+  const e = notifyEnv();
+  if(e.ios && !e.standalone) return 'needs-install';
+  if(!e.hasNotif || !e.swOk) return 'unsupported';
+  if(e.perm === 'denied') return 'blocked';
+  return (notifyPrefs().on && e.perm === 'granted') ? 'on' : 'off';
+}
+function urlBase64ToUint8Array(b64){
+  const pad = '='.repeat((4 - b64.length % 4) % 4);
+  const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from(raw, c => c.charCodeAt(0));
+}
+// Registers this phone with the server (when there is one) and sends the
+// reminder days/time along. Safe to call often.
+async function syncPushSubscription(){
+  if(!PUSH_SERVER_URL || !PUSH_VAPID_PUBLIC_KEY) return 'no-server';
+  const p = notifyPrefs();
+  try{
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if(!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(PUSH_VAPID_PUBLIC_KEY) });
+    const res = await fetch(PUSH_SERVER_URL.replace(/\/$/, '') + '/subscribe', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subscription: sub.toJSON(), days: p.days, time: p.time, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone })
+    });
+    if(!res.ok) throw new Error('server ' + res.status);
+    notifyServerError = false;
+    return 'ok';
+  }catch(e){ notifyServerError = true; return 'error'; }
+}
+async function dropPushSubscription(){
+  if(!PUSH_SERVER_URL) return;
+  try{
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if(!sub) return;
+    const endpoint = sub.endpoint;
+    await sub.unsubscribe();
+    await fetch(PUSH_SERVER_URL.replace(/\/$/, '') + '/unsubscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint }) });
+  }catch(e){}
+}
+async function setNotifyOn(){
+  if(notifyBusy) return;
+  const st = notifyState();
+  if(st !== 'off') return;
+  notifyBusy = true;
+  try{
+    // Must be asked straight from the tap, or iPhone ignores the request.
+    const perm = await Notification.requestPermission();
+    if(perm === 'granted'){
+      notifyPrefs().on = true;
+      saveData();
+      await syncPushSubscription();
+    }
+  }catch(e){}
+  notifyBusy = false;
+  renderNotifySettings();
+}
+async function setNotifyOff(){
+  notifyPrefs().on = false;
+  saveData();
+  renderNotifySettings();
+  await dropPushSubscription();
+}
+function toggleNotifyDay(d){
+  const p = notifyPrefs();
+  p.days = p.days.includes(d) ? p.days.filter(x => x !== d) : p.days.concat(d).sort((a, b) => a - b);
+  saveData();
+  renderNotifySettings();
+  syncPushSubscription().then(() => { if(settingsTab === 'notifications') renderNotifySettings(); });
+}
+function setNotifyTime(v){
+  if(!/^\d\d:\d\d$/.test(v)) return;
+  notifyPrefs().time = v;
+  saveData();
+  syncPushSubscription();
+}
+// The test goes through sw.js and shows after a few seconds, so you can lock
+// the phone or leave the app first. If the saved sw.js is an older one that
+// doesn't answer, it is shown straight away instead.
+async function sendTestNotification(){
+  try{
+    const reg = await navigator.serviceWorker.ready;
+    const worker = reg.active || navigator.serviceWorker.controller;
+    const ack = worker ? await new Promise(resolve => {
+      const ch = new MessageChannel();
+      const t = setTimeout(() => resolve(false), 900);
+      ch.port1.onmessage = () => { clearTimeout(t); resolve(true); };
+      worker.postMessage({ type: 'test-notification', delay: 4000 }, [ch.port2]);
+    }) : false;
+    if(!ack) await reg.showNotification('Lift Log', { body: 'Notifications work. Time to lift!', icon: 'icon-192.png', tag: 'liftlog-test' });
+    showAlert(ack ? 'Test sent. It shows up in a few seconds. You can lock your phone or leave the app now.' : 'Test sent.');
+  }catch(e){
+    showAlert('The test notification could not be shown. Check that notifications are allowed for Lift Log in your phone settings.');
+  }
+}
+function renderNotifySettings(){
+  const el = document.getElementById('tabNotifications');
+  if(!el) return;
+  const st = notifyState();
+  const p = notifyPrefs();
+  const intro = `<h4 class="settings-h">Notifications</h4>`;
+  const noServer = !PUSH_SERVER_URL ? `<div class="note-box"><strong>Reminders are not live yet.</strong> They are sent by the Lift Log server, which is not connected yet. You can already allow notifications and send yourself a test.</div>` : '';
+  let body = '';
+  if(st === 'needs-install'){
+    body = `<div class="note-box"><strong>Put Lift Log on your Home Screen first.</strong> On iPhone, notifications only work for the installed app. Open Lift Log in Safari, tap Share, choose Add to Home Screen, then open it from there and come back to this screen.</div>`;
+  }else if(st === 'unsupported'){
+    body = `<div class="note-box"><strong>Not available here.</strong> Notifications need the installed web app or a browser that supports them, opened from its web address.</div>`;
+  }else if(st === 'blocked'){
+    body = notifyEnv().ios
+      ? `<div class="note-box"><strong>Notifications are blocked for Lift Log.</strong> Open the Settings app, tap Notifications, choose Lift Log and turn on Allow Notifications. Then come back here.</div>
+         <a class="btn" href="app-settings:" style="display:block;text-align:center;text-decoration:none;">Open iPhone Settings</a>
+         <div class="ex-meta" style="margin-top:.5rem;">If the button does nothing, open the Settings app yourself.</div>
+         <button type="button" class="btn" style="width:100%;margin-top:.7rem;" onclick="renderNotifySettings()">Check again</button>`
+      : `<div class="note-box"><strong>Notifications are blocked for Lift Log.</strong> Turn them back on in the site settings of your browser, then come back here.</div>`;
+  }else{
+    body = `${noServer}
+    <div class="ex-meta" style="margin-bottom:.5rem;">Let Lift Log send you notifications on this phone, such as a reminder on your training days.</div>
+    <div class="checklist" style="margin-bottom:.9rem;">
+      <div class="check-chip ${st === 'on' ? 'on' : ''}" onclick="setNotifyOn()">On</div>
+      <div class="check-chip ${st === 'on' ? '' : 'on'}" onclick="setNotifyOff()">Off</div>
+    </div>`;
+    if(st === 'on'){
+      body += `
+      <h4 class="settings-h" style="margin-top:1.3rem;padding-top:1rem;border-top:1px solid var(--border);">Training reminder</h4>
+      <div class="ex-meta" style="margin-bottom:.5rem;">Choose the days you plan to train. You get one reminder on those days at the time below. No days selected means no reminder.</div>
+      <div class="checklist" style="margin-bottom:.8rem;">
+        ${NOTIFY_DAYS.map(([n, lbl]) => `<div class="check-chip ${p.days.includes(n) ? 'on' : ''}" onclick="toggleNotifyDay(${n})">${lbl}</div>`).join('')}
+      </div>
+      <div class="row-label">Time</div>
+      <input type="time" class="plain-input" id="notifyTimeInput" value="${p.time}" onchange="setNotifyTime(this.value)">
+      ${notifyServerError ? `<div class="note-box" style="margin-top:.7rem;"><strong>Could not reach the server.</strong> Your choices are saved here and will be sent again next time.</div>` : ''}
+      <button type="button" class="btn" style="width:100%;margin-top:.9rem;" onclick="sendTestNotification()">Send a test notification</button>`;
+    }
+  }
+  el.innerHTML = intro + body;
 }
 
 function renderInfoSettings(){
@@ -3544,7 +3739,7 @@ function renderTemplateChecklist(){
   const selectedSet = new Set(editingTemplateExercises);
   const shown = data.exercises.filter(ex =>
     !templateExerciseTagFilter || selectedSet.has(ex.name) || (Array.isArray(ex.tags) && ex.tags.includes(templateExerciseTagFilter))
-  );
+  ).sort((a, b) => a.name.localeCompare(b.name));
   el.innerHTML = shown.map(ex => `
     <div class="check-chip ${selectedSet.has(ex.name) ? 'on' : ''}" data-name="${escAttr(ex.name)}" onclick="toggleTemplateExercise(this.dataset.name)">${escAttr(ex.name)}</div>
   `).join('');
@@ -4834,7 +5029,12 @@ ensureSelectedExercise();
 initRestTimer();
 applyTheme();
 setTimeout(checkForUpdateOnLaunch, 1500);
+// Coming back from the Settings app: look again, so a change shows up without reopening Lift Log.
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible' && settingsTab === 'notifications' && document.getElementById('settingsDialog').open) renderNotifySettings();
+});
 registerOfflineSupport();
+if(notifyState() === 'on') syncPushSubscription(); // keeps the server's copy of this phone up to date
 setTimeout(maybeSuggestDeload, 3200); // after the update check, never on top of another popup
 render();
 // Mark the walkthrough as seen however the dialog closes (Skip, Got it, the ✕,
