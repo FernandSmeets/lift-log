@@ -1,0 +1,10 @@
+# Lift Log web folder (tiltwick.com/lift-log).
+Options -Indexes
+DirectoryIndex index.html
+
+# Always check for a new version of the app shell, so updates arrive right away.
+<IfModule mod_headers.c>
+  <FilesMatch "^(index\.html|sw\.js|manifest\.json)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
