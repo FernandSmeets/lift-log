@@ -1,0 +1,68 @@
+name: Deploy server
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'
+      - '.github/workflows/deploy-server.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-server
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      DB_HOST: ${{ vars.DB_HOST }}
+      DB_NAME: ${{ vars.DB_NAME }}
+      DB_USER: ${{ vars.DB_USER }}
+      DB_PASS: ${{ secrets.DB_PASS }}
+      MIGRATE_TOKEN: ${{ secrets.MIGRATE_TOKEN }}
+      SFTP_HOST: ${{ vars.SFTP_HOST }}
+      SFTP_USER: ${{ vars.SFTP_USER }}
+      LFTP_PASSWORD: ${{ secrets.SFTP_PASS }}
+      SFTP_PATH: ${{ vars.SFTP_PATH }}
+      SITE_URL: ${{ vars.SITE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check settings
+        run: |
+          missing=""
+          for v in DB_HOST DB_NAME DB_USER DB_PASS MIGRATE_TOKEN SFTP_HOST SFTP_USER LFTP_PASSWORD SFTP_PATH SITE_URL; do
+            [ -n "${!v}" ] || missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Missing Actions secrets/variables:$missing (LFTP_PASSWORD = secret SFTP_PASS)"
+            exit 1
+          fi
+
+      - name: Build server files
+        run: |
+          mkdir -p build
+          cp -r server/api build/api
+          php -r 'echo "<?php\nreturn " . var_export([
+              "db_host" => getenv("DB_HOST"),
+              "db_name" => getenv("DB_NAME"),
+              "db_user" => getenv("DB_USER"),
+              "db_pass" => getenv("DB_PASS"),
+              "migrate_token" => getenv("MIGRATE_TOKEN"),
+          ], true) . ";\n";' > build/api/config.php
+          for f in build/api/*.php; do php -l "$f"; done
+
+      - name: Upload via SFTP
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+          lftp --env-password -u "$SFTP_USER" "sftp://$SFTP_HOST" -e "
+            set sftp:auto-confirm yes;
+            set net:max-retries 2;
+            mkdir -pf $SFTP_PATH/api;
+            mirror -R --verbose build/api $SFTP_PATH/api;
+            bye"
+
+      - name: Apply database schema
+        run: |
+          curl -fsS -X POST -H "X-Migrate-Token: $MIGRATE_TOKEN" "$SITE_URL/api/migrate.php"
