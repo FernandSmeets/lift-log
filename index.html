@@ -831,6 +831,31 @@
     padding:.3rem .55rem; font-size:var(--fs-xs); color:var(--text); white-space:nowrap;
     pointer-events:none; box-shadow:var(--shadow-sm); z-index:2;
   }
+
+  /* ---------- Account: login screen ---------- */
+  #authScreen{
+    position:fixed; inset:0; z-index:1000; background:var(--bg); overflow-y:auto;
+    display:flex; align-items:flex-start; justify-content:center;
+    padding:max(3rem, env(safe-area-inset-top)) 1rem 2rem;
+  }
+  #authScreen[hidden]{ display:none; }
+  .auth-card{ width:100%; max-width:380px; }
+  .auth-title{ font-family:'Oswald', sans-serif; font-size:var(--fs-title); font-weight:600; letter-spacing:.02em; margin:0 0 .3rem; }
+  .auth-sub{ color:var(--text-dim); font-size:var(--fs-base); line-height:1.5; margin:0 0 1.2rem; }
+  .auth-card label{ display:block; font-size:var(--fs-xs); color:var(--text-dim); margin:0 0 .3rem; letter-spacing:.02em; }
+  .auth-card .btn{ width:100%; margin-top:.2rem; }
+  .auth-error{ color:var(--feel-hard); font-size:var(--fs-sm); line-height:1.5; margin:0 0 .7rem; }
+  .auth-error:empty{ display:none; }
+  .auth-links{ display:flex; flex-direction:column; align-items:center; gap:.7rem; margin-top:1.1rem; }
+  .auth-link{ background:none; border:none; padding:.3rem; color:var(--brand-link); font-family:inherit; font-size:var(--fs-base); cursor:pointer; }
+  .auth-consent{ display:flex; gap:.55rem; align-items:flex-start; font-size:var(--fs-sm); color:var(--text-dim); line-height:1.5; margin:.1rem 0 .9rem; }
+  .auth-consent input{ width:1.15rem; height:1.15rem; margin-top:.1rem; accent-color:var(--accent); flex:none; }
+  .auth-consent .auth-link{ padding:0; font-size:inherit; }
+  .sync-status{ font-size:var(--fs-sm); color:var(--text-dim); }
+  .sync-status.warn{ color:var(--feel-medium); }
+  .privacy-body h4{ font-size:var(--fs-md); margin:1rem 0 .3rem; }
+  .privacy-body p, .privacy-body li{ font-size:var(--fs-base); color:var(--text-dim); line-height:1.55; }
+  .privacy-body ul{ padding-left:1.1rem; margin:.3rem 0; }
 </style>
 </head>
 <body>
@@ -916,6 +941,7 @@
         <button type="button" class="more-tab-menu-item" id="tabDataBtn" onclick="switchTab('data')">Data</button>
         <button type="button" class="more-tab-menu-item" id="tabAppearanceBtn" onclick="switchTab('appearance')">Appearance</button>
         <button type="button" class="more-tab-menu-item" id="tabNotifyBtn" onclick="switchTab('notifications')">Notifications</button>
+        <button type="button" class="more-tab-menu-item" id="tabAccountBtn" onclick="switchTab('account')">Account</button>
         <button type="button" class="more-tab-menu-item" id="tabInfoBtn" onclick="switchTab('info')">Info</button>
       </div>
     </div>
@@ -926,6 +952,7 @@
     <div id="tabData"></div>
     <div id="tabAppearance"></div>
     <div id="tabNotifications"></div>
+    <div id="tabAccount"></div>
     <div id="tabInfo"></div>
     <div class="settings-footer">
       <button type="button" class="footer-link" onclick="openContact()">Contact</button>
@@ -1017,6 +1044,48 @@
   </div>
 </dialog>
 
+<!-- Login / create account (see Account & sync). Covers the app until you're logged in. -->
+<div id="authScreen" hidden>
+  <div class="auth-card" id="authCard"></div>
+</div>
+
+<!-- Privacy statement -->
+<dialog id="privacyDialog">
+  <div class="dialog-head"><h3>Privacy statement</h3><button class="dialog-close" onclick="document.getElementById('privacyDialog').close()">✕</button></div>
+  <div class="dialog-body privacy-body">
+    <p>Lift Log is made by Pixelplanners (Fernand Smeets). This statement explains what happens with your data when you use a Lift Log account.</p>
+    <h4>What we store</h4>
+    <ul>
+      <li>Your email address and your password (stored only as a secure hash, never readable).</li>
+      <li>Your training data: exercises, templates, workouts, weights, reps and settings.</li>
+      <li>When you last logged in and the type of browser or phone you use, so you can stay logged in.</li>
+      <li>For failed login attempts: your IP address, for at most one day, to block password guessing.</li>
+    </ul>
+    <h4>Why</h4>
+    <p>Only to give you an account, keep your training data safe and make it available on your other devices. We don't use your data for advertising, don't sell it and don't share it with others.</p>
+    <h4>Where</h4>
+    <p>Your data is stored on servers of our hosting provider STRATO in Germany. Data is sent over an encrypted connection.</p>
+    <h4>How long</h4>
+    <p>As long as you have an account. You can delete your account and all its data yourself at any time in Settings → ••• → Account.</p>
+    <h4>Your rights</h4>
+    <p>You can ask to see, correct or delete your data, or take a copy (Settings → ••• → Data → export). Questions or requests: <a href="mailto:info@pixelplanners.nl" style="color:var(--brand-link);">info@pixelplanners.nl</a>. If you're not happy with how we handle your data, you can file a complaint with the Dutch Data Protection Authority (Autoriteit Persoonsgegevens).</p>
+  </div>
+</dialog>
+
+<!-- Delete account (asks for the password once more) -->
+<dialog id="deleteAccountDialog">
+  <div class="dialog-head"><h3>Delete account</h3><button class="dialog-close" onclick="document.getElementById('deleteAccountDialog').close()">✕</button></div>
+  <div class="dialog-body">
+    <p style="font-size:var(--fs-md); line-height:1.6; margin:0 0 .9rem;">This permanently deletes your account and all training data saved in it. This can't be undone. Enter your password to confirm.</p>
+    <input type="password" class="plain-input" id="deleteAccountPassword" placeholder="Password" autocomplete="current-password">
+    <p class="auth-error" id="deleteAccountError"></p>
+    <div style="display:flex; gap:.5rem;">
+      <button type="button" class="btn" style="flex:1;" onclick="document.getElementById('deleteAccountDialog').close()">Cancel</button>
+      <button type="button" class="btn danger" style="flex:1;" id="deleteAccountBtn" onclick="confirmDeleteAccount()">Delete</button>
+    </div>
+  </div>
+</dialog>
+
 <!-- New/edit template dialog -->
 <dialog id="templateDialog">
   <div class="dialog-head"><h3 id="templateDialogTitle">New template</h3><button class="dialog-close" onclick="document.getElementById('templateDialog').close()">✕</button></div>
@@ -1038,8 +1107,436 @@
 </dialog>
 
 <script>
-const APP_VERSION = '3.0.26';
+const APP_VERSION = '3.1.0';
 const STORE_KEY = 'liftlog_data_v2';
+
+/* ---------- Account & sync ----------
+   Lift Log needs an account. Your data still lives on the phone first (so the
+   app works offline at the gym); every change is also sent to your account on
+   the Lift Log server, and changes made on another device are picked up when
+   the app opens or comes back to the foreground.
+   The server keeps a revision number per account. A save says which revision it
+   started from; if another device saved in between, the server refuses and we
+   ask which version to keep. Whatever gets replaced is first copied to
+   BACKUP_KEY on this device, so nothing is ever lost silently. */
+const API_BASE = 'https://tiltwick.com/lift-log/api/';
+const AUTH_KEY = 'liftlog_auth_v1';            // { token, email, revision, dirty, lastSync }
+const BACKUP_KEY = 'liftlog_data_backup_v1';   // last local copy replaced by a sync
+const DEVICE_ONLY_SETTINGS = ['dropboxToken', 'githubToken', 'githubRepo']; // never leave this phone
+const SYNC_DELAY_MS = 1500;
+
+function readAuth(){
+  try{ return JSON.parse(localStorage.getItem(AUTH_KEY) || 'null') || {}; }catch(e){ return {}; }
+}
+let auth = readAuth();
+let syncTimer = null, syncBusy = false, syncError = '', localChangeSeq = 0;
+
+function writeAuth(){
+  try{ localStorage.setItem(AUTH_KEY, JSON.stringify(auth)); }catch(e){}
+}
+function isLoggedIn(){ return !!auth.token; }
+
+// fetch() wrapper: JSON in and out. Resolves { status, body }; rejects only when
+// the server can't be reached at all (offline, timeout).
+async function api(path, method, body){
+  const headers = { 'Content-Type': 'application/json' };
+  if(auth.token) headers['X-Auth-Token'] = auth.token;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 20000);
+  try{
+    const res = await fetch(API_BASE + path, {
+      method: method || 'GET', headers, signal: ctrl.signal, cache: 'no-store',
+      body: body === undefined ? undefined : JSON.stringify(body)
+    });
+    let json = {};
+    try{ json = await res.json(); }catch(e){}
+    return { status: res.status, body: json };
+  } finally { clearTimeout(timer); }
+}
+
+function hasLocalWorkouts(d){
+  return Object.values((d && d.sessions) || {}).some(list => Array.isArray(list) && list.length > 0);
+}
+function syncPayload(){
+  const copy = JSON.parse(JSON.stringify(data));
+  if(copy.settings) DEVICE_ONLY_SETTINGS.forEach(k => delete copy.settings[k]);
+  return copy;
+}
+function backupLocalData(){
+  try{ localStorage.setItem(BACKUP_KEY, JSON.stringify({ savedAt: new Date().toISOString(), data })); }catch(e){}
+}
+// Replaces this device's data with the account's copy, keeping device-only settings.
+function applyServerData(serverData, revision){
+  const keep = {};
+  DEVICE_ONLY_SETTINGS.forEach(k => { if(data.settings && data.settings[k]) keep[k] = data.settings[k]; });
+  data = serverData;
+  if(!data.settings) data.settings = {};
+  Object.assign(data.settings, keep);
+  ensureSettings();
+  writeLocalData();
+  auth.revision = revision;
+  auth.dirty = false;
+  auth.lastSync = Date.now();
+  writeAuth();
+  refreshAfterDataChange();
+}
+function refreshAfterDataChange(){
+  try{
+    applyTheme();
+    if(appInUse()) currentTemplate = pickStartupTemplate();
+    ensureSelectedExercise();
+    render();
+    if(document.getElementById('settingsDialog').open) renderSettings();
+  }catch(e){ console.error('refresh failed', e); }
+}
+
+// Called by saveData(): remember there's something to send, and send it soon.
+function onLocalDataChanged(){
+  if(!isLoggedIn()) return;
+  localChangeSeq++;
+  if(!auth.dirty){ auth.dirty = true; writeAuth(); }
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(pushToServer, SYNC_DELAY_MS);
+}
+
+async function pushToServer(){
+  if(!isLoggedIn() || !auth.dirty) return;
+  if(syncBusy){ clearTimeout(syncTimer); syncTimer = setTimeout(pushToServer, SYNC_DELAY_MS); return; }
+  syncBusy = true;
+  const seq = localChangeSeq;
+  try{
+    const res = await api('data.php', 'PUT', { data: syncPayload(), base_revision: auth.revision || 0 });
+    if(res.status === 200){
+      auth.revision = res.body.revision;
+      if(seq === localChangeSeq) auth.dirty = false;
+      auth.lastSync = Date.now();
+      syncError = '';
+      writeAuth();
+    } else if(res.status === 409){
+      await resolveConflict(res.body.data, res.body.revision);
+    } else if(res.status === 401){
+      sessionExpired();
+    } else {
+      syncError = res.body.message || 'Could not save to your account.';
+    }
+  }catch(e){
+    syncError = 'offline';
+  }finally{
+    syncBusy = false;
+    renderAccountStatus();
+  }
+  if(isLoggedIn() && auth.dirty && seq !== localChangeSeq) syncTimer = setTimeout(pushToServer, SYNC_DELAY_MS);
+}
+
+// Fetches the account's copy; takes it when it's newer and nothing here is waiting to be sent.
+async function pullFromServer(){
+  if(!isLoggedIn() || syncBusy) return;
+  if(auth.dirty){ return pushToServer(); }
+  syncBusy = true;
+  let needPush = false;
+  try{
+    const res = await api('data.php', 'GET');
+    if(res.status === 200){
+      syncError = '';
+      if(res.body.data && res.body.revision > (auth.revision || 0)){
+        applyServerData(res.body.data, res.body.revision);
+      } else if(!res.body.data){
+        auth.revision = 0; auth.dirty = true; writeAuth();
+        needPush = true;
+      } else {
+        auth.lastSync = Date.now(); writeAuth();
+      }
+    } else if(res.status === 401){
+      sessionExpired();
+    }
+  }catch(e){
+    syncError = 'offline';
+  }finally{
+    syncBusy = false;
+    renderAccountStatus();
+  }
+  if(needPush) await pushToServer();
+}
+
+async function resolveConflict(serverData, serverRevision){
+  const keepThis = await showConfirm(
+    'Your training data was also changed on another device since this phone last synced.\n\nWhich version do you want to keep? The other one is replaced.',
+    { title: 'Two versions', ok: 'This phone', cancel: 'Other device' }
+  );
+  if(keepThis){
+    auth.revision = serverRevision; auth.dirty = true; writeAuth();
+    syncBusy = false;
+    await pushToServer();
+  } else {
+    backupLocalData();
+    applyServerData(serverData, serverRevision);
+  }
+}
+
+// Right after logging in: decide whether this phone's data or the account's data wins.
+async function firstSyncAfterLogin(){
+  const res = await api('data.php', 'GET');
+  if(res.status !== 200) throw new Error(res.body.message || 'Could not load your data.');
+  const server = res.body;
+  if(!server.data){
+    // New account: this phone's data (if any) becomes the account's data.
+    auth.revision = 0; auth.dirty = true; writeAuth();
+    await pushToServer();
+    return;
+  }
+  if(hasLocalWorkouts(data) && JSON.stringify(syncPayload()) !== JSON.stringify(server.data)){
+    const useAccount = await showConfirm(
+      'This phone already has training data, and your account has data too.\n\nUse the data from your account, or replace it with what\'s on this phone?',
+      { title: 'Which data?', ok: 'From account', cancel: 'This phone' }
+    );
+    if(!useAccount){
+      auth.revision = server.revision; auth.dirty = true; writeAuth();
+      await pushToServer();
+      return;
+    }
+    backupLocalData();
+  }
+  applyServerData(server.data, server.revision);
+}
+
+function sessionExpired(){
+  auth = {};
+  writeAuth();
+  showAuthScreen('login', 'You were logged out. Please log in again.');
+}
+
+/* Login screen */
+let authMode = 'login', authBusy = false, resetToken = '';
+
+function showAuthScreen(mode, message){
+  authMode = mode || 'login';
+  renderAuthScreen(message || '');
+  document.getElementById('authScreen').hidden = false;
+  document.documentElement.style.overflow = 'hidden';
+}
+function hideAuthScreen(){
+  document.getElementById('authScreen').hidden = true;
+  document.documentElement.style.overflow = '';
+}
+function setAuthMode(mode){ authMode = mode; renderAuthScreen(''); }
+
+function renderAuthScreen(message){
+  const el = document.getElementById('authCard');
+  const email = (document.getElementById('authEmail') || {}).value || auth.lastEmail || '';
+  const err = `<p class="auth-error" id="authError">${escAttr(message)}</p>`;
+  const emailField = `<label for="authEmail">Email</label>
+    <input type="email" class="plain-input" id="authEmail" autocomplete="email" inputmode="email" value="${escAttr(email)}">`;
+  const pwField = (id, label, ac) => `<label for="${id}">${label}</label>
+    <input type="password" class="plain-input" id="${id}" autocomplete="${ac}">`;
+  let html = `<h1 class="auth-title">Lift Log</h1>`;
+  if(authMode === 'login'){
+    html += `<p class="auth-sub">Log in to your account. Your training data is saved in it, so it's safe and on all your devices.</p>
+      <form onsubmit="event.preventDefault(); submitAuth();">
+        ${emailField}${pwField('authPassword', 'Password', 'current-password')}${err}
+        <button type="submit" class="btn primary" id="authSubmit">Log in</button>
+      </form>
+      <div class="auth-links">
+        <button type="button" class="auth-link" onclick="setAuthMode('register')">New here? Create an account</button>
+        <button type="button" class="auth-link" onclick="setAuthMode('forgot')">Forgot your password?</button>
+      </div>`;
+  } else if(authMode === 'register'){
+    html += `<p class="auth-sub">Create a free account. Training data already on this phone is saved in it.</p>
+      <form onsubmit="event.preventDefault(); submitAuth();">
+        ${emailField}${pwField('authPassword', 'Password (at least 8 characters)', 'new-password')}
+        <div class="auth-consent"><input type="checkbox" id="authConsent">
+          <span>I've read the <button type="button" class="auth-link" onclick="openPrivacy()">privacy statement</button> and agree that my data is stored in my account.</span></div>
+        ${err}
+        <button type="submit" class="btn primary" id="authSubmit">Create account</button>
+      </form>
+      <div class="auth-links">
+        <button type="button" class="auth-link" onclick="setAuthMode('login')">Already have an account? Log in</button>
+      </div>`;
+  } else if(authMode === 'forgot'){
+    html += `<p class="auth-sub">Enter your email address and we'll send you a link to choose a new password.</p>
+      <form onsubmit="event.preventDefault(); submitAuth();">
+        ${emailField}${err}
+        <button type="submit" class="btn primary" id="authSubmit">Send link</button>
+      </form>
+      <div class="auth-links">
+        <button type="button" class="auth-link" onclick="setAuthMode('login')">Back to log in</button>
+      </div>`;
+  } else if(authMode === 'reset'){
+    html += `<p class="auth-sub">Choose a new password for your account.</p>
+      <form onsubmit="event.preventDefault(); submitAuth();">
+        ${pwField('authPassword', 'New password (at least 8 characters)', 'new-password')}${err}
+        <button type="submit" class="btn primary" id="authSubmit">Save password</button>
+      </form>
+      <div class="auth-links">
+        <button type="button" class="auth-link" onclick="setAuthMode('login')">Back to log in</button>
+      </div>`;
+  }
+  html += `<div class="auth-links"><button type="button" class="auth-link" style="font-size:var(--fs-sm); color:var(--text-dim);" onclick="openPrivacy()">Privacy statement</button></div>`;
+  el.innerHTML = html;
+}
+
+function authFail(message){
+  const e = document.getElementById('authError');
+  if(e) e.textContent = message;
+}
+
+async function submitAuth(){
+  if(authBusy) return;
+  const emailEl = document.getElementById('authEmail');
+  const pwEl = document.getElementById('authPassword');
+  const email = emailEl ? emailEl.value.trim() : '';
+  const password = pwEl ? pwEl.value : '';
+  if(authMode !== 'reset' && !email) return authFail('Please enter your email address.');
+  if(authMode !== 'forgot' && !password) return authFail('Please enter your password.');
+  if(authMode === 'register' && !document.getElementById('authConsent').checked){
+    return authFail('Please agree to the privacy statement to create an account.');
+  }
+  const btn = document.getElementById('authSubmit');
+  const label = btn.textContent;
+  authBusy = true; btn.disabled = true; btn.textContent = 'One moment…'; authFail('');
+  try{
+    if(authMode === 'forgot'){
+      const res = await api('forgot.php', 'POST', { email });
+      if(res.status !== 200) return authFail(res.body.message || 'Something went wrong. Please try again.');
+      auth.lastEmail = email; writeAuth();
+      authMode = 'login';
+      renderAuthScreen('');
+      await showAlert('If an account exists for ' + email + ', we\'ve sent it an email with a link to choose a new password. The link works for one hour. Check your spam folder if you don\'t see it.');
+      return;
+    }
+    const path = authMode === 'register' ? 'register.php' : authMode === 'reset' ? 'reset.php' : 'login.php';
+    const body = authMode === 'reset' ? { token: resetToken, password } : { email, password };
+    const res = await api(path, 'POST', body);
+    if(res.status !== 200 && res.status !== 201) return authFail(res.body.message || 'Something went wrong. Please try again.');
+    auth = { token: res.body.token, email: res.body.email, lastEmail: res.body.email, revision: 0, dirty: false };
+    writeAuth();
+    resetToken = '';
+    try{ await firstSyncAfterLogin(); }
+    catch(e){ syncError = 'offline'; }
+    hideAuthScreen();
+    refreshAfterDataChange();
+  }catch(e){
+    authFail('Can\'t reach the Lift Log server. Check your internet connection and try again.');
+  }finally{
+    authBusy = false;
+    const b = document.getElementById('authSubmit');
+    if(b){ b.disabled = false; b.textContent = label; }
+  }
+}
+
+function openPrivacy(){ document.getElementById('privacyDialog').showModal(); }
+
+/* Settings → ••• → Account */
+function syncStatusText(){
+  if(syncBusy) return { text: 'Syncing…', warn: false };
+  if(syncError === 'offline') return { text: auth.dirty ? 'Offline — your latest changes are saved on this phone and will be sent when you\'re back online.' : 'Offline — showing the data saved on this phone.', warn: auth.dirty };
+  if(syncError) return { text: syncError, warn: true };
+  if(auth.dirty) return { text: 'Saving changes to your account…', warn: false };
+  if(auth.lastSync) return { text: 'All changes are saved in your account (last synced ' + new Date(auth.lastSync).toLocaleString([], { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) + ').', warn: false };
+  return { text: 'Not synced yet.', warn: false };
+}
+function renderAccountStatus(){
+  const el = document.getElementById('accountSyncStatus');
+  if(!el) return;
+  const s = syncStatusText();
+  el.textContent = s.text;
+  el.classList.toggle('warn', s.warn);
+}
+function renderAccountSettings(){
+  const el = document.getElementById('tabAccount');
+  if(!el) return;
+  el.innerHTML = `
+    <div class="section-title">Account</div>
+    <div class="settings-row">
+      <div class="ex-info"><span class="name">${escAttr(auth.email || '')}</span><span class="sync-status" id="accountSyncStatus"></span></div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:.5rem; margin-top:.9rem;">
+      <button type="button" class="btn" onclick="syncNow()">Sync now</button>
+      <button type="button" class="btn" onclick="logOut()">Log out</button>
+      <button type="button" class="btn" onclick="openPrivacy()">Privacy statement</button>
+      <button type="button" class="btn danger" onclick="openDeleteAccount()">Delete account</button>
+    </div>`;
+  renderAccountStatus();
+}
+async function syncNow(){
+  syncError = '';
+  renderAccountStatus();
+  if(auth.dirty) await pushToServer(); else await pullFromServer();
+  renderAccountStatus();
+}
+async function logOut(){
+  if(auth.dirty) await pushToServer();
+  if(auth.dirty){
+    const ok = await showConfirm('Some changes haven\'t reached your account yet (no connection). If you log out now, they are lost.\n\nLog out anyway?', { title: 'Log out', ok: 'Log out', cancel: 'Stay' });
+    if(!ok) return;
+  } else {
+    const ok = await showConfirm('Log out of ' + (auth.email || 'your account') + '? Your training data stays safe in your account; log in again to see it.', { title: 'Log out', ok: 'Log out', cancel: 'Cancel' });
+    if(!ok) return;
+  }
+  try{ await api('logout.php', 'POST', {}); }catch(e){}
+  clearLocalAccountData();
+  location.reload();
+}
+// Removes this account's data from the phone, so the next person to log in starts clean.
+function clearLocalAccountData(){
+  const lastEmail = auth.email;
+  try{
+    [STORE_KEY, BACKUP_KEY, 'liftlog_setdone_v1', 'liftlog_workout_start', 'liftlog_workout_backup_asked'].forEach(k => localStorage.removeItem(k));
+  }catch(e){}
+  auth = { lastEmail };
+  writeAuth();
+  data = loadData();
+  ensureSettings();
+}
+function openDeleteAccount(){
+  document.getElementById('deleteAccountPassword').value = '';
+  document.getElementById('deleteAccountError').textContent = '';
+  document.getElementById('deleteAccountDialog').showModal();
+}
+async function confirmDeleteAccount(){
+  const password = document.getElementById('deleteAccountPassword').value;
+  const errEl = document.getElementById('deleteAccountError');
+  if(!password){ errEl.textContent = 'Please enter your password.'; return; }
+  const btn = document.getElementById('deleteAccountBtn');
+  btn.disabled = true;
+  try{
+    const res = await api('delete-account.php', 'POST', { password });
+    if(res.status !== 200){ errEl.textContent = res.body.message || 'Something went wrong. Please try again.'; return; }
+    clearLocalAccountData();
+    auth = {};
+    writeAuth();
+    document.getElementById('deleteAccountDialog').close();
+    await showAlert('Your account and all its data have been deleted.');
+    location.reload();
+  }catch(e){
+    errEl.textContent = 'Can\'t reach the Lift Log server. Check your internet connection and try again.';
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+// Startup: a ?reset=… link from the password email opens the new-password screen;
+// without an account the login screen covers the app; otherwise sync quietly.
+async function initAccount(){
+  document.addEventListener('visibilitychange', () => {
+    if(document.visibilityState === 'visible') pullFromServer();
+  });
+  window.addEventListener('online', () => { if(auth.dirty) pushToServer(); else pullFromServer(); });
+  const params = new URLSearchParams(location.search);
+  if(params.has('reset')){
+    resetToken = params.get('reset') || '';
+    params.delete('reset');
+    const q = params.toString();
+    history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
+    if(isLoggedIn()){
+      if(auth.dirty) await pushToServer();
+      clearLocalAccountData();
+    }
+    showAuthScreen('reset');
+    return;
+  }
+  if(!isLoggedIn()){ showAuthScreen('login'); return; }
+  pullFromServer();
+}
 
 // Some browsers (notably iOS Safari, especially when added to the home screen)
 // restore a remembered scroll position or shift the page down slightly while
@@ -1051,6 +1548,7 @@ if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 // Keep only the 10 most recent versions here, newest first, whenever a new version is published.
 const CHANGELOG = [
+  { version: '3.1.0', notes: ['New: Lift Log accounts. Create an account (or log in) with your email address and your training data is saved in it: safe if you lose your phone, and the same on all your devices. Training data already on your phone moves into your new account. The app still works offline at the gym; changes are sent to your account as soon as you\'re online. Settings → ••• → Account shows the sync status and lets you log out or delete your account. Forgot your password? Request a reset link on the login screen'] },
   { version: '3.0.26', notes: ['Notifications: when they are blocked, a Check again button (and returning from the Settings app) refreshes the screen, so you don\'t have to close and reopen Lift Log after turning them on'] },
   { version: '3.0.25', notes: ['Notifications: when they are blocked, the message now lists the steps on iPhone (Settings → Notifications → Lift Log → Allow Notifications) and has an Open iPhone Settings button that tries to jump straight to the Settings app'] },
   { version: '3.0.24', notes: ['New: Settings → ••• → Notifications. Allow notifications for Lift Log, send yourself a test, and choose the days and time for a training reminder. On iPhone this only works once Lift Log is on your Home Screen. The reminders themselves are sent by the Lift Log server, which is not connected yet, so for now only the test notification works. Needs the new sw.js file next to index.html'] },
@@ -1060,7 +1558,6 @@ const CHANGELOG = [
   { version: '3.0.20', notes: ['Deload week: after 5 training weeks (or sooner if 3 workouts in a row felt Hard) the app suggests a lighter week — same weights, about half the sets, for 7 days. You choose: start it, ask again next week, or not now. During the week the target and week strip turn blue, and those workouts are left out of targets, trends and PRs, so building up continues where you left off. Change the interval (4/5/6 weeks or off) or start/end a deload yourself in Settings → Workout'] },
   { version: '3.0.19', notes: ['Templates on the home screen work the same way now: hold a template button for half a second and an Edit button pops up above it to open that template\'s settings'] },
   { version: '3.0.18', notes: ['Quicker exercise editing from the home screen: hold any exercise button for half a second and an Edit button pops up above it — tap it to open that exercise\'s settings. Tap anywhere else to dismiss it'] },
-  { version: '3.0.17', notes: ['First version of editing an exercise straight from the home screen'] },
 ];
 
 const DEFAULT_EXERCISES = [
@@ -1232,6 +1729,10 @@ function ensureSettings(){
   }
 }
 function saveData(){
+  writeLocalData();
+  onLocalDataChanged();
+}
+function writeLocalData(){
   try{ localStorage.setItem(STORE_KEY, JSON.stringify(data)); }
   catch(e){ console.error('save failed', e); }
 }
@@ -1785,6 +2286,7 @@ function deloadReason(){
 }
 let deloadDismissedThisSession = false;
 function maybeSuggestDeload(){
+  if(!isLoggedIn()) return;
   if(deloadDismissedThisSession || document.querySelector('dialog[open]')) return;
   const dd = deloadData(), today = todayStr();
   if(dd.snoozeUntil && today < dd.snoozeUntil) return;
@@ -2968,6 +3470,7 @@ function openA2hs(){
 // both mean it's already installed, and other iOS browsers like Chrome/Firefox
 // use a different share sheet than the one these steps describe).
 function maybeShowA2hsPrompt(){
+  if(!isLoggedIn()) return;
   try{
     if(localStorage.getItem(A2HS_SEEN_KEY)) return;
     const ua = window.navigator.userAgent || '';
@@ -3040,7 +3543,8 @@ function renderSettings(){
   document.getElementById('tabAppearanceBtn').classList.toggle('active', settingsTab === 'appearance');
   document.getElementById('tabInfoBtn').classList.toggle('active', settingsTab === 'info');
   document.getElementById('tabNotifyBtn').classList.toggle('active', settingsTab === 'notifications');
-  document.getElementById('moreTabBtn').classList.toggle('active', settingsTab === 'data' || settingsTab === 'appearance' || settingsTab === 'notifications' || settingsTab === 'info');
+  document.getElementById('tabAccountBtn').classList.toggle('active', settingsTab === 'account');
+  document.getElementById('moreTabBtn').classList.toggle('active', settingsTab === 'data' || settingsTab === 'appearance' || settingsTab === 'notifications' || settingsTab === 'account' || settingsTab === 'info');
   document.getElementById('tabExercises').style.display = settingsTab === 'exercises' ? 'block' : 'none';
   document.getElementById('tabTemplates').style.display = settingsTab === 'templates' ? 'block' : 'none';
   document.getElementById('tabProgress').style.display = settingsTab === 'progress' ? 'block' : 'none';
@@ -3049,6 +3553,7 @@ function renderSettings(){
   document.getElementById('tabAppearance').style.display = settingsTab === 'appearance' ? 'block' : 'none';
   document.getElementById('tabInfo').style.display = settingsTab === 'info' ? 'block' : 'none';
   document.getElementById('tabNotifications').style.display = settingsTab === 'notifications' ? 'block' : 'none';
+  document.getElementById('tabAccount').style.display = settingsTab === 'account' ? 'block' : 'none';
 
   renderExerciseSettings();
   renderTemplateSettings();
@@ -3057,6 +3562,7 @@ function renderSettings(){
   renderDataSettings();
   renderAppearanceSettings();
   renderNotifySettings();
+  renderAccountSettings();
   renderInfoSettings();
 }
 
@@ -3187,7 +3693,7 @@ let lastUpdateCheckAt = 0;
 let updatePopupDismissedFor = null;
 let updateDialogState = { version: null, phase: 'ask', status: '', warn: false }; // phase: ask | backing-up | backed-up
 async function checkForUpdateOnLaunch(){
-  if(navigator.onLine === false) return;
+  if(navigator.onLine === false || !isLoggedIn()) return;
   lastUpdateCheckAt = Date.now();
   let v;
   try{ v = await fetchPublishedVersion(); }catch(e){ return; }
@@ -5034,6 +5540,7 @@ document.addEventListener('visibilitychange', () => {
   if(document.visibilityState === 'visible' && settingsTab === 'notifications' && document.getElementById('settingsDialog').open) renderNotifySettings();
 });
 registerOfflineSupport();
+initAccount();
 if(notifyState() === 'on') syncPushSubscription(); // keeps the server's copy of this phone up to date
 setTimeout(maybeSuggestDeload, 3200); // after the update check, never on top of another popup
 render();
