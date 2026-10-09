@@ -26,6 +26,7 @@ jobs:
       LFTP_PASSWORD: ${{ secrets.SFTP_PASS }}
       SFTP_PATH: ${{ vars.SFTP_PATH }}
       SITE_URL: ${{ vars.SITE_URL }}
+      MAIL_FROM: ${{ vars.MAIL_FROM }}
     steps:
       - uses: actions/checkout@v4
 
@@ -50,6 +51,8 @@ jobs:
               "db_user" => getenv("DB_USER"),
               "db_pass" => getenv("DB_PASS"),
               "migrate_token" => getenv("MIGRATE_TOKEN"),
+              "site_url" => getenv("SITE_URL"),
+              "mail_from" => getenv("MAIL_FROM") ?: "noreply@" . parse_url(getenv("SITE_URL"), PHP_URL_HOST),
           ], true) . ";\n";' > build/api/config.php
           for f in build/api/*.php; do php -l "$f"; done
 
