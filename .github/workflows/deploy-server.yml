@@ -56,12 +56,18 @@ jobs:
       - name: Upload via SFTP
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+          echo "Host: $SFTP_HOST  User: $SFTP_USER  Target: $SFTP_PATH/api"
+          # Connection log (lftp masks the password as XXXX) is printed if anything fails.
           lftp --env-password -u "$SFTP_USER" "sftp://$SFTP_HOST" -e "
             set sftp:auto-confirm yes;
             set net:max-retries 2;
+            set net:timeout 20;
+            debug -t -o lftp-debug.log 5;
+            echo 'Remote home folder:';
+            cls -1;
             mkdir -pf $SFTP_PATH/api;
             mirror -R --verbose build/api $SFTP_PATH/api;
-            bye"
+            bye" || { echo "----- lftp connection log -----"; cat lftp-debug.log; exit 1; }
 
       - name: Apply database schema
         run: |
