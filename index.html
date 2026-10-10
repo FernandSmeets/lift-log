@@ -709,7 +709,7 @@
     cursor:pointer; padding:0; text-decoration:underline; text-decoration-color:var(--accent-dim);
   }
 
-  /* Collapsible sections in Settings → Data (Dropbox / GitHub / CSV export) —
+  /* Collapsible sections in Settings → Data (CSV export) —
      plain <details>/<summary> so they work without extra JS, closed by
      default so the tab isn't a wall of inputs. */
   .backup-section{
@@ -1107,7 +1107,7 @@
 </dialog>
 
 <script>
-const APP_VERSION = '3.1.2';
+const APP_VERSION = '3.1.3';
 const STORE_KEY = 'liftlog_data_v2';
 
 /* ---------- Account & sync ----------
@@ -1122,7 +1122,6 @@ const STORE_KEY = 'liftlog_data_v2';
 const API_BASE = 'https://tiltwick.com/lift-log/api/';
 const AUTH_KEY = 'liftlog_auth_v1';            // { token, email, revision, dirty, lastSync }
 const BACKUP_KEY = 'liftlog_data_backup_v1';   // last local copy replaced by a sync
-const DEVICE_ONLY_SETTINGS = ['dropboxToken', 'githubToken', 'githubRepo']; // never leave this phone
 const SYNC_DELAY_MS = 1500;
 
 function readAuth(){
@@ -1158,20 +1157,15 @@ function hasLocalWorkouts(d){
   return Object.values((d && d.sessions) || {}).some(list => Array.isArray(list) && list.length > 0);
 }
 function syncPayload(){
-  const copy = JSON.parse(JSON.stringify(data));
-  if(copy.settings) DEVICE_ONLY_SETTINGS.forEach(k => delete copy.settings[k]);
-  return copy;
+  return JSON.parse(JSON.stringify(data));
 }
 function backupLocalData(){
   try{ localStorage.setItem(BACKUP_KEY, JSON.stringify({ savedAt: new Date().toISOString(), data })); }catch(e){}
 }
-// Replaces this device's data with the account's copy, keeping device-only settings.
+// Replaces this device's data with the account's copy.
 function applyServerData(serverData, revision){
-  const keep = {};
-  DEVICE_ONLY_SETTINGS.forEach(k => { if(data.settings && data.settings[k]) keep[k] = data.settings[k]; });
   data = serverData;
   if(!data.settings) data.settings = {};
-  Object.assign(data.settings, keep);
   ensureSettings();
   writeLocalData();
   auth.revision = revision;
@@ -1570,6 +1564,7 @@ if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 // Keep only the 10 most recent versions here, newest first, whenever a new version is published.
 const CHANGELOG = [
+  { version: '3.1.3', notes: ['Settings → Data: the Dropbox and GitHub backup options are gone, now that your account keeps your training data safe. Any tokens you had entered for them are removed from your phone. CSV export, email and import stay'] },
   { version: '3.1.2', notes: ['Logging in on iPhone: the password manager no longer suggests a new strong password in the login field (which then didn\'t match your account). It now offers your saved password when logging in, and only suggests a new one when you create an account or reset your password'] },
   { version: '3.1.1', notes: ['Lift Log has a new address: tiltwick.com/lift-log. The old address still works and shows a reminder once a day; log in at the new address with the same account and all your training data is there'] },
   { version: '3.1.0', notes: ['New: Lift Log accounts. Create an account (or log in) with your email address and your training data is saved in it: safe if you lose your phone, and the same on all your devices. Training data already on your phone moves into your new account. The app still works offline at the gym; changes are sent to your account as soon as you\'re online. Settings → ••• → Account shows the sync status and lets you log out or delete your account. Forgot your password? Request a reset link on the login screen'] },
@@ -1579,7 +1574,6 @@ const CHANGELOG = [
   { version: '3.0.23', notes: ['The workout summary no longer pops up by itself when you save the last exercise of a template, so you can do the exercises in any order. Instead, a "Finish workout" button now sits under the last exercise. If an exercise is still open, the app asks whether to finish anyway or go back to the workout'] },
   { version: '3.0.22', notes: ['When you pick exercises for a template, the list is now in alphabetical order, so you can find an exercise quickly. The order in which the exercises appear in the workout is still set under "Order" below it'] },
   { version: '3.0.21', notes: ['Lift Log now also opens without a connection — in flight mode or without reception at the gym. The app keeps a copy of itself on your phone (needs the new sw.js file next to index.html), and still picks up new versions automatically when you\'re online. Settings → ••• → Info shows whether offline use is ready'] },
-  { version: '3.0.20', notes: ['Deload week: after 5 training weeks (or sooner if 3 workouts in a row felt Hard) the app suggests a lighter week — same weights, about half the sets, for 7 days. You choose: start it, ask again next week, or not now. During the week the target and week strip turn blue, and those workouts are left out of targets, trends and PRs, so building up continues where you left off. Change the interval (4/5/6 weeks or off) or start/end a deload yourself in Settings → Workout'] },
 ];
 
 const DEFAULT_EXERCISES = [
@@ -1740,14 +1734,13 @@ function ensureSettings(){
   if(typeof data.settings.backupEmail !== 'string'){
     data.settings.backupEmail = '';
   }
-  if(typeof data.settings.dropboxToken !== 'string'){
-    data.settings.dropboxToken = '';
-  }
-  if(typeof data.settings.githubToken !== 'string'){
-    data.settings.githubToken = '';
-  }
-  if(typeof data.settings.githubRepo !== 'string'){
-    data.settings.githubRepo = '';
+  // Dropbox/GitHub backup was removed in 3.1.3 (your account keeps your data
+  // safe now); forget any tokens still saved from before.
+  if('dropboxToken' in data.settings || 'githubToken' in data.settings || 'githubRepo' in data.settings){
+    delete data.settings.dropboxToken;
+    delete data.settings.githubToken;
+    delete data.settings.githubRepo;
+    writeLocalData();
   }
 }
 function saveData(){
@@ -3162,7 +3155,6 @@ function saveSession(){
     data.templateLastDone[currentTemplate] = todayStr();
   }
   saveData();
-  autoBackupAll();
 
   // Move on to the next exercise in the current view automatically, so you
   // can work through a template set by set without reselecting each one by
@@ -3208,8 +3200,7 @@ function saveSession(){
 }
 
 // After saving the last exercise of a template (or of "All"), ask once per
-// workout per day whether to save a backup. Skipped when Dropbox/GitHub is
-// set up — those already back up automatically on every save.
+// workout per day whether to save a backup.
 const WORKOUT_BACKUP_ASKED_KEY = 'liftlog_workout_backup_asked';
 function isLastExerciseInView(){
   const visible = visibleExerciseNames();
@@ -3319,18 +3310,14 @@ function renderWorkoutBackupDialog(phase){
     <ul class="ws-list">${up.map(t => `<li><span>${escAttr(t.name)}</span><span></span></li>`).join('')}</ul>` : '';
   const trendNote = s.trends.length
     ? `<p class="ws-note">${up.length} of ${s.trends.length} exercises went up${down.length ? `, ${down.length} went down` : ''} compared with last time.</p>` : '';
-  const cloud = hasCloudBackup();
   el.innerHTML = `
     <p class="ws-lead"><strong>Nice work!</strong> Here's what you did today.${s.deload ? ` <span class="deload-tag">Deload week</span>` : ''}</p>
     <div class="ws-stats">${tiles.join('')}</div>
     ${prHtml}${upHtml}${trendNote}
     ${s.deload ? `<p class="ws-note">Lighter by design this week, so no comparisons with last time. Building up continues after the deload.</p>` : ''}
-    ${cloud ? `<p class="ws-note">Your data is backed up automatically.</p>` : ''}
     <div class="update-actions">
-      ${cloud
-        ? `<button type="button" class="btn primary" onclick="${close}">Done</button>`
-        : `<button type="button" class="btn primary" onclick="workoutBackupNow()">Back up now (save CSV file)</button>
-           <button type="button" class="update-later" onclick="${close}">Close</button>`}
+      <button type="button" class="btn primary" onclick="workoutBackupNow()">Back up now (save CSV file)</button>
+      <button type="button" class="update-later" onclick="${close}">Close</button>
     </div>`;
 }
 async function workoutBackupNow(){
@@ -3397,40 +3384,6 @@ function openContact(){
   document.getElementById('contactDialog').showModal();
 }
 
-const BACKUP_INFO = {
-  dropbox: {
-    title: 'Dropbox backup — setup',
-    body: `
-      <ol style="padding-left:1.1rem; margin:0; font-size:var(--fs-base); line-height:1.65;">
-        <li>Go to the <a href="https://www.dropbox.com/developers/apps" target="_blank" rel="noopener">Dropbox App Console</a> and create a new app.</li>
-        <li>Choose access type <strong>"App folder"</strong> — the app can then only reach its own folder, not your whole Dropbox.</li>
-        <li>Open the <strong>"Permissions"</strong> tab first and enable <code>files.content.write</code> and <code>files.content.read</code>, then click "Submit". Do this <strong>before</strong> the next step — a token generated before the permissions are set won't include them, and backups will fail.</li>
-        <li>Only then, under "OAuth 2", generate a permanent access token.</li>
-        <li>Paste that token into the Dropbox field above.</li>
-      </ol>
-      <p style="font-size:var(--fs-sm); color:var(--text-dim); margin-top:.8rem;">Every "Save session" then automatically uploads your full history to <code>lift-log-backup.csv</code> in that folder. Restore reads it back in, same as importing a CSV.</p>
-    `
-  },
-  github: {
-    title: 'GitHub backup — setup',
-    body: `
-      <ol style="padding-left:1.1rem; margin:0; font-size:var(--fs-base); line-height:1.65;">
-        <li>Create (or reuse) a GitHub repository to hold the backup file.</li>
-        <li>Create a fine-grained personal access token scoped to just that repo, with <strong>Contents: Read and write</strong>.</li>
-        <li>Paste the token above, and the repo as <code>username/repo</code>.</li>
-      </ol>
-      <p style="font-size:var(--fs-sm); color:var(--text-dim); margin-top:.8rem;">Every "Save session" then automatically writes your full history to <code>lift-log-backup.csv</code> on the <code>main</code> branch of that repo. Restore reads it back in, same as importing a CSV.</p>
-    `
-  }
-};
-
-function openInfo(kind){
-  const info = BACKUP_INFO[kind];
-  if(!info) return;
-  document.getElementById('infoDialogTitle').textContent = info.title;
-  document.getElementById('infoDialogBody').innerHTML = info.body;
-  document.getElementById('infoDialog').showModal();
-}
 
 /* ---------- Add to Home Screen walkthrough (iOS Safari, shown once) ---------- */
 
@@ -3740,15 +3693,11 @@ function closeUpdateDialog(){
   updatePopupDismissedFor = updateDialogState.version;
   document.getElementById('updateDialog').close();
 }
-function hasCloudBackup(){
-  ensureSettings();
-  return !!(data.settings.dropboxToken || '').trim() || (!!(data.settings.githubToken || '').trim() && !!parseGithubRepo());
-}
 function renderUpdateDialog(){
   const el = document.getElementById('updateDialogBody');
   if(!el) return;
   const s = updateDialogState;
-  const backupLabel = hasCloudBackup() ? 'Back up first' : 'Back up first (save CSV file)';
+  const backupLabel = 'Back up first (save CSV file)';
   el.innerHTML = `
     <p class="update-msg">Version <span class="num">${escAttr(s.version)}</span> of Lift Log is ready (you have <span class="num">${APP_VERSION}</span>).
     Your exercises, templates and history stay saved when you update — but a backup first is always a good idea.
@@ -3762,35 +3711,15 @@ function renderUpdateDialog(){
       <button type="button" class="update-later" onclick="closeUpdateDialog()">Later</button>
     </div>`;
 }
-// Uses the cloud backup (Dropbox / GitHub) when one is set up; otherwise
-// saves a CSV file with the same export as Settings → Data.
+// Saves a CSV file with the same export as Settings → Data.
 async function backupBeforeUpdate(){
   updateDialogState.phase = 'backing-up';
   updateDialogState.status = '';
   renderUpdateDialog();
-  if(hasCloudBackup()){
-    const csv = buildCSV();
-    const tasks = [];
-    if((data.settings.dropboxToken || '').trim()) tasks.push(uploadToDropbox(csv).then(r => ({ service: 'Dropbox', ok: !!(r && r.ok) })).catch(() => ({ service: 'Dropbox', ok: false })));
-    if((data.settings.githubToken || '').trim() && parseGithubRepo()) tasks.push(uploadToGithub(csv).then(r => ({ service: 'GitHub', ok: !!(r && r.ok) })).catch(() => ({ service: 'GitHub', ok: false })));
-    const results = await Promise.all(tasks);
-    const ok = results.filter(r => r.ok).map(r => r.service);
-    const failed = results.filter(r => !r.ok).map(r => r.service);
-    if(failed.length && !ok.length){
-      updateDialogState.phase = 'ask';
-      updateDialogState.warn = true;
-      updateDialogState.status = `Backup to ${failed.join(' & ')} failed. Try again, or update without backup.`;
-    } else {
-      updateDialogState.phase = 'backed-up';
-      updateDialogState.warn = !!failed.length;
-      updateDialogState.status = `Backed up to ${ok.join(' & ')}.` + (failed.length ? ` (${failed.join(' & ')} failed.)` : '');
-    }
-  } else {
-    await exportCSV();
-    updateDialogState.phase = 'backed-up';
-    updateDialogState.warn = false;
-    updateDialogState.status = 'Backup file created — make sure it\'s saved, then tap Update now.';
-  }
+  await exportCSV();
+  updateDialogState.phase = 'backed-up';
+  updateDialogState.warn = false;
+  updateDialogState.status = 'Backup file created — make sure it\'s saved, then tap Update now.';
   renderUpdateDialog();
 }
 // After updating, tidy the one-off ?v= off the address so it doesn't stick around.
@@ -4961,268 +4890,6 @@ async function exportCSV(){
   }
 }
 
-/* ---------- Dropbox cloud backup ---------- */
-
-const DROPBOX_BACKUP_PATH = '/lift-log-backup.csv';
-
-async function uploadToDropbox(csvText){
-  const token = (data.settings.dropboxToken || '').trim();
-  if(!token) return { ok:false, reason:'no-token' };
-  try{
-    const res = await fetch('https://content.dropboxapi.com/2/files/upload', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'Dropbox-API-Arg': JSON.stringify({ path: DROPBOX_BACKUP_PATH, mode: 'overwrite', mute: true }),
-        'Content-Type': 'application/octet-stream'
-      },
-      body: csvText
-    });
-    if(!res.ok) return { ok:false, reason: 'http-' + res.status, detail: await dropboxErrorDetail(res) };
-    return { ok:true };
-  }catch(e){
-    return { ok:false, reason:'network' };
-  }
-}
-
-async function dropboxErrorDetail(res){
-  try{
-    const text = await res.text();
-    try{
-      const json = JSON.parse(text);
-      if(json.error && json.error['.tag'] === 'missing_scope' && json.error.required_scope){
-        return 'missing_scope: ' + json.error.required_scope + ' is not enabled for this token';
-      }
-      return json.error_summary || text;
-    }catch(e){
-      return text;
-    }
-  }catch(e){
-    return '';
-  }
-}
-
-async function downloadFromDropbox(){
-  const token = (data.settings.dropboxToken || '').trim();
-  if(!token) return { ok:false, reason:'no-token' };
-  try{
-    const res = await fetch('https://content.dropboxapi.com/2/files/download', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'Dropbox-API-Arg': JSON.stringify({ path: DROPBOX_BACKUP_PATH })
-      }
-    });
-    if(!res.ok) return { ok:false, reason: 'http-' + res.status, detail: await dropboxErrorDetail(res) };
-    const text = await res.text();
-    return { ok:true, text };
-  }catch(e){
-    return { ok:false, reason:'network' };
-  }
-}
-
-function dropboxErrorMessage(result){
-  if(!result) return 'Dropbox backup failed.';
-  if(result.reason === 'no-token') return 'Add a Dropbox access token above first.';
-  if(result.reason === 'network') return 'Could not reach Dropbox — check your connection.';
-  const detail = (result.detail || '').trim();
-  if(result.reason === 'http-401') return 'Dropbox rejected the token — check it\'s correct and not expired.' + (detail ? ' (' + detail + ')' : '');
-  if(result.reason === 'http-409') return 'No backup file found yet on Dropbox — try Backup now first.' + (detail ? ' (' + detail + ')' : '');
-  return 'Dropbox backup failed (' + (result.reason || 'unknown error') + (detail ? ': ' + detail : '') + ').';
-}
-
-async function manualDropboxBackup(){
-  ensureSettings();
-  const note = document.getElementById('dropboxNote');
-  if(!data.settings.dropboxToken.trim()){
-    if(note) note.textContent = 'Add a Dropbox access token above first.';
-    return;
-  }
-  if(note) note.textContent = 'Backing up…';
-  const csv = buildCSV();
-  const result = await uploadToDropbox(csv);
-  if(note) note.textContent = result.ok ? 'Backed up to Dropbox.' : dropboxErrorMessage(result);
-  setTimeout(() => { const n = document.getElementById('dropboxNote'); if(n) n.textContent=''; }, result.ok ? 3000 : 8000);
-}
-
-async function restoreFromDropbox(){
-  ensureSettings();
-  const note = document.getElementById('dropboxNote');
-  if(!data.settings.dropboxToken.trim()){
-    if(note) note.textContent = 'Add a Dropbox access token above first.';
-    return;
-  }
-  if(note) note.textContent = 'Fetching from Dropbox…';
-  const result = await downloadFromDropbox();
-  if(!result.ok){
-    if(note) note.textContent = dropboxErrorMessage(result);
-    return;
-  }
-  if(note) note.textContent = '';
-  importCSVText(result.text);
-}
-
-function setDropboxToken(val){
-  ensureSettings();
-  data.settings.dropboxToken = val.trim();
-  saveData();
-}
-
-/* ---------- GitHub cloud backup ---------- */
-
-const GITHUB_BACKUP_PATH = 'lift-log-backup.csv';
-const GITHUB_BACKUP_BRANCH = 'main';
-
-function utf8ToBase64(str){
-  return btoa(unescape(encodeURIComponent(str)));
-}
-function base64ToUtf8(str){
-  return decodeURIComponent(escape(atob(str)));
-}
-
-function parseGithubRepo(){
-  const repo = (data.settings.githubRepo || '').trim();
-  const parts = repo.split('/').map(s => s.trim()).filter(Boolean);
-  if(parts.length !== 2) return null;
-  return { owner: parts[0], repoName: parts[1] };
-}
-
-async function githubGetFileSha(owner, repoName, token){
-  try{
-    const res = await fetch(`https://api.github.com/repos/${owner}/${repoName}/contents/${GITHUB_BACKUP_PATH}?ref=${GITHUB_BACKUP_BRANCH}`, {
-      headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' }
-    });
-    if(res.status === 404) return { ok:true, sha:null };
-    if(!res.ok) return { ok:false, reason: 'http-' + res.status };
-    const json = await res.json();
-    return { ok:true, sha: json.sha };
-  }catch(e){
-    return { ok:false, reason:'network' };
-  }
-}
-
-async function uploadToGithub(csvText){
-  const token = (data.settings.githubToken || '').trim();
-  const parsed = parseGithubRepo();
-  if(!token || !parsed) return { ok:false, reason: !token ? 'no-token' : 'bad-repo' };
-  const shaResult = await githubGetFileSha(parsed.owner, parsed.repoName, token);
-  if(!shaResult.ok) return shaResult;
-  try{
-    const body = {
-      message: 'Lift Log backup ' + todayStr(),
-      content: utf8ToBase64(csvText),
-      branch: GITHUB_BACKUP_BRANCH
-    };
-    if(shaResult.sha) body.sha = shaResult.sha;
-    const res = await fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repoName}/contents/${GITHUB_BACKUP_PATH}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'Accept': 'application/vnd.github+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(body)
-    });
-    if(!res.ok) return { ok:false, reason: 'http-' + res.status };
-    return { ok:true };
-  }catch(e){
-    return { ok:false, reason:'network' };
-  }
-}
-
-async function downloadFromGithub(){
-  const token = (data.settings.githubToken || '').trim();
-  const parsed = parseGithubRepo();
-  if(!token || !parsed) return { ok:false, reason: !token ? 'no-token' : 'bad-repo' };
-  try{
-    const res = await fetch(`https://api.github.com/repos/${parsed.owner}/${parsed.repoName}/contents/${GITHUB_BACKUP_PATH}?ref=${GITHUB_BACKUP_BRANCH}`, {
-      headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' }
-    });
-    if(!res.ok) return { ok:false, reason: 'http-' + res.status };
-    const json = await res.json();
-    const text = base64ToUtf8((json.content || '').replace(/\n/g, ''));
-    return { ok:true, text };
-  }catch(e){
-    return { ok:false, reason:'network' };
-  }
-}
-
-function githubErrorMessage(result){
-  if(!result) return 'GitHub backup failed.';
-  if(result.reason === 'no-token') return 'Add a GitHub token and repo above first.';
-  if(result.reason === 'bad-repo') return 'Repo should look like username/repo.';
-  if(result.reason === 'network') return 'Could not reach GitHub — check your connection.';
-  if(result.reason === 'http-401' || result.reason === 'http-403') return 'GitHub rejected the token — check it\'s correct and has repo access.';
-  if(result.reason === 'http-404') return 'Repo or branch not found — check the repo name.';
-  return 'GitHub backup failed (' + (result.reason || 'unknown error') + ').';
-}
-
-async function manualGithubBackup(){
-  ensureSettings();
-  const note = document.getElementById('githubNote');
-  if(!data.settings.githubToken.trim() || !parseGithubRepo()){
-    if(note) note.textContent = 'Add a GitHub token and repo (username/repo) above first.';
-    return;
-  }
-  if(note) note.textContent = 'Backing up…';
-  const csv = buildCSV();
-  const result = await uploadToGithub(csv);
-  if(note) note.textContent = result.ok ? 'Backed up to GitHub.' : githubErrorMessage(result);
-  setTimeout(() => { const n = document.getElementById('githubNote'); if(n) n.textContent=''; }, 3000);
-}
-
-async function restoreFromGithub(){
-  ensureSettings();
-  const note = document.getElementById('githubNote');
-  if(!data.settings.githubToken.trim() || !parseGithubRepo()){
-    if(note) note.textContent = 'Add a GitHub token and repo (username/repo) above first.';
-    return;
-  }
-  if(note) note.textContent = 'Fetching from GitHub…';
-  const result = await downloadFromGithub();
-  if(!result.ok){
-    if(note) note.textContent = githubErrorMessage(result);
-    return;
-  }
-  if(note) note.textContent = '';
-  importCSVText(result.text);
-}
-
-function setGithubToken(val){
-  ensureSettings();
-  data.settings.githubToken = val.trim();
-  saveData();
-}
-function setGithubRepo(val){
-  ensureSettings();
-  data.settings.githubRepo = val.trim();
-  saveData();
-}
-
-/* ---------- Combined auto-backup on save ---------- */
-
-function autoBackupAll(){
-  ensureSettings();
-  const hasDropbox = !!(data.settings.dropboxToken || '').trim();
-  const hasGithub = !!(data.settings.githubToken || '').trim() && !!parseGithubRepo();
-  if(!hasDropbox && !hasGithub) return;
-  const csv = buildCSV();
-  const tasks = [];
-  if(hasDropbox) tasks.push(uploadToDropbox(csv).then(r => ({ service: 'Dropbox', ok: r.ok })));
-  if(hasGithub) tasks.push(uploadToGithub(csv).then(r => ({ service: 'GitHub', ok: r.ok })));
-  Promise.all(tasks).then(results => {
-    const note = document.getElementById('savedNote');
-    if(!note) return;
-    const okServices = results.filter(r => r.ok).map(r => r.service);
-    const failedServices = results.filter(r => !r.ok).map(r => r.service);
-    let msg = '';
-    if(okServices.length) msg += 'Backed up to ' + okServices.join(' & ') + '.';
-    if(failedServices.length) msg += (msg ? ' ' : '') + failedServices.join(' & ') + ' backup failed.';
-    note.textContent = msg;
-    setTimeout(() => { const n = document.getElementById('savedNote'); if(n) n.textContent=''; }, 3500);
-  });
-}
-
 function parseCSV(text){
   const rows = [];
   let row = [], field = '', inQuotes = false;
@@ -5420,47 +5087,7 @@ function renderDataSettings(){
   ensureSettings();
   const totalSessions = Object.values(data.sessions).reduce((sum, list) => sum + list.length, 0);
   el.innerHTML = `
-    <div class="section-title">Back up your logged history, or restore it on another device. Pick an option below.</div>
-
-    <details class="backup-section">
-      <summary>
-        <span>Dropbox</span>
-        <span class="backup-summary-right">
-          <button type="button" class="info-btn" onclick="event.stopPropagation(); openInfo('dropbox')" aria-label="How to set this up">ⓘ</button>
-          ${chevronDownIcon}
-        </span>
-      </summary>
-      <div class="backup-body">
-        <input type="password" class="plain-input" id="dropboxTokenInput" placeholder="Dropbox access token"
-          value="${escAttr(data.settings.dropboxToken)}" oninput="setDropboxToken(this.value)">
-        <div style="display:flex; gap:.5rem; margin-top:.5rem;">
-          <button class="btn" style="flex:1;" onclick="manualDropboxBackup()">Backup now</button>
-          <button class="btn" style="flex:1;" onclick="restoreFromDropbox()">Restore from Dropbox</button>
-        </div>
-        <div class="saved-note" id="dropboxNote" style="margin-bottom:.2rem;"></div>
-      </div>
-    </details>
-
-    <details class="backup-section">
-      <summary>
-        <span>GitHub</span>
-        <span class="backup-summary-right">
-          <button type="button" class="info-btn" onclick="event.stopPropagation(); openInfo('github')" aria-label="How to set this up">ⓘ</button>
-          ${chevronDownIcon}
-        </span>
-      </summary>
-      <div class="backup-body">
-        <input type="password" class="plain-input" id="githubTokenInput" placeholder="GitHub access token"
-          value="${escAttr(data.settings.githubToken)}" oninput="setGithubToken(this.value)">
-        <input type="text" class="plain-input" id="githubRepoInput" placeholder="username/repo" style="margin-top:.5rem;"
-          value="${escAttr(data.settings.githubRepo)}" oninput="setGithubRepo(this.value)">
-        <div style="display:flex; gap:.5rem; margin-top:.5rem;">
-          <button class="btn" style="flex:1;" onclick="manualGithubBackup()">Backup now</button>
-          <button class="btn" style="flex:1;" onclick="restoreFromGithub()">Restore from GitHub</button>
-        </div>
-        <div class="saved-note" id="githubNote" style="margin-bottom:.2rem;"></div>
-      </div>
-    </details>
+    <div class="section-title">Your training data is saved in your account. You can also download it as a CSV file, or import one.</div>
 
     <details class="backup-section">
       <summary>
