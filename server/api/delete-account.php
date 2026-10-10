@@ -5,13 +5,13 @@ start(['POST']);
 
 $user = require_user();
 $in = input();
-rate_limit($user['email']);
+rate_limit('delete', $user['email']);
 
 $pdo = db();
 $q = $pdo->prepare('SELECT password_hash FROM users WHERE id = ?');
 $q->execute([$user['id']]);
 if (!password_verify((string)($in['password'] ?? ''), $q->fetchColumn())) {
-    record_attempt($user['email']);
+    record_attempt('delete', $user['email']);
     fail(401, 'wrong_password', 'Password is incorrect.');
 }
 

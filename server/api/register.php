@@ -6,8 +6,8 @@ start(['POST']);
 $in = input();
 $email = normalize_email($in['email'] ?? '');
 $password = check_password($in['password'] ?? '');
-rate_limit(null, 10);
-record_attempt(null);
+rate_limit('register', null, 10);
+record_attempt('register', null);
 
 $pdo = db();
 $q = $pdo->prepare('SELECT id FROM users WHERE email = ?');

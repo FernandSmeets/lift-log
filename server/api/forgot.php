@@ -5,8 +5,8 @@ start(['POST']);
 
 $in = input();
 $email = normalize_email($in['email'] ?? '');
-rate_limit($email, 10, 3);
-record_attempt($email);
+rate_limit('forgot', $email, 10, 3);
+record_attempt('forgot', $email);
 
 $pdo = db();
 $q = $pdo->prepare('SELECT id FROM users WHERE email = ?');

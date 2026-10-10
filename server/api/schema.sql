@@ -65,6 +65,11 @@ CREATE TABLE IF NOT EXISTS login_attempts (
   KEY ix_attempts_email_time (email, attempted_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Each action (login, forgot, register, reset, delete) has its own counter.
+ALTER TABLE login_attempts ADD COLUMN IF NOT EXISTS action VARCHAR(20) NOT NULL DEFAULT 'login' AFTER email;
+CREATE INDEX IF NOT EXISTS ix_attempts_action_ip_time ON login_attempts (action, ip, attempted_at);
+CREATE INDEX IF NOT EXISTS ix_attempts_action_email_time ON login_attempts (action, email, attempted_at);
+
 -- Reserved for push notifications later.
 CREATE TABLE IF NOT EXISTS push_subscriptions (
   id              INT UNSIGNED NOT NULL AUTO_INCREMENT,

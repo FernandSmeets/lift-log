@@ -6,7 +6,7 @@ start(['POST']);
 $in = input();
 $token = (string)($in['token'] ?? '');
 $password = check_password($in['password'] ?? '');
-rate_limit(null);
+rate_limit('reset', null);
 
 $pdo = db();
 $q = $pdo->prepare(
@@ -16,7 +16,7 @@ $q = $pdo->prepare(
 $q->execute([hash('sha256', $token)]);
 $reset = $q->fetch();
 if (!$reset) {
-    record_attempt(null);
+    record_attempt('reset', null);
     fail(400, 'invalid_reset', 'This reset link is invalid or has expired. Please request a new one.');
 }
 

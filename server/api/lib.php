@@ -80,18 +80,19 @@ function check_password($password): string {
     return $password;
 }
 
-// Throttles guessing: too many recorded attempts from this IP (or for this email) in 15 minutes.
-function rate_limit(?string $email, int $perIp = 10, int $perEmail = 5): void {
+// Throttles guessing: too many recorded attempts for this action from this IP (or for this email) in 15 minutes.
+// Every action has its own counter, so failed logins don't block "forgot password" and the other way around.
+function rate_limit(string $action, ?string $email, int $perIp = 10, int $perEmail = 5): void {
     $pdo = db();
     if (random_int(1, 50) === 1) {
         $pdo->exec('DELETE FROM login_attempts WHERE attempted_at < NOW() - INTERVAL 1 DAY');
     }
-    $q = $pdo->prepare('SELECT COUNT(*) FROM login_attempts WHERE ip = ? AND attempted_at > NOW() - INTERVAL 15 MINUTE');
-    $q->execute([client_ip()]);
+    $q = $pdo->prepare('SELECT COUNT(*) FROM login_attempts WHERE action = ? AND ip = ? AND attempted_at > NOW() - INTERVAL 15 MINUTE');
+    $q->execute([$action, client_ip()]);
     $tooMany = $q->fetchColumn() >= $perIp;
     if (!$tooMany && $email !== null) {
-        $q = $pdo->prepare('SELECT COUNT(*) FROM login_attempts WHERE email = ? AND attempted_at > NOW() - INTERVAL 15 MINUTE');
-        $q->execute([$email]);
+        $q = $pdo->prepare('SELECT COUNT(*) FROM login_attempts WHERE action = ? AND email = ? AND attempted_at > NOW() - INTERVAL 15 MINUTE');
+        $q->execute([$action, $email]);
         $tooMany = $q->fetchColumn() >= $perEmail;
     }
     if ($tooMany) {
@@ -99,8 +100,13 @@ function rate_limit(?string $email, int $perIp = 10, int $perEmail = 5): void {
     }
 }
 
-function record_attempt(?string $email): void {
-    db()->prepare('INSERT INTO login_attempts (ip, email) VALUES (?, ?)')->execute([client_ip(), $email]);
+function record_attempt(string $action, ?string $email): void {
+    db()->prepare('INSERT INTO login_attempts (action, ip, email) VALUES (?, ?, ?)')->execute([$action, client_ip(), $email]);
+}
+
+// After a successful login the earlier failed tries for that email no longer count.
+function clear_attempts(string $action, string $email): void {
+    db()->prepare('DELETE FROM login_attempts WHERE action = ? AND email = ?')->execute([$action, $email]);
 }
 
 function new_token(): string {
