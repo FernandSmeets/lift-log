@@ -1107,7 +1107,7 @@
 </dialog>
 
 <script>
-const APP_VERSION = '3.1.1';
+const APP_VERSION = '3.1.2';
 const STORE_KEY = 'liftlog_data_v2';
 
 /* ---------- Account & sync ----------
@@ -1325,13 +1325,16 @@ function renderAuthScreen(message){
   const email = (document.getElementById('authEmail') || {}).value || auth.lastEmail || '';
   const err = `<p class="auth-error" id="authError">${escAttr(message)}</p>`;
   const emailField = `<label for="authEmail">Email</label>
-    <input type="email" class="plain-input" id="authEmail" autocomplete="email" inputmode="email" value="${escAttr(email)}">`;
+    <input type="email" class="plain-input" id="authEmail" name="username" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false" value="${escAttr(email)}">`;
+  // Separate ids/names for an existing and a new password: iPhone's password
+  // manager remembers fields by name, and must only offer a strong new password
+  // when one is being created, never when logging in.
   const pwField = (id, label, ac) => `<label for="${id}">${label}</label>
-    <input type="password" class="plain-input" id="${id}" autocomplete="${ac}">`;
+    <input type="password" class="plain-input" id="${id}" name="${ac === 'new-password' ? 'new-password' : 'password'}" autocomplete="${ac}">`;
   let html = `<h1 class="auth-title">Lift Log</h1>`;
   if(authMode === 'login'){
     html += `<p class="auth-sub">Log in to your account. Your training data is saved in it, so it's safe and on all your devices.</p>
-      <form onsubmit="event.preventDefault(); submitAuth();">
+      <form method="post" action="#" onsubmit="event.preventDefault(); submitAuth();">
         ${emailField}${pwField('authPassword', 'Password', 'current-password')}${err}
         <button type="submit" class="btn primary" id="authSubmit">Log in</button>
       </form>
@@ -1341,8 +1344,8 @@ function renderAuthScreen(message){
       </div>`;
   } else if(authMode === 'register'){
     html += `<p class="auth-sub">Create a free account. Training data already on this phone is saved in it.</p>
-      <form onsubmit="event.preventDefault(); submitAuth();">
-        ${emailField}${pwField('authPassword', 'Password (at least 8 characters)', 'new-password')}
+      <form method="post" action="#" onsubmit="event.preventDefault(); submitAuth();">
+        ${emailField}${pwField('authNewPassword', 'Password (at least 8 characters)', 'new-password')}
         <div class="auth-consent"><input type="checkbox" id="authConsent">
           <span>I've read the <button type="button" class="auth-link" onclick="openPrivacy()">privacy statement</button> and agree that my data is stored in my account.</span></div>
         ${err}
@@ -1353,7 +1356,7 @@ function renderAuthScreen(message){
       </div>`;
   } else if(authMode === 'forgot'){
     html += `<p class="auth-sub">Enter your email address and we'll send you a link to choose a new password.</p>
-      <form onsubmit="event.preventDefault(); submitAuth();">
+      <form method="post" action="#" onsubmit="event.preventDefault(); submitAuth();">
         ${emailField}${err}
         <button type="submit" class="btn primary" id="authSubmit">Send link</button>
       </form>
@@ -1362,8 +1365,9 @@ function renderAuthScreen(message){
       </div>`;
   } else if(authMode === 'reset'){
     html += `<p class="auth-sub">Choose a new password for your account.</p>
-      <form onsubmit="event.preventDefault(); submitAuth();">
-        ${pwField('authPassword', 'New password (at least 8 characters)', 'new-password')}${err}
+      <form method="post" action="#" onsubmit="event.preventDefault(); submitAuth();">
+        <input type="email" name="username" autocomplete="username" value="${escAttr(auth.lastEmail || '')}" hidden>
+        ${pwField('authNewPassword', 'New password (at least 8 characters)', 'new-password')}${err}
         <button type="submit" class="btn primary" id="authSubmit">Save password</button>
       </form>
       <div class="auth-links">
@@ -1382,7 +1386,7 @@ function authFail(message){
 async function submitAuth(){
   if(authBusy) return;
   const emailEl = document.getElementById('authEmail');
-  const pwEl = document.getElementById('authPassword');
+  const pwEl = document.getElementById('authPassword') || document.getElementById('authNewPassword');
   const email = emailEl ? emailEl.value.trim() : '';
   const password = pwEl ? pwEl.value : '';
   if(authMode !== 'reset' && !email) return authFail('Please enter your email address.');
@@ -1566,6 +1570,7 @@ if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 // Keep only the 10 most recent versions here, newest first, whenever a new version is published.
 const CHANGELOG = [
+  { version: '3.1.2', notes: ['Logging in on iPhone: the password manager no longer suggests a new strong password in the login field (which then didn\'t match your account). It now offers your saved password when logging in, and only suggests a new one when you create an account or reset your password'] },
   { version: '3.1.1', notes: ['Lift Log has a new address: tiltwick.com/lift-log. The old address still works and shows a reminder once a day; log in at the new address with the same account and all your training data is there'] },
   { version: '3.1.0', notes: ['New: Lift Log accounts. Create an account (or log in) with your email address and your training data is saved in it: safe if you lose your phone, and the same on all your devices. Training data already on your phone moves into your new account. The app still works offline at the gym; changes are sent to your account as soon as you\'re online. Settings → ••• → Account shows the sync status and lets you log out or delete your account. Forgot your password? Request a reset link on the login screen'] },
   { version: '3.0.26', notes: ['Notifications: when they are blocked, a Check again button (and returning from the Settings app) refreshes the screen, so you don\'t have to close and reopen Lift Log after turning them on'] },
@@ -1575,7 +1580,6 @@ const CHANGELOG = [
   { version: '3.0.22', notes: ['When you pick exercises for a template, the list is now in alphabetical order, so you can find an exercise quickly. The order in which the exercises appear in the workout is still set under "Order" below it'] },
   { version: '3.0.21', notes: ['Lift Log now also opens without a connection — in flight mode or without reception at the gym. The app keeps a copy of itself on your phone (needs the new sw.js file next to index.html), and still picks up new versions automatically when you\'re online. Settings → ••• → Info shows whether offline use is ready'] },
   { version: '3.0.20', notes: ['Deload week: after 5 training weeks (or sooner if 3 workouts in a row felt Hard) the app suggests a lighter week — same weights, about half the sets, for 7 days. You choose: start it, ask again next week, or not now. During the week the target and week strip turn blue, and those workouts are left out of targets, trends and PRs, so building up continues where you left off. Change the interval (4/5/6 weeks or off) or start/end a deload yourself in Settings → Workout'] },
-  { version: '3.0.19', notes: ['Templates on the home screen work the same way now: hold a template button for half a second and an Edit button pops up above it to open that template\'s settings'] },
 ];
 
 const DEFAULT_EXERCISES = [
