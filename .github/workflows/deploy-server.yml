@@ -31,6 +31,7 @@ jobs:
       SFTP_PATH: ${{ vars.SFTP_PATH }}
       SITE_URL: ${{ vars.SITE_URL }}
       MAIL_FROM: ${{ vars.MAIL_FROM }}
+      ADMIN_EMAILS: ${{ vars.ADMIN_EMAILS }}
     steps:
       - uses: actions/checkout@v4
 
@@ -51,6 +52,7 @@ jobs:
           cp index.html sw.js manifest.json *.png build/
           cp server/site.htaccess build/.htaccess
           cp -r server/api build/api
+          cp -r server/beheer build/beheer
           php -r 'echo "<?php\nreturn " . var_export([
               "db_host" => getenv("DB_HOST"),
               "db_name" => getenv("DB_NAME"),
@@ -59,6 +61,7 @@ jobs:
               "migrate_token" => getenv("MIGRATE_TOKEN"),
               "site_url" => getenv("SITE_URL"),
               "mail_from" => getenv("MAIL_FROM") ?: "noreply@" . parse_url(getenv("SITE_URL"), PHP_URL_HOST),
+              "admin_emails" => (string)getenv("ADMIN_EMAILS"),
           ], true) . ";\n";' > build/api/config.php
           for f in build/api/*.php; do php -l "$f"; done
 

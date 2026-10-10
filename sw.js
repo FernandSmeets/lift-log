@@ -99,6 +99,8 @@ self.addEventListener('fetch', event => {
   if (url.searchParams.has('check')) return;
 
   const scopePath = new URL(self.registration.scope).pathname;
+  // The admin page (beheer/) is a separate page: always straight from the network.
+  if (url.pathname.startsWith(scopePath + 'beheer/')) return;
   const isPage = req.mode === 'navigate' ||
     url.pathname === scopePath || url.pathname === scopePath + 'index.html';
   if (isPage) {

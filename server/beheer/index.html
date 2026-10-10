@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Lift Log admin</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14161A; --surface:#1E2127; --surface-hi:#262A31;
+    --border:#33383F; --text:#ECEEF0; --text-dim:#A3A8B0;
+    --accent:#E8543E; --accent-dim:#E8543E33; --good:#6FCF97; --bad:#EB5757;
+    color-scheme:dark;
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#F4F5F7; --surface:#FFFFFF; --surface-hi:#ECEEF1;
+      --border:#D8DBE0; --text:#16181C; --text-dim:#5E646E;
+      --accent:#E0492F; --accent-dim:#E8543E26; --good:#23965A; --bad:#E04848;
+      color-scheme:light;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 Inter,system-ui,-apple-system,sans-serif;
+    padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .wrap{max-width:1100px;margin:0 auto;padding:20px 16px 40px}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+  h1{font:600 1.7rem Oswald,sans-serif;margin:0;flex:1}
+  h1 small{font:500 .8rem Inter,sans-serif;color:var(--text-dim);margin-left:6px}
+  .btn{font:600 .9rem Inter,sans-serif;border-radius:10px;padding:10px 14px;border:1px solid var(--border);
+    background:var(--surface);color:var(--text);cursor:pointer}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;width:100%;padding:13px}
+  .btn:disabled{opacity:.6;cursor:default}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px}
+  #login{max-width:380px;margin:12vh auto 0}
+  #login h1{text-align:center;margin-bottom:6px}
+  #login p{color:var(--text-dim);text-align:center;margin:0 0 18px;font-size:.88rem}
+  label{display:block;font-size:.8rem;color:var(--text-dim);margin:12px 0 5px}
+  input{width:100%;font:16px Inter,sans-serif;padding:11px 12px;border-radius:10px;border:1px solid var(--border);
+    background:var(--surface-hi);color:var(--text)}
+  input:focus{outline:2px solid var(--accent);outline-offset:-1px}
+  .err{color:var(--bad);font-size:.85rem;min-height:1.2em;margin:10px 0}
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+  .tile .n{font:600 1.9rem Oswald,sans-serif}
+  .tile .l{font-size:.78rem;color:var(--text-dim)}
+  .tools{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+  .tools input{flex:1}
+  .meta{font-size:.78rem;color:var(--text-dim);margin-top:10px}
+  table{width:100%;border-collapse:collapse;font-size:.86rem}
+  th{text-align:left;font-weight:600;font-size:.75rem;color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--border);
+    cursor:pointer;user-select:none;white-space:nowrap}
+  th.sorted{color:var(--text)}
+  td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  td .sub{display:block;font-size:.74rem;color:var(--text-dim)}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  th.num{text-align:right}
+  .email{font-weight:600;word-break:break-all}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--border);vertical-align:1px}
+  .dot.on{background:var(--good)}
+  .tablecard{padding:4px 6px;overflow-x:auto}
+  .empty{color:var(--text-dim);text-align:center;padding:24px}
+  /* Phones: one card per account instead of a wide table. */
+  @media (max-width:720px){
+    .tiles{grid-template-columns:repeat(2,1fr)}
+    thead{display:none}
+    table,tbody,tr,td{display:block;width:100%}
+    tr{border-bottom:1px solid var(--border);padding:8px 4px}
+    tr:last-child{border-bottom:0}
+    td{border:0;padding:3px 6px;display:flex;justify-content:space-between;gap:12px;text-align:right}
+    td::before{content:attr(data-label);color:var(--text-dim);font-size:.78rem;text-align:left;flex:none}
+    td.first{display:block;text-align:left}
+    td.first::before{content:none}
+    td .sub{display:inline;margin-left:6px}
+    td.num{text-align:right}
+  }
+  [hidden]{display:none !important}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <form id="login" class="card" hidden autocomplete="on">
+    <h1>Lift Log admin</h1>
+    <p>Log in with an admin account.</p>
+    <label for="email">Email</label>
+    <input id="email" name="username" type="email" autocomplete="username" required>
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required>
+    <div class="err" id="loginErr"></div>
+    <button class="btn primary" id="loginBtn" type="submit">Log in</button>
+  </form>
+
+  <main id="main" hidden>
+    <header>
+      <h1>Accounts <small id="who"></small></h1>
+      <button class="btn" id="refreshBtn" type="button">Refresh</button>
+      <button class="btn" id="logoutBtn" type="button">Log out</button>
+    </header>
+    <div class="tiles">
+      <div class="card tile"><div class="n" id="tTotal">0</div><div class="l">accounts</div></div>
+      <div class="card tile"><div class="n" id="tNew">0</div><div class="l">new in the last 7 days</div></div>
+      <div class="card tile"><div class="n" id="tActive">0</div><div class="l">trained in the last 7 days</div></div>
+      <div class="card tile"><div class="n" id="tEmpty">0</div><div class="l">no workouts yet</div></div>
+    </div>
+    <div class="tools">
+      <input id="search" type="search" placeholder="Search by email" autocomplete="off">
+    </div>
+    <div class="card tablecard">
+      <table>
+        <thead><tr id="head"></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="err" id="mainErr"></div>
+    <div class="meta" id="meta"></div>
+  </main>
+
+</div>
+<script>
+const API = '../api/';
+const TOKEN_KEY = 'liftlog_admin_v1';
+let token = null;
+let users = [];
+let serverNow = new Date();
+let sortKey = 'created_at', sortDir = -1;
+
+const COLS = [
+  { key: 'email', label: 'Account' },
+  { key: 'created_at', label: 'Created' },
+  { key: 'last_login_at', label: 'Last login' },
+  { key: 'synced_at', label: 'Last sync' },
+  { key: 'last_training', label: 'Last workout' },
+  { key: 'training_days', label: 'Workout days', num: true },
+  { key: 'exercises', label: 'Exercises', num: true },
+  { key: 'devices', label: 'Devices', num: true }
+];
+
+const $ = id => document.getElementById(id);
+
+try { token = localStorage.getItem(TOKEN_KEY); } catch (e) {}
+
+async function api(path, method, body) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['X-Auth-Token'] = token;
+  const res = await fetch(API + path, {
+    method: method || 'GET', headers, cache: 'no-store',
+    body: body === undefined ? undefined : JSON.stringify(body)
+  });
+  let json = {};
+  try { json = await res.json(); } catch (e) {}
+  return { status: res.status, body: json };
+}
+
+function saveToken(t) {
+  token = t;
+  try { t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY); } catch (e) {}
+}
+
+function showLogin(message) {
+  $('main').hidden = true;
+  $('login').hidden = false;
+  $('loginErr').textContent = message || '';
+  $('email').focus();
+}
+
+// Dates from the server are "YYYY-MM-DD HH:MM:SS" in the server's time zone.
+function parse(s) {
+  if (!s) return null;
+  const [d, t] = s.split(' ');
+  const [y, m, day] = d.split('-').map(Number);
+  const [h, mi, se] = (t || '0:0:0').split(':').map(Number);
+  return new Date(y, m - 1, day, h, mi, se);
+}
+function fmtDate(s, withTime) {
+  const d = parse(s);
+  if (!d) return '–';
+  const opts = { day: 'numeric', month: 'short', year: 'numeric' };
+  if (withTime) Object.assign(opts, { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleString('en-GB', opts);
+}
+function ago(s) {
+  const d = parse(s);
+  if (!d) return '';
+  const days = Math.floor((serverNow - d) / 86400000);
+  if (days <= 0) {
+    const hours = Math.floor((serverNow - d) / 3600000);
+    return hours <= 0 ? 'just now' : hours + ' h ago';
+  }
+  return days === 1 ? 'yesterday' : days + ' days ago';
+}
+// For a date without a time (a workout day): today, yesterday or N days ago.
+function daysAgo(day) {
+  const d = parse(day);
+  if (!d) return '';
+  const today = new Date(serverNow.getFullYear(), serverNow.getMonth(), serverNow.getDate());
+  const days = Math.round((today - d) / 86400000);
+  return days <= 0 ? 'today' : days === 1 ? 'yesterday' : days + ' days ago';
+}
+function within(s, days) {
+  const d = parse(s);
+  return !!d && serverNow - d <= days * 86400000;
+}
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function render() {
+  $('tTotal').textContent = users.length;
+  $('tNew').textContent = users.filter(u => within(u.created_at, 7)).length;
+  $('tActive').textContent = users.filter(u => within(u.last_training ? u.last_training + ' 23:59:59' : null, 7)).length;
+  $('tEmpty').textContent = users.filter(u => !u.logged).length;
+
+  $('head').innerHTML = COLS.map(c =>
+    `<th data-key="${c.key}" class="${c.num ? 'num' : ''} ${c.key === sortKey ? 'sorted' : ''}">${c.label}${c.key === sortKey ? (sortDir < 0 ? ' ↓' : ' ↑') : ''}</th>`
+  ).join('');
+
+  const q = $('search').value.trim().toLowerCase();
+  const list = users.filter(u => !q || u.email.includes(q)).sort((a, b) => {
+    const x = a[sortKey], y = b[sortKey];
+    if (x === y) return 0;
+    if (x === null || x === undefined) return 1;
+    if (y === null || y === undefined) return -1;
+    return (x < y ? -1 : 1) * sortDir;
+  });
+
+  $('rows').innerHTML = list.length ? list.map(u => `
+    <tr>
+      <td class="first"><span class="dot ${within(u.last_training ? u.last_training + ' 23:59:59' : null, 7) ? 'on' : ''}"></span><span class="email">${esc(u.email)}</span></td>
+      <td data-label="Created"><span>${fmtDate(u.created_at)}<span class="sub">${ago(u.created_at)}</span></span></td>
+      <td data-label="Last login"><span>${fmtDate(u.last_login_at, true)}<span class="sub">${ago(u.last_login_at)}</span></span></td>
+      <td data-label="Last sync"><span>${fmtDate(u.synced_at, true)}<span class="sub">${ago(u.synced_at)}</span></span></td>
+      <td data-label="Last workout"><span>${u.last_training ? fmtDate(u.last_training) : '–'}<span class="sub">${daysAgo(u.last_training)}</span></span></td>
+      <td data-label="Workout days" class="num">${u.training_days}</td>
+      <td data-label="Exercises" class="num">${u.exercises}</td>
+      <td data-label="Devices" class="num">${u.devices}</td>
+    </tr>`).join('') : `<tr><td class="empty first" colspan="${COLS.length}">${q ? 'No accounts match your search.' : 'No accounts yet.'}</td></tr>`;
+
+  $('meta').textContent = `Showing ${list.length} of ${users.length} accounts. Devices = devices that are logged in. The green dot means a workout in the last 7 days.`;
+}
+
+async function load() {
+  $('mainErr').textContent = '';
+  $('refreshBtn').disabled = true;
+  try {
+    const res = await api('admin-users.php');
+    if (res.status === 401) { saveToken(null); return showLogin('Please log in again.'); }
+    if (res.status === 403) { await logout(); return showLogin(res.body.message || 'This account has no access to the admin page.'); }
+    if (res.status !== 200 || !res.body.ok) {
+      $('main').hidden = false; $('login').hidden = true;
+      $('mainErr').textContent = res.body.message || 'Could not load the accounts.';
+      return;
+    }
+    users = res.body.users;
+    serverNow = parse(res.body.server_time) || new Date();
+    $('who').textContent = res.body.email;
+    $('login').hidden = true;
+    $('main').hidden = false;
+    render();
+  } catch (e) {
+    $('main').hidden = !token;
+    if (!token) return showLogin('No connection. Please try again.');
+    $('mainErr').textContent = 'No connection. Please try again.';
+  } finally {
+    $('refreshBtn').disabled = false;
+  }
+}
+
+async function logout() {
+  if (token) { try { await api('logout.php', 'POST', {}); } catch (e) {} }
+  saveToken(null);
+  users = [];
+}
+
+$('login').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const email = $('email').value.trim(), password = $('password').value;
+  if (!email || !password) return;
+  $('loginBtn').disabled = true;
+  $('loginErr').textContent = '';
+  try {
+    saveToken(null);
+    const res = await api('login.php', 'POST', { email, password });
+    if (res.status !== 200 || !res.body.ok) {
+      $('loginErr').textContent = res.body.message || 'Could not log in.';
+      return;
+    }
+    saveToken(res.body.token);
+    $('password').value = '';
+    await load();
+  } catch (e) {
+    $('loginErr').textContent = 'No connection. Please try again.';
+  } finally {
+    $('loginBtn').disabled = false;
+  }
+});
+$('refreshBtn').addEventListener('click', load);
+$('logoutBtn').addEventListener('click', async () => { await logout(); showLogin(''); });
+$('search').addEventListener('input', render);
+$('head').addEventListener('click', ev => {
+  const th = ev.target.closest('th');
+  if (!th) return;
+  const key = th.dataset.key;
+  if (key === sortKey) sortDir = -sortDir;
+  else { sortKey = key; sortDir = key === 'email' ? 1 : -1; }
+  render();
+});
+
+if (token) load(); else showLogin('');
+</script>
+</body>
+</html>
