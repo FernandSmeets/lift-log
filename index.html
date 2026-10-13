@@ -128,8 +128,9 @@
   header .date{ color:var(--text-dim); font-size:var(--fs-md); }
   /* Week strip in the header (replaces the date line): Mon–Sun, filled on
      days with a saved workout, ring on today, count of this week's workouts. */
-  .week-strip{ display:flex; align-items:center; gap:.55rem; margin-top:.2rem; }
-  .week-days{ display:flex; gap:4px; }
+  .week-strip{ display:flex; align-items:center; gap:.55rem; margin-top:.2rem; flex-wrap:wrap; row-gap:.3rem; }
+  header .titles{ min-width:0; }
+  .week-days{ display:flex; gap:3px; }
   .week-day{
     width:1.3rem; height:1.3rem; border-radius:50%; background:var(--surface-hi); border:1px solid var(--border);
     display:flex; align-items:center; justify-content:center;
@@ -172,6 +173,51 @@
     cursor:pointer; color:var(--text-dim); flex:0 0 auto;
     -webkit-user-select:none; user-select:none;
   }
+  /* Buddies (header button + dialog) */
+  .header-btns{ display:flex; gap:.35rem; flex:0 0 auto; margin-left:.4rem; }
+  #buddiesDialog{ height:85dvh; }
+  #buddiesDialog .dialog-body{ height:calc(85dvh - 3.2rem); max-height:none; }
+  @media (max-width:480px){
+    #buddiesDialog{ height:88dvh; }
+    #buddiesDialog .dialog-body{ height:calc(88dvh - 3.2rem); }
+  }
+  .bd-card{ background:var(--surface-hi); border:1px solid var(--border); border-radius:12px; padding:.75rem .8rem; margin-bottom:.6rem; }
+  .bd-section{ margin:1.1rem 0 .5rem; }
+  .bd-section:first-child{ margin-top:0; }
+  .bd-row{ display:flex; align-items:center; gap:.65rem; cursor:pointer; -webkit-user-select:none; user-select:none; }
+  .bd-row:active{ filter:brightness(.95); }
+  .bd-av{ width:2.2rem; height:2.2rem; border-radius:50%; flex:0 0 auto; display:flex; align-items:center; justify-content:center;
+    font-size:var(--fs-sm); font-weight:600; background:var(--brand-dim); color:var(--brand-link); }
+  .bd-name{ font-size:var(--fs-md); font-weight:600; }
+  .bd-meta{ font-size:var(--fs-xs); color:var(--text-dim); }
+  .bd-main{ flex:1; min-width:0; display:flex; flex-direction:column; gap:.3rem; }
+  .bd-count{ font-family:'Oswald',sans-serif; font-size:1.5rem; font-weight:600; }
+  .bd-text{ font-size:var(--fs-base); line-height:1.45; }
+  .bd-sets{ margin:.35rem 0 0; padding:0; list-style:none; font-size:var(--fs-sm); }
+  .bd-sets li{ display:flex; justify-content:space-between; gap:.6rem; padding:.2rem 0; }
+  .bd-sets b{ font-weight:600; }
+  .bd-pr{ display:inline-block; font-size:var(--fs-2xs); font-weight:600; padding:.1rem .45rem; border-radius:999px;
+    background:var(--accent-dim); color:var(--text); margin-left:.3rem; }
+  .bd-reacts{ display:flex; gap:.4rem; margin-top:.55rem; }
+  .bd-react{ border:1px solid var(--border); background:var(--surface); color:var(--text-dim); border-radius:999px;
+    min-height:2.1rem; min-width:3rem; padding:0 .7rem; font-size:var(--fs-base); font-family:inherit; cursor:pointer; }
+  .bd-react.mine{ border-color:var(--accent); background:var(--accent-dim); color:var(--text); }
+  .bd-react:disabled{ opacity:.6; }
+  .bd-code{ font-family:'Oswald',sans-serif; font-size:1.7rem; letter-spacing:.3rem; text-align:center; padding:.5rem;
+    border:1px dashed var(--border); border-radius:10px; background:var(--surface); margin:.5rem 0 .6rem; }
+  .bd-add{ display:flex; gap:.5rem; margin-top:.6rem; }
+  .bd-add .plain-input{ margin:0; flex:1; text-transform:uppercase; }
+  .bd-tiles{ display:grid; grid-template-columns:repeat(3,1fr); gap:.4rem; margin-bottom:.6rem; }
+  .bd-tile{ background:var(--surface-hi); border:1px solid var(--border); border-radius:10px; padding:.55rem .4rem; text-align:center; }
+  .bd-tile .num{ display:block; font-size:1.5rem; font-weight:600; line-height:1.1; }
+  .bd-tile span:last-child{ font-size:var(--fs-2xs); color:var(--text-dim); }
+  .bd-back{ background:none; border:none; color:var(--text-dim); font-family:inherit; font-size:var(--fs-base); padding:.3rem 0; margin-bottom:.6rem; cursor:pointer; }
+  .bd-opt{ display:flex; align-items:flex-start; gap:.6rem; padding:.55rem 0; border-bottom:1px solid var(--border); cursor:pointer; }
+  .bd-opt:last-child{ border-bottom:none; }
+  .bd-opt input{ margin:.2rem 0 0; accent-color:var(--accent); width:1.1rem; height:1.1rem; flex:0 0 auto; }
+  .bd-note{ font-size:var(--fs-sm); color:var(--text-dim); line-height:1.5; margin:0 0 .6rem; }
+  .bd-error{ color:var(--feel-hard); font-size:var(--fs-sm); line-height:1.5; margin:.4rem 0 0; }
+  .bd-received{ font-size:var(--fs-sm); padding:.25rem 0; }
   .cog-btn:active{ color:var(--text); border-color:var(--accent); background:var(--surface-hi); }
   .cog-btn svg{ width:1.4rem; height:1.4rem; }
 
@@ -865,9 +911,14 @@
     <h1><img class="brand-mark" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAWfmNhQlgAABZ+anVtYgAAAB5qdW1kYzJwYQARABCAAACqADibcQNjMnBhAAAAFlhqdW1iAAAAR2p1bWRjMm1hABEAEIAAAKoAOJtxA3VybjpjMnBhOjBmNjJhYWQ4LTcwZjQtNDA0My1hYTMxLWM0ZjQzNTRiM2Q4NQAAAAOTanVtYgAAAClqdW1kYzJhcwARABCAAACqADibcQNjMnBhLmFzc2VydGlvbnMAAAAAuGp1bWIAAABEanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5pbmdyZWRpZW50LnYzAAAAABhjMnNoOBlaoYAoDpjmk0fR6p7RoQAAAGxjYm9yo2lkYzpmb3JtYXRpaW1hZ2UvcG5namluc3RhbmNlSUR4LHhtcDppaWQ6ODEyODMwMDUtOGQ4Ni00ODE4LTk5Y2YtNDYzOTRjODZjZmJibHJlbGF0aW9uc2hpcGhwYXJlbnRPZgAAAeJqdW1iAAAAQWp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuYWN0aW9ucy52MgAAAAAYYzJzaB4UGB1A6VxyNU6Aa5eGQv8AAAGZY2JvcqJnYWN0aW9uc4KiZmFjdGlvbmtjMnBhLm9wZW5lZGpwYXJhbWV0ZXJzoWtpbmdyZWRpZW50c4GiY3VybHgtc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5pbmdyZWRpZW50LnYzZGhhc2hYIKzUTKJ1VJQV2lH8+BPuBDaij1k7eO/CsuZaDv7e7QOSpGZhY3Rpb254HWNvbS5hbnRocm9waWMuY2xhdWRlLnByb3ZpZGVkanBhcmFtZXRlcnOheB9jb20uYW50aHJvcGljLm9yaWdpbi1jb25maWRlbmNlZ3Vua25vd25rZGVzY3JpcHRpb254ZkNsYXVkZSBwcm92aWRlZCB0aGlzIGZpbGUgYXQgdGhlIHJlcXVlc3Qgb2YgYSB1c2VyIGFuZCBtYXkgaGF2ZSBjcmVhdGVkIG9yIG1vZGlmaWVkIHRoZSBmaWxlIGNvbnRlbnRzLm1zb2Z0d2FyZUFnZW50oWRuYW1lZkNsYXVkZXJhbGxBY3Rpb25zSW5jbHVkZWT1AAAAyGp1bWIAAABAanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5oYXNoLmRhdGEAAAAAGGMyc2gHmlQ8vw7Ge2Ws+rBuxs84AAAAgGNib3KlY2FsZ2ZzaGEyNTZjcGFkTQAAAAAAAAAAAAAAAABkaGFzaFggCBgiUoL1FyMRkmIFZ39199RDGMjCNL1VavOw7TKNEjRkbmFtZW5qdW1iZiBtYW5pZmVzdGpleGNsdXNpb25zgaJlc3RhcnQYIWZsZW5ndGgZFooAAAI+anVtYgAAACdqdW1kYzJjbAARABCAAACqADibcQNjMnBhLmNsYWltLnYyAAAAAg9jYm9ypWNhbGdmc2hhMjU2aXNpZ25hdHVyZXhNc2VsZiNqdW1iZj0vYzJwYS91cm46YzJwYTowZjYyYWFkOC03MGY0LTQwNDMtYWEzMS1jNGY0MzU0YjNkODUvYzJwYS5zaWduYXR1cmVqaW5zdGFuY2VJRHgseG1wOmlpZDpmNjA4YzU2Yi04ODhmLTRkMmYtODU1MS00M2M1Y2FkOWE2NjZyY3JlYXRlZF9hc3NlcnRpb25zg6JjdXJseC1zZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmluZ3JlZGllbnQudjNkaGFzaFggrNRMonVUlBXaUfz4E+4ENqKPWTt478Ky5loO/t7tA5KiY3VybHgqc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5hY3Rpb25zLnYyZGhhc2hYIG0gJP5/dFOqomJvs9QmiHVNfvDQ16i1855uQ/MueNQSomN1cmx4KXNlbGYjanVtYmY9YzJwYS5hc3NlcnRpb25zL2MycGEuaGFzaC5kYXRhZGhhc2hYIF0wFZFOELrW1cNtSiAwHted6sGJeQmIgg7bRI2h7L9fdGNsYWltX2dlbmVyYXRvcl9pbmZvo2RuYW1lb0FudGhyb3BpYyBGaWxlc2d2ZXJzaW9uZTEuMC4wa3NwZWNWZXJzaW9uZTIuNC4wAAAQOGp1bWIAAAAoanVtZGMyY3MAEQAQgAAAqgA4m3EDYzJwYS5zaWduYXR1cmUAAAAQCGNib3LShFkCEqIBJhghWQIKMIICBjCCAY2gAwIBAgIUQOWgCu7COdC+uIP6BkIFPWdVEwAwCgYIKoZIzj0EAwMwSTEXMBUGA1UEChMOQW50aHJvcGljLCBQQkMxLjAsBgNVBAMTJUFudGhyb3BpYyBDb250ZW50IENyZWRlbnRpYWxzIFJvb3QgQ0EwHhcNMjYwODA3MTg0MzU2WhcNMjgwODA2MTk0MzU2WjBEMRcwFQYDVQQKEw5BbnRocm9waWMsIFBCQzEpMCcGA1UEAxMgQW50aHJvcGljIENsYXVkZSBDb250ZW50IFNpZ25pbmcwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASYegpry1AYBRTVNL1CpTlbROnY3dey+UrsF9C3phYrATN3ZHf93Mo8RQN0KOUuOn19P4oWNFWe5n2/She9N7eTo1gwVjAOBgNVHQ8BAf8EBAMCB4AwFQYDVR0lBA4wDAYKKwYBBAGD6F4CATAMBgNVHRMBAf8EAjAAMB8GA1UdIwQYMBaAFM5R4gSBTmRbI/jjxM+aPpzB11zCMAoGCCqGSM49BAMDA2cAMGQCMDFzHRSeAXrSy1WOzkbhPZ6Km2wGTmZ/2gK18k8BQGXyqz88Rdrz6CTX9flAnYNVxgIwcF9c3fVhqmJKpi+UhasNUMko69cyX6STPfta3Q8EjyzDjzoyrol46FP6VFHhvUcJoWNwYWRZDZ4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2WEC9ZWE3+ZYmD/aKeTwr8pa4c1IfppSkGJ1Veh397tk1Hdm3u8rwx0pgKqHLmJdFMoKILvGeFhDap4w/6k+6dOuqrJoNEAAACJ5JREFUeNptVmmQVNUVPufct/U60wwyG8sMyrBEBsuEmSQqlSpCSYJGVGJiFK0YUmoqm4lKjIoayyqtxB38YQkaYkxCATohCygQFbHASLQiM4igAw7L7D3dPd39tntOfryeJSb317td933fed+5fb4Pk6k0ACAiiyTiiVQqbZimoQxAEBFEAEARgfElICCIOLYDECAEzez7frFYKBWLSCQCIoIgmExXRQRTMjWJZFKEw1Az8xicQESCiEgRIDMLAAKIAIAggAAgIillEJXL5ezIsLAAgAhjKl0NIOecU2s7ThD4EXMFHTHaKCLX84rFoiISkUQiYZrm+DEZ+y4ABATTMALfHx4ejOgNZl1dnbFs2/M8QBTmqMZxERCxWCw2NTVd++1rPM8fHR3d8Ze/9vf3m5YZlTn2qQKIIOD5nmmYqXRVfiSLRGRZthOLe74vIswsIiwcPbOIiPi+n8lkfnnX2o+OHd+zdy8CPPTgryzL0qGuHGPW0VlmYQaBIAhM0zZMi5kNx4mJCLAGASCa1DoBEVJUKBQuv2zFG2+8uX7DM1Nrag4efGdddZVt267rGoYhFXEAiUQEEUFYBITIsizf9wxlGKy1q1kQpTQKSERoWRZLpZ9EVCgUOruOnDN1qmVb6VQ6DMN8Po9E0V0QECLleh4zA7NYjkFga02kAIAIoay5JWHc2Zx45JGHt23d0tIyp1wuE5GIaGZmzhcK586e7bquW3abm5tnzJgxWiwiIDMDiCJVLpXmz5vX8fL2B+9fd9d5iRmOcrUmQgAkBHBZ1jYYrRcuXnXj6uc3PreotdUwDM/zmJmQEolEV9cRwzCqqqtzubzj2P0DA8KsFBGR7we+78disXlz527dsuX6W29pnTPntkazyIggAELlkBttaoTAu+CS7qPHNj3//PGPP66qrkqlUkqp4Ww21PrTnh5mXV9ft2rV1VddufKJJ54ipXL5fKFQmFJTYzuOZVnHjh9/9rmN2cFsYX77HAqqSXzNIGBopBXtF/p972dmzf746NHa+ob29rb71t3bMue83bv37tu/3zLNDz882tbWtnPXqz/98Y++unTpxk0vrFx5hSKKx+M33rA6FnN27XrtcFdXV1dX3+lTdl2jhbTyKxe9uOsfiECmbTfXTXODwEml+/t6FyxYEAZhXW0tIj32+BMjIyOZTOa+dfck4jHLMn+7+XcbN216/NFf102bls/n//DHP/195866urpisZiIJxrq60dGskY8Ebpey6yZSATChu/7PadOXyDglkuWZb333vsDA4Pfuuab1163uqWl5ZGHH6qrq+vo2LH6hu/OmDXjtd17zp09e9Gi1pkzZ2Yy1S/+/qU1a74/b+7ckVxu2/aXe8+esS17aHQUSR0/cVKHISBR6Ll7333fUSrbezZTUzMyPPDF9rYgDDo7O3+x9o6f3Pbz3bv3vLB5c6oqzZpjjvONyy87cODgRRdf8krHn6+/7juL29q3bX/56quu7O7uDnUYS6VKZ05pzR2v7zcIRQSn1TVopB3NNLDixplX39DeuvDNN984cuTDw52dDQ0Nt99xZ119faFQiMdiIpJMptKpZG9fX7FYRMQHH7i/qbmpo2PHpo3PfqHtS6P53N/2v9259mb+4J+rPnGnkBRGCyqVTOWCsCyUHBnINp6HOlyx4utHj3509913bd22/fDhTqWUYajoP2HZVn//gIjYtl0slhYtav3Brbf4vmfbVrFYCsOwJpXq2775ucGgz9MGQhD4yoknbYLDZd7fn9vy0kuL2xYvXbq0ubnpyafWP73hmenTp39t+fJDh/5lWZYAhEFgmsZILnfxRV9uaprV8UpHqVxefumyTCaTy+WfXL/htV07X836Z3yJKdDCYRAQIohADIFIAWIQBOl0+u577v3NY48vWrjwZHd3e/viZcuWjeRy0az2PK922rTbf3ZbT0+PE4s9vX7Dzbf+sL9/INSh57poWAaRjSACCAgAKp5IQcUxwA+CxoaGbDb77w8+WHj++V1HjpTd8slPP11+6bJ9+94yTZOIstnsmjU3nT3Tu3XrtnQycUHrQsu2y2752LHj7x465MTsih0hAkAY+CqeSEVDXVgs2+4+cWJgcMjzvIMH3wmCwHFivb291Zkpvb1nPc9XSvlB8Ln5898+cGAoO1wS+uiTExAGJ0727N6zN+Y4Ew7xGQIEiEzYUMbp06f7BwYd20ZCZrYsS2seHBqMBrNjGrl8YXBoKAjCKxpSi6em3jo1ONjXFzUJx6Z99BAG3phEUnE8AbFMyzQMFgbAqJBcbgSYFSEL5Bn8QmGwVH6gZepjF9ZWg2w+XUzblfEOOPYOoogEgU8AEqFLxcOBhcdNHwGEWbMuaxnyNYvc1JB8fcms5dOSaQWsORcwRCYIExYtFQcFADB4DH6ygUdLIYQsLMKC56edz2ecvf3FRxdMTabstEKXgRBpMiqOeyFgNK0BjMnQ49oBAApkAz3FVCHCkkxsa/t0HYZLBkeH3DAWM4KKl1WaCSCAkygi0SPTFeHIf8dikESBqcx8XUNq35JZ986pqTKVrWDY0yBggihERaQQEYBk/N0x0AovRhsKw3Ai2ciEPlrge43JuWlTa50v+54felo8lhKRH7Ib6lIQBpqLIVcYZJIOIALAOgQAjMUTTizxX+EQAABYoMqktEFZL/QF6mOGr6XXDWpjpgVw1gsdRVNMlQt0NmRV0QfHiQjJLRdFBG3bsWzHMK3/5QhFtICBSAA+MwKYhAGLAFgKmSEUUYgGVuJjJauJIFEY+L7vERE6sbgw205cGaYITybASniMqqtcNkREAJ64DjJZHwRAIq1Dzy0hEhIpMxqTYUBISimslIEIkzsyNq0QYfKPE8AYxWNADIPA98pIhEhIqCzbQUAACQOPWQMiEiHiZ/VChP+zJvIriGitfa8cBB4pRUQR438AhoAPChDsiosAAAAASUVORK5CYII=" alt="">Lift Log</h1>
     <div class="week-strip" id="weekStrip" aria-label="This week"></div>
   </div>
+  <div class="header-btns">
+  <button class="cog-btn" onclick="openBuddies()" aria-label="Buddies">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+  </button>
   <button class="cog-btn" onclick="openSettings()" aria-label="Settings">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
   </button>
+  </div>
 </header>
 
 <main>
@@ -960,6 +1011,12 @@
       <button type="button" class="footer-link" onclick="openChangelog()">Changelog</button>
     </div>
   </div>
+</dialog>
+
+<!-- Buddies: friends who see each other's training (see openBuddies()) -->
+<dialog id="buddiesDialog">
+  <div class="dialog-head"><h3>Buddies</h3><button class="dialog-close" onclick="document.getElementById('buddiesDialog').close()">✕</button></div>
+  <div class="dialog-body" id="buddiesBody"></div>
 </dialog>
 
 <!-- Changelog dialog -->
@@ -1060,9 +1117,12 @@
       <li>Your training data: exercises, templates, workouts, weights, reps and settings.</li>
       <li>When you last logged in and the type of browser or phone you use, so you can stay logged in.</li>
       <li>For failed login attempts: your IP address, for at most one day, to block password guessing.</li>
+      <li>If you use Buddies: the name you choose, who your buddies are, what you share with each of them and your emoji reactions.</li>
     </ul>
     <h4>Why</h4>
     <p>Only to give you an account, keep your training data safe and make it available on your other devices. We don't use your data for advertising, don't sell it and don't share it with others.</p>
+    <h4>Buddies</h4>
+    <p>Buddies only see something from you after you've added each other with a code. Per buddy, you choose what they see: only the days you trained, also which exercises, or also your weights and PRs. They see your chosen name, never your email address. You can pause sharing or remove a buddy at any time in Buddies.</p>
     <h4>Where</h4>
     <p>Your data is stored on servers of our hosting provider STRATO in Germany. Data is sent over an encrypted connection.</p>
     <h4>How long</h4>
@@ -1107,7 +1167,7 @@
 </dialog>
 
 <script>
-const APP_VERSION = '3.1.6';
+const APP_VERSION = '3.2.0';
 const STORE_KEY = 'liftlog_data_v2';
 
 /* ---------- Account & sync ----------
@@ -1416,6 +1476,7 @@ async function submitAuth(){
     hideAuthScreen();
     refreshAfterDataChange();
     setTimeout(maybeShowMovedNotice, 800);
+    setTimeout(openBuddiesForInvite, 900);
   }catch(e){
     authFail('Can\'t reach the Lift Log server. Check your internet connection and try again.');
   }finally{
@@ -1532,9 +1593,354 @@ function maybeShowMovedNotice(){
   document.getElementById('infoDialog').showModal();
 }
 
+/* ---------- Buddies ----------
+   Friends who see each other's training. Each person picks, per buddy, how
+   much that buddy sees (only that they trained / + exercises / + weights and
+   PRs). Buddies add each other with a 6-character code or an invite link;
+   reactions are emoji only. Everything lives on the server (api/social.php). */
+const BUDDY_INVITE_KEY = 'liftlog_buddy_invite';
+const SHARE_LEVELS = [
+  { title: 'Only that I trained', text: 'Which days you trained' },
+  { title: '+ Exercises', text: 'Which exercises, no weights' },
+  { title: '+ Weights and PRs', text: 'Everything from your workouts' }
+];
+let social = null;        // last answer from social.php
+let socialError = '';
+let socialBusy = false;
+let buddyView = null;     // null = overview, otherwise a buddy id
+let editingBuddyName = false;
+
+function openBuddies(){
+  buddyView = null;
+  editingBuddyName = false;
+  socialError = '';
+  document.getElementById('buddiesDialog').showModal();
+  renderBuddies();
+  loadSocial();
+}
+async function loadSocial(){
+  if(!isLoggedIn()) return;
+  try{
+    const res = await api('social.php', 'GET');
+    if(res.status === 401){ sessionExpired(); return; }
+    if(res.status !== 200) socialError = res.body.message || 'Could not load your buddies.';
+    else { social = res.body; socialError = ''; }
+  }catch(e){
+    socialError = 'No connection. Your buddies show up when you\'re back online.';
+  }
+  renderBuddies();
+  maybeAddInvitedBuddy();
+}
+// Sends one change to the server; the answer is the new state. Returns the error message, if any.
+async function socialAction(body){
+  if(socialBusy) return '';
+  socialBusy = true;
+  try{
+    const res = await api('social.php', 'POST', body);
+    if(res.status === 401){ sessionExpired(); return ''; }
+    if(res.status !== 200) return res.body.message || 'Something went wrong. Please try again.';
+    social = res.body;
+    socialError = '';
+    return '';
+  }catch(e){
+    return 'No connection. Please try again when you\'re online.';
+  }finally{
+    socialBusy = false;
+    if(document.getElementById('buddiesDialog').open) renderBuddies();
+  }
+}
+
+function escHtml(s){ return escAttr(s); }
+function initials(name){
+  const parts = String(name || '?').trim().split(/\s+/);
+  return ((parts[0] || '?')[0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+}
+function formatCode(code){ return code ? code.slice(0, 3) + '-' + code.slice(3) : ''; }
+function dayLabel(day){
+  if(!social) return day;
+  const d = new Date(day + 'T12:00:00'), t = new Date(social.today + 'T12:00:00');
+  const diff = Math.round((t - d) / 86400000);
+  if(diff <= 0) return 'today';
+  if(diff === 1) return 'yesterday';
+  if(diff < 7) return d.toLocaleDateString('en-GB', { weekday: 'long' });
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+function topSetText(s){
+  if(s.weight > 0) return `${fmtNum(s.weight)} kg × ${s.reps}`;
+  if(s.reps > 0) return `${s.reps} reps`;
+  if(s.duration > 0) return `${s.duration} sec`;
+  return '';
+}
+function fmtNum(n){ return Number.isInteger(n) ? String(n) : String(Math.round(n * 10) / 10); }
+function weekDotsHtml(week){
+  const letters = ['M','T','W','T','F','S','S'];
+  return `<div class="week-days">${(week || []).map((on, i) => `<span class="week-day${on ? ' done' : ''}">${letters[i]}</span>`).join('')}</div>`;
+}
+function reactionsHtml(item){
+  return `<div class="bd-reacts">${item.reactions.map(r =>
+    `<button type="button" class="bd-react${r.mine ? ' mine' : ''}" ${socialBusy ? 'disabled' : ''}
+      onclick="reactToBuddy(${item.buddy_id}, '${item.day}', '${r.emoji}')" aria-label="React ${r.emoji}">${r.emoji}${r.count ? ' ' + r.count : ''}</button>`
+  ).join('')}</div>`;
+}
+function workoutText(item){
+  if(item.sets){
+    return `<ul class="bd-sets">${item.sets.map(s =>
+      `<li><span>${escHtml(s.name)}${s.pr ? '<span class="bd-pr">PR</span>' : ''}</span><b>${topSetText(s)}</b></li>`).join('')}</ul>`;
+  }
+  if(item.exercises){
+    const shown = item.exercises.slice(0, 4).map(escHtml).join(', ');
+    const more = item.exercises.length > 4 ? ` +${item.exercises.length - 4} more` : '';
+    return `<div class="bd-text">Trained ${shown}${more}</div>`;
+  }
+  return `<div class="bd-text">Trained ${item.count} exercise${item.count === 1 ? '' : 's'}</div>`;
+}
+
+function renderBuddies(){
+  const body = document.getElementById('buddiesBody');
+  if(!body) return;
+  if(!social){
+    body.innerHTML = socialError
+      ? `<p class="bd-note">${escHtml(socialError)}</p><button type="button" class="btn" style="width:100%;" onclick="loadSocial()">Try again</button>`
+      : '<p class="bd-note">Loading…</p>';
+    return;
+  }
+  if(buddyView !== null){
+    const b = social.buddies.find(x => x.id === buddyView);
+    if(b){ body.innerHTML = buddyDetailHtml(b); return; }
+    buddyView = null;
+  }
+  body.innerHTML = social.me.name && !editingBuddyName ? buddiesOverviewHtml() : chooseNameHtml();
+}
+
+function chooseNameHtml(){
+  return `
+    <div class="section-title">Your name</div>
+    <p class="bd-note">Choose the name your buddies see. Your email address is never shown to them.</p>
+    <input type="text" class="plain-input" id="buddyNameInput" maxlength="30" placeholder="e.g. Sam" autocomplete="nickname" value="${escAttr(social.me.name || '')}">
+    <p class="bd-error" id="buddyNameError"></p>
+    <button type="button" class="btn primary" style="width:100%; margin-top:.4rem;" onclick="saveBuddyName()">Save</button>
+    ${social.me.name ? '<button type="button" class="btn" style="width:100%; margin-top:.5rem;" onclick="editingBuddyName = false; renderBuddies();">Cancel</button>' : ''}`;
+}
+
+function buddiesOverviewHtml(){
+  const s = social;
+  let html = socialError ? `<p class="bd-error" style="margin:0 0 .8rem;">${escHtml(socialError)}</p>` : '';
+  html += `<div class="section-title bd-section">This week</div>`;
+  if(!s.buddies.length){
+    html += `<p class="bd-note">No buddies yet. Share your code below; when a friend adds it, you see each other's training.</p>`;
+  }
+  s.buddies.forEach(b => {
+    html += `<div class="bd-card bd-row" onclick="showBuddy(${b.id})">
+      <div class="bd-av">${escHtml(initials(b.name))}</div>
+      <div class="bd-main"><span class="bd-name">${escHtml(b.name)}</span>
+        ${b.hidden ? '<span class="bd-meta">Not sharing right now</span>' : weekDotsHtml(b.week)}</div>
+      ${b.hidden ? '' : `<span class="bd-count">${b.this_week}</span>`}
+    </div>`;
+  });
+
+  if(s.feed.length){
+    html += `<div class="section-title bd-section">Recent</div>`;
+    s.feed.forEach(item => {
+      html += `<div class="bd-card">
+        <div class="bd-row" onclick="showBuddy(${item.buddy_id})">
+          <div class="bd-av">${escHtml(initials(item.name))}</div>
+          <div class="bd-main"><span class="bd-name">${escHtml(item.name)} <span class="bd-meta">· ${escHtml(dayLabel(item.day))}</span></span></div>
+        </div>
+        ${workoutText(item)}
+        ${reactionsHtml(item)}
+      </div>`;
+    });
+  }
+
+  if(s.received.length){
+    html += `<div class="section-title bd-section">On your workouts</div><div class="bd-card">`;
+    s.received.slice(0, 10).forEach(r => {
+      html += `<div class="bd-received"><b>${escHtml(r.name)}</b> ${r.emoji} <span class="bd-meta">your workout ${escHtml(dayLabel(r.day))}</span></div>`;
+    });
+    html += `</div>`;
+  }
+
+  html += `
+    <div class="section-title bd-section">Add a buddy</div>
+    <div class="bd-card">
+      <div class="bd-text">Your code. Send it to a friend; they enter it in their Lift Log.</div>
+      <div class="bd-code" id="myBuddyCode">${formatCode(s.me.code)}</div>
+      <button type="button" class="btn primary" style="width:100%;" onclick="shareBuddyInvite()">Share invite link</button>
+      <div class="bd-add">
+        <input type="text" class="plain-input" id="buddyCodeInput" maxlength="7" placeholder="Friend's code" autocomplete="off" autocapitalize="characters">
+        <button type="button" class="btn" onclick="addBuddyFromInput()">Add</button>
+      </div>
+      <p class="bd-error" id="buddyAddError"></p>
+    </div>
+
+    <div class="section-title bd-section">You</div>
+    <div class="bd-card">
+      <div class="settings-row">
+        <div class="ex-info"><span class="name">${escHtml(s.me.name)}</span><span class="ex-meta">The name your buddies see</span></div>
+        <button type="button" class="btn" onclick="changeBuddyName()">Change</button>
+      </div>
+      <label class="bd-opt" style="border:none;">
+        <input type="checkbox" ${s.me.hidden ? 'checked' : ''} onchange="setSocialHidden(this.checked)">
+        <span><span class="bd-name" style="font-size:var(--fs-base);">Pause sharing</span><br><span class="bd-meta">Your buddies see nothing from you until you turn this off.</span></span>
+      </label>
+      <button type="button" class="btn" style="width:100%; margin-top:.3rem;" onclick="newBuddyCode()">Make a new code</button>
+      <p class="bd-meta" style="margin:.4rem 0 0;">Your old code then stops working. Buddies you already have stay.</p>
+    </div>`;
+  return html;
+}
+
+function buddyDetailHtml(b){
+  const name = escHtml(b.name);
+  let html = `<button type="button" class="bd-back" onclick="showBuddy(null)">‹ All buddies</button>
+    <div class="bd-row" style="cursor:default; margin-bottom:.8rem;"><div class="bd-av">${escHtml(initials(b.name))}</div><span class="bd-name" style="font-size:var(--fs-lg);">${name}</span></div>`;
+  if(b.hidden){
+    html += `<p class="bd-note">${name} isn't sharing right now.</p>`;
+  } else {
+    html += `<div class="bd-tiles">
+      <div class="bd-tile"><span class="num">${b.this_week}</span><span>this week</span></div>
+      <div class="bd-tile"><span class="num">${b.weeks_in_row}</span><span>weeks in a row</span></div>
+      ${b.they_share >= 2
+        ? `<div class="bd-tile"><span class="num">${b.prs_this_month}</span><span>PRs this month</span></div>`
+        : `<div class="bd-tile"><span class="num">${b.last_day ? escHtml(dayLabel(b.last_day)) : '–'}</span><span>last workout</span></div>`}
+    </div>`;
+    if(b.they_share >= 2 && b.records.length){
+      html += `<div class="section-title bd-section">Personal records</div><div class="bd-card"><ul class="bd-sets" style="margin:0;">${
+        b.records.slice(0, 8).map(r => `<li><span>${escHtml(r.name)}</span><b>${topSetText(r)}</b></li>`).join('')}</ul></div>`;
+      const mine = b.records.map(r => ({ r, my: myBestWeight(r.name) })).filter(x => x.my > 0);
+      if(mine.length){
+        html += `<div class="section-title bd-section">Same exercises as you</div><div class="bd-card"><ul class="bd-sets" style="margin:0;">${
+          mine.slice(0, 6).map(x => `<li><span>${escHtml(x.r.name)}</span><span>${name}: <b>${fmtNum(x.r.weight)} kg</b> · you: <b>${fmtNum(x.my)} kg</b></span></li>`).join('')}</ul></div>`;
+      }
+    } else if(b.they_share === 0){
+      html += `<p class="bd-note">${name} shares only which days they trained.</p>`;
+    }
+    if(b.workouts.length){
+      html += `<div class="section-title bd-section">Last two weeks</div>`;
+      b.workouts.forEach(w => {
+        html += `<div class="bd-card"><div class="bd-meta" style="text-transform:capitalize;">${escHtml(dayLabel(w.day))}</div>${workoutText(w)}${reactionsHtml({ ...w, buddy_id: b.id })}</div>`;
+      });
+    }
+  }
+  html += `<div class="section-title bd-section">What ${name} sees from you</div><div class="bd-card" style="padding-top:.2rem; padding-bottom:.2rem;">${
+    SHARE_LEVELS.map((l, i) => `<label class="bd-opt"><input type="radio" name="shareLevel" ${b.i_share === i ? 'checked' : ''} onchange="setShareLevel(${b.id}, ${i})">
+      <span><span class="bd-name" style="font-size:var(--fs-base);">${l.title}</span><br><span class="bd-meta">${l.text}</span></span></label>`).join('')}</div>
+    <button type="button" class="btn danger" style="width:100%; margin-top:.6rem;" onclick="removeBuddy(${b.id})">Remove ${name}</button>`;
+  return html;
+}
+function myBestWeight(name){
+  let best = 0;
+  (data.sessions[name] || []).forEach(s => (s.sets || []).forEach(set => { const w = parseFloat(set.weight); if(w > best) best = w; }));
+  return best;
+}
+
+function showBuddy(id){
+  buddyView = id;
+  renderBuddies();
+  const body = document.getElementById('buddiesBody');
+  if(body) body.scrollTop = 0;
+}
+async function saveBuddyName(){
+  const input = document.getElementById('buddyNameInput');
+  const name = input ? input.value.trim() : '';
+  if(!name){ document.getElementById('buddyNameError').textContent = 'Please enter a name.'; return; }
+  const err = await socialAction({ action: 'name', name });
+  if(err){ const el = document.getElementById('buddyNameError'); if(el) el.textContent = err; return; }
+  editingBuddyName = false;
+  renderBuddies();
+  maybeAddInvitedBuddy();
+}
+function changeBuddyName(){
+  editingBuddyName = true;
+  renderBuddies();
+  const input = document.getElementById('buddyNameInput');
+  if(input) input.focus();
+}
+async function addBuddy(code){
+  const before = new Set(social.buddies.map(b => b.id));
+  const err = await socialAction({ action: 'add', code });
+  if(err) return err;
+  const added = social.buddies.find(b => !before.has(b.id));
+  if(added) await showAlert(`You and ${added.name} are now buddies. Choose what ${added.name} sees from you on their page; it starts at "Only that I trained".`);
+  return '';
+}
+async function addBuddyFromInput(){
+  const input = document.getElementById('buddyCodeInput');
+  const code = input ? input.value.trim() : '';
+  if(!code){ document.getElementById('buddyAddError').textContent = 'Enter your friend\'s code.'; return; }
+  const err = await addBuddy(code);
+  const el = document.getElementById('buddyAddError');
+  if(el) el.textContent = err;
+}
+async function shareBuddyInvite(){
+  const url = NEW_APP_URL + '?buddy=' + social.me.code;
+  const text = `Train with me on Lift Log. Add me as a buddy with code ${formatCode(social.me.code)}, or open this link:`;
+  if(navigator.share){
+    try{ await navigator.share({ title: 'Lift Log', text, url }); return; }
+    catch(e){ if(e && e.name === 'AbortError') return; }
+  }
+  try{
+    await navigator.clipboard.writeText(text + ' ' + url);
+    showAlert('Invite link copied. Paste it in a message to your friend.');
+  }catch(e){
+    showAlert(text + '\n\n' + url);
+  }
+}
+async function reactToBuddy(buddyId, day, emoji){
+  const err = await socialAction({ action: 'react', buddy_id: buddyId, day, emoji });
+  if(err) showAlert(err);
+}
+async function setShareLevel(buddyId, level){
+  const err = await socialAction({ action: 'share', buddy_id: buddyId, level });
+  if(err) showAlert(err);
+}
+async function setSocialHidden(hidden){
+  const err = await socialAction({ action: 'hide', hidden });
+  if(err) showAlert(err);
+}
+async function newBuddyCode(){
+  const ok = await showConfirm('Make a new code? Your current code and invite links stop working. Buddies you already have stay.', { title: 'New code', ok: 'Make new code', cancel: 'Cancel' });
+  if(!ok) return;
+  const err = await socialAction({ action: 'new_code' });
+  if(err) showAlert(err);
+}
+async function removeBuddy(buddyId){
+  const b = social.buddies.find(x => x.id === buddyId);
+  const ok = await showConfirm(`Remove ${b ? b.name : 'this buddy'}? You no longer see each other's training. You can add each other again later with a code.`, { title: 'Remove buddy', ok: 'Remove', cancel: 'Cancel' });
+  if(!ok) return;
+  const err = await socialAction({ action: 'remove', buddy_id: buddyId });
+  if(err){ showAlert(err); return; }
+  showBuddy(null);
+}
+
+// Invite links (…/lift-log/?buddy=CODE): remembered until you're logged in
+// and have chosen a name, then the buddy is added.
+function rememberBuddyInvite(){
+  const params = new URLSearchParams(location.search);
+  if(!params.has('buddy')) return;
+  try{ localStorage.setItem(BUDDY_INVITE_KEY, params.get('buddy') || ''); }catch(e){}
+  params.delete('buddy');
+  const q = params.toString();
+  history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
+}
+function pendingBuddyInvite(){
+  try{ return localStorage.getItem(BUDDY_INVITE_KEY) || ''; }catch(e){ return ''; }
+}
+function openBuddiesForInvite(){
+  if(isLoggedIn() && pendingBuddyInvite() && !document.getElementById('buddiesDialog').open) openBuddies();
+}
+async function maybeAddInvitedBuddy(){
+  const code = pendingBuddyInvite();
+  if(!code || !social || !social.me.name || socialBusy) return;
+  try{ localStorage.removeItem(BUDDY_INVITE_KEY); }catch(e){}
+  if(code.replace(/[^A-Za-z0-9]/g, '').toUpperCase() === social.me.code) return;
+  const err = await addBuddy(code);
+  if(err) showAlert('That invite link didn\'t work: ' + err);
+}
+
 // Startup: a ?reset=… link from the password email opens the new-password screen;
 // without an account the login screen covers the app; otherwise sync quietly.
 async function initAccount(){
+  rememberBuddyInvite();
   // Back in the app: fetch changes. Leaving it: send waiting changes right away,
   // because a phone may stop the app before the short save delay is over.
   document.addEventListener('visibilitychange', () => {
@@ -1568,6 +1974,7 @@ async function initAccount(){
   if(!isLoggedIn()){ showAuthScreen('login'); return; }
   pullFromServer();
   setTimeout(maybeShowMovedNotice, 1200);
+  setTimeout(openBuddiesForInvite, 1000);
 }
 
 // Some browsers (notably iOS Safari, especially when added to the home screen)
@@ -1580,6 +1987,7 @@ if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 // Keep only the 10 most recent versions here, newest first, whenever a new version is published.
 const CHANGELOG = [
+  { version: '3.2.0', notes: ['New: Buddies. Tap the people icon at the top to add friends with a code or an invite link, see when they train and react with an emoji. You choose per buddy what they see: only the days you trained, also your exercises, or also your weights and PRs. Your buddies see a name you choose, never your email address.', 'Fixed: the OK button on a notice now closes it.'] },
   { version: '3.1.6', notes: ['Sync: an open Lift Log (for example on your computer) now checks your account every minute, so workouts you log on your phone show up without reloading. Changes are also sent right away when you leave the app.'] },
   { version: '3.1.5', notes: ['Behind the scenes: preparation for a separate admin page. Lift Log itself works the same as before.'] },
   { version: '3.1.4', notes: ['Forgot your password? Asking for a reset link is no longer blocked by earlier failed login attempts. A successful login also clears those failed attempts.'] },
@@ -1589,7 +1997,6 @@ const CHANGELOG = [
   { version: '3.1.0', notes: ['New: Lift Log accounts. Create an account (or log in) with your email address and your training data is saved in it: safe if you lose your phone, and the same on all your devices. Training data already on your phone moves into your new account. The app still works offline at the gym; changes are sent to your account as soon as you\'re online. Settings → ••• → Account shows the sync status and lets you log out or delete your account. Forgot your password? Request a reset link on the login screen'] },
   { version: '3.0.26', notes: ['Notifications: when they are blocked, a Check again button (and returning from the Settings app) refreshes the screen, so you don\'t have to close and reopen Lift Log after turning them on'] },
   { version: '3.0.25', notes: ['Notifications: when they are blocked, the message now lists the steps on iPhone (Settings → Notifications → Lift Log → Allow Notifications) and has an Open iPhone Settings button that tries to jump straight to the Settings app'] },
-  { version: '3.0.24', notes: ['New: Settings → ••• → Notifications. Allow notifications for Lift Log, send yourself a test, and choose the days and time for a training reminder. On iPhone this only works once Lift Log is on your Home Screen. The reminders themselves are sent by the Lift Log server, which is not connected yet, so for now only the test notification works. Needs the new sw.js file next to index.html'] },
 ];
 
 const DEFAULT_EXERCISES = [
@@ -3491,6 +3898,7 @@ function showAlert(message){
       done = true;
       okBtn.removeEventListener('click', finish);
       dlg.removeEventListener('close', finish);
+      if(dlg.open) dlg.close();
       resolve();
     };
     okBtn.addEventListener('click', finish);

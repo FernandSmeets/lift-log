@@ -107,7 +107,7 @@
       <div class="card tile"><div class="n" id="tEmpty">0</div><div class="l">no workouts yet</div></div>
     </div>
     <div class="tools">
-      <input id="search" type="search" placeholder="Search by email" autocomplete="off">
+      <input id="search" type="search" placeholder="Search by email or name" autocomplete="off">
     </div>
     <div class="card tablecard">
       <table>
@@ -136,6 +136,7 @@ const COLS = [
   { key: 'last_training', label: 'Last workout' },
   { key: 'training_days', label: 'Workout days', num: true },
   { key: 'exercises', label: 'Exercises', num: true },
+  { key: 'buddies', label: 'Buddies', num: true },
   { key: 'devices', label: 'Devices', num: true }
 ];
 
@@ -219,7 +220,7 @@ function render() {
   ).join('');
 
   const q = $('search').value.trim().toLowerCase();
-  const list = users.filter(u => !q || u.email.includes(q)).sort((a, b) => {
+  const list = users.filter(u => !q || u.email.includes(q) || (u.name || '').toLowerCase().includes(q)).sort((a, b) => {
     const x = a[sortKey], y = b[sortKey];
     if (x === y) return 0;
     if (x === null || x === undefined) return 1;
@@ -229,13 +230,14 @@ function render() {
 
   $('rows').innerHTML = list.length ? list.map(u => `
     <tr>
-      <td class="first"><span class="dot ${within(u.last_training ? u.last_training + ' 23:59:59' : null, 7) ? 'on' : ''}"></span><span class="email">${esc(u.email)}</span></td>
+      <td class="first"><span class="dot ${within(u.last_training ? u.last_training + ' 23:59:59' : null, 7) ? 'on' : ''}"></span><span class="email">${esc(u.email)}</span>${u.name ? `<span class="sub">${esc(u.name)}</span>` : ''}</td>
       <td data-label="Created"><span>${fmtDate(u.created_at)}<span class="sub">${ago(u.created_at)}</span></span></td>
       <td data-label="Last login"><span>${fmtDate(u.last_login_at, true)}<span class="sub">${ago(u.last_login_at)}</span></span></td>
       <td data-label="Last sync"><span>${fmtDate(u.synced_at, true)}<span class="sub">${ago(u.synced_at)}</span></span></td>
       <td data-label="Last workout"><span>${u.last_training ? fmtDate(u.last_training) : '–'}<span class="sub">${daysAgo(u.last_training)}</span></span></td>
       <td data-label="Workout days" class="num">${u.training_days}</td>
       <td data-label="Exercises" class="num">${u.exercises}</td>
+      <td data-label="Buddies" class="num">${u.buddies}</td>
       <td data-label="Devices" class="num">${u.devices}</td>
     </tr>`).join('') : `<tr><td class="empty first" colspan="${COLS.length}">${q ? 'No accounts match your search.' : 'No accounts yet.'}</td></tr>`;
 

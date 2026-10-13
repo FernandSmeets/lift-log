@@ -82,3 +82,35 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
   UNIQUE KEY uq_push_endpoint (endpoint(500)),
   CONSTRAINT fk_push_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Buddies: friends who see each other's training, as much as each of them chooses.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS display_name VARCHAR(40) NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS buddy_code CHAR(6) NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS social_hidden TINYINT(1) NOT NULL DEFAULT 0;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_users_buddy_code ON users (buddy_code);
+
+-- One row per direction. share_level = what user_id shows buddy_id:
+-- 0 only that they trained, 1 also which exercises, 2 also weights and PRs.
+CREATE TABLE IF NOT EXISTS buddies (
+  user_id         INT UNSIGNED NOT NULL,
+  buddy_id        INT UNSIGNED NOT NULL,
+  share_level     TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, buddy_id),
+  KEY ix_buddies_buddy (buddy_id),
+  CONSTRAINT fk_buddies_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+  CONSTRAINT fk_buddies_buddy FOREIGN KEY (buddy_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Emoji reactions on a buddy's training day.
+CREATE TABLE IF NOT EXISTS reactions (
+  from_user       INT UNSIGNED NOT NULL,
+  to_user         INT UNSIGNED NOT NULL,
+  day             DATE         NOT NULL,
+  emoji           VARCHAR(8)   NOT NULL,
+  created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (from_user, to_user, day, emoji),
+  KEY ix_reactions_to (to_user, day),
+  CONSTRAINT fk_reactions_from FOREIGN KEY (from_user) REFERENCES users (id) ON DELETE CASCADE,
+  CONSTRAINT fk_reactions_to FOREIGN KEY (to_user) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

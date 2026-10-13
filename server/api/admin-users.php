@@ -14,7 +14,7 @@ if (!in_array($user['email'], $admins, true)) {
 }
 
 $rows = db()->query(
-    'SELECT u.id, u.email, u.created_at, u.last_login_at, d.updated_at AS synced_at, d.revision, d.data,
+    'SELECT u.id, u.email, u.display_name, (SELECT COUNT(*) FROM buddies b WHERE b.user_id = u.id) AS buddies, u.created_at, u.last_login_at, d.updated_at AS synced_at, d.revision, d.data,
             (SELECT COUNT(*) FROM sessions s WHERE s.user_id = u.id AND s.expires_at > NOW()) AS devices
      FROM users u LEFT JOIN user_data d ON d.user_id = u.id
      ORDER BY u.created_at DESC'
@@ -40,6 +40,8 @@ foreach ($rows as $r) {
     ksort($days);
     $users[] = [
         'email' => $r['email'],
+        'name' => $r['display_name'],
+        'buddies' => (int)$r['buddies'],
         'created_at' => $r['created_at'],
         'last_login_at' => $r['last_login_at'],
         'synced_at' => $r['synced_at'],
