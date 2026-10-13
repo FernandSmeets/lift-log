@@ -122,12 +122,38 @@ function summarize(?string $json, int $level, string $today): array {
         $workouts[] = $item;
     }
 
+    // Earned badges (data.badges.earned, worked out by the app): strength
+    // badges only for "+ Weights and PRs", body-weight badges never.
+    $badges = [];
+    $earned = is_array($data) && is_array($data['badges']['earned'] ?? null) ? $data['badges']['earned'] : [];
+    foreach ($earned as $id => $e) {
+        if (!is_array($e) || !preg_match('/^[a-z0-9_]{1,30}$/', (string)$id)) continue;
+        $t = (int)($e['t'] ?? 0);
+        $d = substr((string)($e['d'] ?? ''), 0, 10);
+        $c = (string)($e['c'] ?? '');
+        if ($t < 1 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $d) || $d > $today) continue;
+        if ($c === 'body' || ($c === 'strength' && $level < 2)) continue;
+        $badges[] = ['id' => (string)$id, 't' => min(9, $t), 'd' => $d];
+    }
+    usort($badges, fn($a, $b) => strcmp($b['d'], $a['d']));
+    foreach ($badges as $b) {
+        if ($b['d'] < $from) continue;
+        $found = false;
+        foreach ($workouts as &$w) {
+            if ($w['day'] === $b['d']) { $w['badges'][] = $b; $found = true; break; }
+        }
+        unset($w);
+        if (!$found) $workouts[] = ['day' => $b['d'], 'count' => 0, 'badges' => [$b]];
+    }
+    usort($workouts, fn($a, $b) => strcmp($b['day'], $a['day']));
+
     $out = [
         'week' => $week,
         'this_week' => count(array_filter($week)),
         'weeks_in_row' => $streak,
         'last_day' => $days ? array_key_first($days) : null,
         'workouts' => $workouts,
+        'badges' => $badges,
     ];
     // Home Rig program: the week you're in and your Mini Cindy scores (rounds).
     if ($level >= 1 && is_array($data)) {

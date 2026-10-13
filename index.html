@@ -288,6 +288,61 @@
   .wt-code{ flex:1 1 12rem; min-width:0; font-size:var(--fs-sm); padding:.55rem .6rem; border-radius:8px; background:var(--surface-hi);
     border:1px solid var(--border); overflow-wrap:anywhere; }
   .wt-opt{ margin-top:.9rem; border-top:1px solid var(--border); border-bottom:none; padding-top:.8rem; }
+  /* Badges: medal button dot, medallions, badges screen and the congratulation */
+  .badge-btn{ position:relative; }
+  .badge-dot{ position:absolute; top:.35rem; right:.35rem; width:.55rem; height:.55rem; border-radius:50%; background:var(--accent); box-shadow:0 0 0 2px var(--surface); }
+  .badge-dot[hidden]{ display:none; }
+  .med{ --c:#2b2f36; position:relative; flex:0 0 auto; width:3.4rem; height:3.4rem; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+    font-size:1.45rem; line-height:1; background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.38), transparent 55%), var(--c);
+    box-shadow:inset 0 0 0 3px rgba(0,0,0,.22), 0 0 0 2px var(--c); }
+  .med.sm{ width:2.6rem; height:2.6rem; font-size:1.1rem; }
+  .med.xl{ width:6.2rem; height:6.2rem; font-size:2.8rem; }
+  .med.t1{ --c:#C98A55; } .med.t2{ --c:#B9C2CC; } .med.t3{ --c:#E8B83E; } .med.t4{ --c:#7FD1C7; } .med.one{ --c:#9B8AE0; }
+  .med.lock{ background:var(--surface-hi); box-shadow:inset 0 0 0 2px var(--border); filter:grayscale(1); opacity:.55; }
+  .med-t{ position:absolute; right:-.3rem; bottom:-.25rem; min-width:1.1rem; padding:.05rem .3rem; border-radius:999px; background:var(--bg); border:1.5px solid var(--c);
+    color:var(--text); font-size:.58rem; font-weight:700; font-family:Inter, Arial, sans-serif; line-height:1.2; text-align:center; }
+  .med.xl .med-t{ font-size:.8rem; padding:.1rem .45rem; }
+  .bdg-stats{ display:grid; grid-template-columns:repeat(3, 1fr); gap:.4rem; margin-bottom:.4rem; }
+  .bdg-next{ padding-top:.2rem; padding-bottom:.2rem; }
+  .bdg-next-row{ display:flex; align-items:center; gap:.75rem; width:100%; padding:.55rem 0; background:none; border:none; border-bottom:1px solid var(--border);
+    color:var(--text); font:inherit; text-align:left; cursor:pointer; }
+  .bdg-next-row:last-child{ border-bottom:none; }
+  .bdg-next-main{ flex:1; min-width:0; display:flex; flex-direction:column; gap:.15rem; }
+  .bdg-next-main b{ font-weight:600; font-size:var(--fs-base); }
+  .bdg-next-main > span{ font-size:var(--fs-sm); color:var(--text-dim); }
+  .bdg-bar{ display:block; height:.35rem; border-radius:3px; background:var(--surface); overflow:hidden; margin-top:.2rem; }
+  .bdg-bar i{ display:block; height:100%; border-radius:3px; background:var(--accent); }
+  .bdg-filter{ margin:.8rem 0 0; }
+  .bdg-grid{ display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:.7rem .35rem; }
+  .bdg-item{ display:flex; flex-direction:column; align-items:center; gap:.3rem; background:none; border:none; padding:.2rem 0; color:var(--text); font:inherit; cursor:pointer; text-align:center; min-width:0; }
+  .bdg-name{ font-size:var(--fs-xs); font-weight:600; line-height:1.2; }
+  .bdg-sub{ font-size:var(--fs-2xs); color:var(--text-dim); line-height:1.25; }
+  .bdg-detail{ display:flex; flex-direction:column; align-items:center; margin:.4rem 0 .2rem; }
+  .bdg-tiers{ list-style:none; margin:0; padding:0; font-size:var(--fs-sm); }
+  .bdg-tiers li{ display:flex; justify-content:space-between; gap:.6rem; padding:.35rem 0; color:var(--text-dim); border-bottom:1px solid var(--border); }
+  .bdg-tiers li:last-child{ border-bottom:none; }
+  .bdg-tiers li.done{ color:var(--text); }
+  .bdg-tiers li b{ font-weight:600; }
+  .bdg-shelf{ display:flex; flex-wrap:wrap; gap:.55rem; }
+  .bd-badge{ display:flex; align-items:center; gap:.65rem; margin-top:.55rem; padding:.55rem .6rem; border-radius:10px; background:var(--surface); font-size:var(--fs-sm); }
+  .bd-badge b{ font-weight:600; }
+  #badgesDialog{ height:85dvh; }
+  #badgesDialog .dialog-body{ height:calc(85dvh - 3.2rem); max-height:none; }
+  @media (max-width:640px){ #badgesDialog{ height:88dvh; } #badgesDialog .dialog-body{ height:calc(88dvh - 3.2rem); } }
+  #badgeEarnedDialog{ overflow:hidden; }
+  .be-body{ position:relative; text-align:center; padding-top:1.6rem !important; }
+  .be-title{ font-family:Oswald, Arial Narrow, sans-serif; font-size:1.45rem; font-weight:600; margin:.8rem 0 .25rem; }
+  .be-text{ color:var(--text-dim); font-size:var(--fs-base); line-height:1.5; margin:0 0 .7rem; }
+  .be-next{ background:var(--surface-hi); border-radius:8px; padding:.5rem .65rem; font-size:var(--fs-sm); color:var(--text-dim); margin-bottom:.6rem; text-align:left; }
+  .be-next b{ color:var(--text); font-weight:600; }
+  .be-share-note{ font-size:var(--fs-xs); color:var(--text-dim); margin:0 0 .8rem; }
+  .be-confetti{ position:absolute; inset:0 0 auto 0; height:7rem; pointer-events:none; overflow:hidden; }
+  .be-confetti i{ position:absolute; top:-1rem; width:.45rem; height:.8rem; border-radius:2px; animation:beFall 1.6s ease-in forwards; }
+  @keyframes beFall{ to{ transform:translateY(8rem) rotate(320deg); opacity:0; } }
+  @media (prefers-reduced-motion:reduce){ .be-confetti{ display:none; } }
+  /* Four header buttons on narrow phones */
+  @media (max-width:400px){ header .header-btns{ gap:.25rem; } header .header-btns .cog-btn{ width:2.45rem; height:2.45rem; } }
+  @media (max-width:359px){ header .header-btns .cog-btn{ width:2.25rem; height:2.25rem; } header .header-btns .cog-btn svg{ width:1.15rem; height:1.15rem; } }
   /* Program (Home Rig): card on the main screen, ladder row in Today, level check */
   .program-card{ display:block; width:100%; text-align:left; font:inherit; color:var(--text); background:var(--surface); border:1px solid var(--border);
     border-radius:10px; padding:.7rem .85rem .75rem; margin:0 0 .9rem; }
@@ -1069,6 +1124,10 @@
   <button class="cog-btn" onclick="openWeight()" aria-label="Weight">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7.2a3 3 0 116 0"/><path d="M5.8 7.2h12.4l3.3 14.3H2.5z"/><text x="12" y="18.2" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="8" font-weight="700" fill="currentColor" stroke="none">kg</text></svg>
   </button>
+  <button class="cog-btn badge-btn" onclick="openBadges()" aria-label="Badges">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 2.5l2.2 6.3M15.5 2.5l-2.2 6.3"/><circle cx="12" cy="15" r="6.2"/><path d="M12 11.9l.95 1.95 2.15.3-1.55 1.5.37 2.12L12 16.77l-1.92 1 .37-2.12-1.55-1.5 2.15-.3z"/></svg>
+    <span class="badge-dot" id="badgeDot" hidden></span>
+  </button>
   <button class="cog-btn" onclick="openBuddies()" aria-label="Buddies">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
   </button>
@@ -1217,6 +1276,15 @@
   <div class="dialog-body" id="programBody"></div>
 </dialog>
 
+<!-- Badges (see openBadges()) and the congratulation for a new one -->
+<dialog id="badgesDialog">
+  <div class="dialog-head"><h3>Badges</h3><button class="dialog-close" onclick="document.getElementById('badgesDialog').close()">✕</button></div>
+  <div class="dialog-body" id="badgesBody"></div>
+</dialog>
+<dialog id="badgeEarnedDialog">
+  <div class="dialog-body be-body" id="badgeEarnedBody"></div>
+</dialog>
+
 <!-- Finisher / Mini Cindy timer (see openFinisher()) -->
 <dialog id="finisherDialog">
   <div class="dialog-head"><h3 id="finisherTitle">Finisher</h3><button class="dialog-close" onclick="closeFinisher()">✕</button></div>
@@ -1345,7 +1413,7 @@
 </dialog>
 
 <script>
-const APP_VERSION = '3.5.0';
+const APP_VERSION = '3.6.0';
 const STORE_KEY = 'liftlog_data_v2';
 
 /* ---------- Account & sync ----------
@@ -1873,6 +1941,7 @@ function workoutText(item){
     const more = item.exercises.length > 4 ? ` +${item.exercises.length - 4} more` : '';
     return `<div class="bd-text">Trained ${shown}${more}</div>`;
   }
+  if(!item.count) return '';
   return `<div class="bd-text">Trained ${item.count} exercise${item.count === 1 ? '' : 's'}</div>`;
 }
 
@@ -1928,6 +1997,7 @@ function buddiesOverviewHtml(){
           <div class="bd-main"><span class="bd-name">${escHtml(item.name)} <span class="bd-meta">· ${escHtml(dayLabel(item.day))}</span></span></div>
         </div>
         ${workoutText(item)}
+        ${(item.badges || []).map(buddyBadgeLine).join('')}
         ${reactionsHtml(item)}
       </div>`;
     });
@@ -1984,6 +2054,7 @@ function buddyDetailHtml(b){
         ? `<div class="bd-tile"><span class="num">${b.prs_this_month}</span><span>PRs this month</span></div>`
         : `<div class="bd-tile"><span class="num">${b.last_day ? escHtml(dayLabel(b.last_day)) : '–'}</span><span>last workout</span></div>`}
     </div>`;
+    html += buddyBadgesHtml(b);
     html += buddyProgramHtml(b);
     if(b.they_share >= 2 && b.records.length){
       html += `<div class="section-title bd-section">Personal records</div><div class="bd-card"><ul class="bd-sets" style="margin:0;">${
@@ -1999,7 +2070,7 @@ function buddyDetailHtml(b){
     if(b.workouts.length){
       html += `<div class="section-title bd-section">Last two weeks</div>`;
       b.workouts.forEach(w => {
-        html += `<div class="bd-card"><div class="bd-meta" style="text-transform:capitalize;">${escHtml(dayLabel(w.day))}</div>${workoutText(w)}${reactionsHtml({ ...w, buddy_id: b.id })}</div>`;
+        html += `<div class="bd-card"><div class="bd-meta" style="text-transform:capitalize;">${escHtml(dayLabel(w.day))}</div>${workoutText(w)}${(w.badges || []).map(buddyBadgeLine).join('')}${reactionsHtml({ ...w, buddy_id: b.id })}</div>`;
       });
     }
   }
@@ -2119,6 +2190,401 @@ async function maybeAddInvitedBuddy(){
   if(code.replace(/[^A-Za-z0-9]/g, '').toUpperCase() === social.me.code) return;
   const err = await addBuddy(code);
   if(err) showAlert('That invite link didn\'t work: ' + err);
+}
+
+/* ---------- Badges ----------
+   Worked out from the training data you already have (sessions, weigh-ins,
+   the Home Rig program), so they're right straight away, also for history
+   from before badges existed or after a CSV import. Each badge has up to
+   four tiers (Bronze, Silver, Gold, Platinum); one-off badges have one.
+   data.badges = { earned: { id: { t: tier, d: date, c: category } },
+   seen: { id: tier } (congratulated), opened: { id: tier } (seen on the
+   badges screen, for the dot on the medal button) }. Earned tiers never go
+   back down, even if the data behind them is deleted. Buddies see earned
+   badges through social.php: strength badges only with "+ Weights and PRs",
+   body badges never. */
+const BADGE_TIERS = ['Bronze', 'Silver', 'Gold', 'Platinum'];
+const BADGE_ROMAN = ['I', 'II', 'III', 'IV'];
+const BADGE_CATS = [
+  { id: 'consistency', name: 'Consistency' },
+  { id: 'strength', name: 'Strength' },
+  { id: 'homerig', name: 'Home Rig' },
+  { id: 'body', name: 'Body' },
+  { id: 'secret', name: 'Secret' }
+];
+const VOLUME_LABELS = { 1.5: 'a car', 6: 'an elephant', 12: 'a bus', 150: 'a blue whale' };
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+// series(ctx) returns [[date, value], ...] with value never going down;
+// a tier is reached on the first date its threshold is met.
+const BADGES = [
+  { id: 'regular', cat: 'consistency', name: 'Regular', icon: '🏋️', th: [5, 25, 50, 100],
+    req: n => plural(n, 'workout'), prog: (v, n) => `${v} of ${n} workouts`,
+    series: c => c.days.map((d, i) => [d, i + 1]) },
+  { id: 'streak', cat: 'consistency', name: 'On a Roll', icon: '🔥', th: [4, 8, 12, 26],
+    req: n => `${n} weeks in a row`, prog: (v, n) => `Best: ${v} of ${n} weeks in a row`,
+    series: c => {
+      const out = []; let run = 0, best = 0, prev = '';
+      c.mondays.forEach(m => {
+        run = prev && addDaysStr(prev, 7) === m ? run + 1 : 1;
+        prev = m;
+        if(run > best){ best = run; out.push([c.weekDays[m][0], best]); }
+      });
+      return out;
+    } },
+  { id: 'fullweek', cat: 'consistency', name: 'Full Week', icon: '📅', th: [5, 10, 25, 50],
+    req: n => `Your weekly goal ${n} times`, prog: (v, n) => `${v} of ${n} full weeks (${c_target()} workouts)`,
+    series: c => {
+      const out = []; let n = 0; const t = c_target();
+      c.mondays.forEach(m => { const d = c.weekDays[m]; if(d.length >= t) out.push([d[t - 1], ++n]); });
+      return out;
+    } },
+  { id: 'recovered', cat: 'consistency', name: 'Recovered', icon: '🌙', th: [1],
+    req: () => 'Finish a deload week', prog: () => 'Finish a lighter week',
+    series: c => {
+      const out = []; let n = 0;
+      deloadData().periods.filter(p => p.end <= c.today).sort((a, b) => a.end.localeCompare(b.end)).forEach(p => {
+        const trained = c.days.filter(d => d >= p.start && d < p.end);
+        if(trained.length) out.push([trained[trained.length - 1], ++n]);
+      });
+      return out;
+    } },
+  { id: 'comeback', cat: 'consistency', name: 'Comeback', icon: '↩️', th: [1],
+    req: () => 'Train again after 3 weeks or more off', prog: () => 'Train again after a long break',
+    series: c => {
+      const out = []; let n = 0;
+      for(let i = 1; i < c.days.length; i++) if(c.days[i] >= addDaysStr(c.days[i - 1], 21)) out.push([c.days[i], ++n]);
+      return out;
+    } },
+  { id: 'prs', cat: 'strength', name: 'Record Breaker', icon: '🏆', th: [10, 25, 50, 100],
+    req: n => plural(n, 'personal record'), prog: (v, n) => `${v} of ${n} PRs`,
+    series: c => c.cumCount(c.prDates) },
+  { id: 'volume', cat: 'strength', name: 'Heavy Lifter', icon: '🐘', th: [1.5, 6, 12, 150],
+    req: n => `Lift ${VOLUME_LABELS[n]} (${n} t in total)`, prog: (v, n) => `${v} of ${n} t lifted`,
+    series: c => c.cumSum(c.volumeByDay, 1000, 1) },
+  { id: 'reps', cat: 'strength', name: 'Rep Machine', icon: '🔁', th: [1000, 5000, 10000, 50000],
+    req: n => `${n.toLocaleString('en-US')} reps in total`, prog: (v, n) => `${v.toLocaleString('en-US')} of ${n.toLocaleString('en-US')} reps`,
+    series: c => c.cumSum(c.repsByDay, 1, 0) },
+  { id: 'hold', cat: 'strength', name: 'Iron Hold', icon: '⏱️', th: [10, 30, 60, 180],
+    req: n => `${n} minutes in holds in total`, prog: (v, n) => `${v} of ${n} minutes in holds`,
+    series: c => c.cumSum(c.holdByDay, 60, 0) },
+  { id: 'levelup', cat: 'strength', name: 'Level Up', icon: '⬆️', th: [5, 25, 50, 100],
+    req: n => `Go up in weight ${n} times`, prog: (v, n) => `${v} of ${n} times more weight`,
+    series: c => c.cumCount(c.upDates) },
+  { id: 'stepup', cat: 'homerig', name: 'Step Up', icon: '🪜', th: [1, 5, 10, 20],
+    req: n => n === 1 ? 'Move up a step on a Home Rig ladder' : `Move up ${n} steps`, prog: (v, n) => `${v} of ${n} steps up`,
+    series: c => c.cumCount(c.ladder.up) },
+  { id: 'firstpullup', cat: 'homerig', name: 'First Pull-Up', icon: '🤸', th: [1],
+    req: () => 'Log your first pull-ups', prog: () => programActive() ? `Pull-up ladder: step ${programLevel('pull') + 1} of 5` : 'Log your first pull-ups',
+    frac: () => programActive() ? (programLevel('pull') + 1) / 5 : 0,
+    series: c => { const s = (data.sessions['Pull-Ups'] || []).filter(x => (x.sets || []).some(st => parseFloat(st.reps) >= 1)).map(x => x.date).sort(); return s.length ? [[s[0], 1]] : []; } },
+  { id: 'top', cat: 'homerig', name: 'Top of the Ladder', icon: '🧗', th: [1, 3, 5, 8],
+    req: n => n === 1 ? 'Reach the top step of a ladder' : `Reach the top of ${n} ladders`, prog: (v, n) => `${v} of ${n} ladders topped`,
+    series: c => c.cumCount(c.ladder.top) },
+  { id: 'halfway', cat: 'homerig', name: 'Halfway', icon: '⭐', th: [1],
+    req: () => 'Finish week 4 of Home Rig', prog: () => programActive() ? `Home Rig: week ${programState().week} of 8` : 'Finish week 4 of Home Rig',
+    frac: () => programActive() ? Math.min(1, (programState().week - 1) / 4) : 0,
+    series: c => c.cumCount(programHistory().halfway) },
+  { id: 'graduate', cat: 'homerig', name: 'Graduate', icon: '🎓', th: [1, 2, 3],
+    req: n => n === 1 ? 'Finish all 8 weeks of Home Rig' : `Finish Home Rig ${n} times`, prog: (v, n) => `${v} of ${n} times all 8 weeks`,
+    frac: v => v === 0 && programActive() ? Math.min(1, (programState().week - 1) / 8) : null,
+    series: c => c.cumCount(programHistory().graduate) },
+  { id: 'cindy', cat: 'homerig', name: 'Cindy Climber', icon: '🌀', th: [5, 10, 15, 20],
+    req: n => `${n} rounds of Mini Cindy`, prog: (v, n) => `Best: ${v} of ${n} rounds`,
+    series: c => { const out = []; let best = 0; cindyScores().forEach(s => { if(s.rounds > best){ best = s.rounds; out.push([s.date, best]); } }); return out; } },
+  { id: 'finisher', cat: 'homerig', name: 'Finisher', icon: '⚡', th: [5, 15, 30, 60],
+    req: n => `Save ${plural(n, 'finisher')}`, prog: (v, n) => `${v} of ${n} finishers`,
+    series: c => c.cumCount((Array.isArray(data.finisherLog) ? data.finisherLog : []).map(x => x.date)) },
+  { id: 'scale', cat: 'body', name: 'On the Scale', icon: '⚖️', th: [7, 30, 100, 365],
+    req: n => `Weigh in on ${n} days`, prog: (v, n) => `${v} of ${n} days weighed`,
+    series: c => weightEntries().map((e, i) => [e.date, i + 1]) },
+  { id: 'goal', cat: 'body', name: 'Goal Reached', icon: '🎯', th: [1],
+    req: () => 'Reach your goal weight', prog: () => data.weightGoal ? `Goal: ${fmtBw(data.weightGoal.kg)} kg` : 'Set a goal weight in Weight',
+    series: c => {
+      const g = data.weightGoal;
+      if(!g || typeof g.kg !== 'number' || typeof g.startKg !== 'number' || g.kg === g.startKg) return [];
+      const down = g.kg < g.startKg;
+      const hit = weightEntries().find(e => e.date >= (g.startDate || '') && (down ? e.kg <= g.kg : e.kg >= g.kg));
+      return hit ? [[hit.date, 1]] : [];
+    } },
+  { id: 'newyear', cat: 'secret', name: 'New Year\'s Lift', icon: '🎆', th: [1], secret: true,
+    req: () => 'Train on the 1st of January', prog: () => '',
+    series: c => c.cumCount(c.days.filter(d => d.slice(5) === '01-01')) },
+  { id: 'weekend', cat: 'secret', name: 'Weekend Warrior', icon: '🛡️', th: [1], secret: true,
+    req: () => 'Train on both Saturday and Sunday of one weekend', prog: () => '',
+    series: c => c.cumCount(c.days.filter(d => new Date(d + 'T00:00:00Z').getUTCDay() === 0 && c.daySet.has(addDaysStr(d, -1)))) },
+  { id: 'leap', cat: 'secret', name: 'Leap Day', icon: '🐸', th: [1], secret: true,
+    req: () => 'Train on the 29th of February', prog: () => '',
+    series: c => c.cumCount(c.days.filter(d => d.slice(5) === '02-29')) }
+];
+const BADGE_BY_ID = Object.fromEntries(BADGES.map(b => [b.id, b]));
+// Workouts per week for Full Week: the Home Rig choice while it runs, otherwise 3.
+function c_target(){ return programActive() ? programPerWeek() : 3; }
+function programHistory(){
+  if(!data.programHistory || typeof data.programHistory !== 'object') data.programHistory = {};
+  ['halfway', 'graduate'].forEach(k => { if(!Array.isArray(data.programHistory[k])) data.programHistory[k] = []; });
+  return data.programHistory;
+}
+// Halfway / Graduate: noted once per program run (data.program.start).
+function noteProgramMilestones(st){
+  if(!programActive()) return false;
+  const h = programHistory(), p = data.program, t = todayStr();
+  let changed = false;
+  if((st.week >= 5 || st.complete) && p.halfwayNoted !== p.start){ h.halfway.push(t); p.halfwayNoted = p.start; changed = true; }
+  if(st.complete && p.graduateNoted !== p.start){ h.graduate.push(t); p.graduateNoted = p.start; changed = true; }
+  return changed;
+}
+function badgeContext(){
+  const today = todayStr();
+  const days = workoutDays().filter(d => d <= today);
+  const weekDays = {};
+  days.forEach(d => { const m = mondayOf(d); (weekDays[m] || (weekDays[m] = [])).push(d); });
+  const c = { today, days, daySet: new Set(days), weekDays, mondays: Object.keys(weekDays).sort(),
+    prDates: [], upDates: [], volumeByDay: {}, repsByDay: {}, holdByDay: {}, ladder: { up: [], top: [] } };
+  const num = v => parseFloat(v) || 0;
+  Object.entries(data.sessions || {}).forEach(([name, list]) => {
+    if(!Array.isArray(list) || name === MINI_CINDY) return;
+    const m = exerciseMetricsByName(name), prim = primaryMetric(m);
+    let best = 0, prevTop = 0;
+    list.filter(s => s.date <= today && s.sets && s.sets.length).slice().sort((a, b) => a.date.localeCompare(b.date)).forEach(s => {
+      let top = 0, topW = 0;
+      s.sets.forEach(st => {
+        top = Math.max(top, num(st[prim]));
+        topW = Math.max(topW, num(st.weight));
+        if(m.includes('weight') && m.includes('reps')) c.volumeByDay[s.date] = (c.volumeByDay[s.date] || 0) + num(st.weight) * num(st.reps);
+        if(m.includes('reps')) c.repsByDay[s.date] = (c.repsByDay[s.date] || 0) + num(st.reps);
+        if(m.includes('duration')) c.holdByDay[s.date] = (c.holdByDay[s.date] || 0) + num(st.duration);
+      });
+      if(best > 0 && top > best) c.prDates.push(s.date);
+      best = Math.max(best, top);
+      if(m.includes('weight') && prevTop > 0 && topW > prevTop && !isDeloadDate(s.date)) c.upDates.push(s.date);
+      if(topW > 0) prevTop = topW;
+    });
+  });
+  PROGRAM_LADDERS.forEach(l => {
+    const logged = [];
+    l.steps.forEach((st, i) => (data.sessions[st.name] || []).forEach(s => { if(s.date <= today && s.sets && s.sets.length) logged.push([s.date, i]); }));
+    logged.sort((a, b) => a[0].localeCompare(b[0]));
+    let hi = -1;
+    logged.forEach(([d, i]) => {
+      if(hi >= 0 && i > hi) for(let k = hi; k < i; k++) c.ladder.up.push(d);
+      if(i > hi){ if(i === l.steps.length - 1) c.ladder.top.push(d); hi = i; }
+    });
+  });
+  c.cumCount = dates => dates.slice().sort().map((d, i) => [d, i + 1]);
+  c.cumSum = (byDay, div, dec) => {
+    let tot = 0; const f = Math.pow(10, dec);
+    return Object.keys(byDay).sort().map(d => { tot += byDay[d]; return [d, Math.floor(tot / div * f) / f]; });
+  };
+  return c;
+}
+// Every badge with its tier now (sticky), value and the date of each tier.
+function computeBadges(){
+  const ctx = badgeContext();
+  const earned = (data.badges && data.badges.earned) || {};
+  return BADGES.map(b => {
+    let series = [];
+    try{ series = b.series(ctx) || []; }catch(e){ console.error('badge', b.id, e); }
+    const value = series.length ? series[series.length - 1][1] : 0;
+    const dates = b.th.map(n => { const hit = series.find(p => p[1] >= n); return hit ? hit[0] : null; });
+    let tier = dates.filter(Boolean).length;
+    const kept = earned[b.id];
+    if(kept && kept.t > tier) tier = Math.min(b.th.length, kept.t);
+    return { b, value, tier, dates, date: tier ? (dates[tier - 1] || (kept && kept.d) || ctx.today) : null };
+  });
+}
+function badgeState(){
+  if(!data.badges || typeof data.badges !== 'object') data.badges = {};
+  ['earned', 'seen', 'opened'].forEach(k => { if(!data.badges[k] || typeof data.badges[k] !== 'object') data.badges[k] = {}; });
+  return data.badges;
+}
+// Brings data.badges.earned up to date; returns the badges with a new tier
+// that haven't been congratulated yet. The very first time, everything
+// already earned counts as seen (no flood of popups), only the dot shows.
+function refreshBadges(){
+  const first = !data.badges;
+  const st = badgeState();
+  const list = computeBadges();
+  let changed = false;
+  list.forEach(x => {
+    const e = st.earned[x.b.id];
+    if(x.tier > 0 && (!e || e.t !== x.tier)){ st.earned[x.b.id] = { t: x.tier, d: x.date, c: x.b.cat }; changed = true; }
+    if(first) st.seen[x.b.id] = x.tier;
+  });
+  if(first) changed = true;
+  if(changed) saveData();
+  return { list, fresh: list.filter(x => x.tier > (st.seen[x.b.id] || 0)) };
+}
+function badgeDotOn(){
+  const st = data.badges;
+  if(!st || !st.earned) return false;
+  return Object.entries(st.earned).some(([id, e]) => e && e.t > ((st.opened || {})[id] || 0));
+}
+function renderBadgeDot(){
+  const dot = document.getElementById('badgeDot');
+  if(dot) dot.hidden = !badgeDotOn();
+}
+function medalHtml(b, tier, size){
+  const cls = tier === 0 ? 'lock' : b.th.length === 1 ? 'one' : 't' + tier;
+  const icon = tier === 0 && b.secret ? '❓' : b.icon;
+  return `<span class="med ${cls}${size ? ' ' + size : ''}" aria-hidden="true">${icon}${tier && b.th.length > 1 ? `<span class="med-t">${BADGE_ROMAN[tier - 1]}</span>` : ''}</span>`;
+}
+function badgeTitle(b, tier){ return b.th.length > 1 && tier ? `${b.name} · ${BADGE_TIERS[tier - 1]}` : b.name; }
+
+// ---- Checking after a change, and the congratulation ----
+let badgeCheckTimer = null;
+let badgeQueue = [];
+function scheduleBadgeCheck(){
+  clearTimeout(badgeCheckTimer);
+  badgeCheckTimer = setTimeout(checkBadges, 700);
+}
+// A congratulation waits while another screen is open; check again when one closes.
+document.querySelectorAll('dialog').forEach(d => { if(d.id !== 'badgeEarnedDialog') d.addEventListener('close', scheduleBadgeCheck); });
+function checkBadges(){
+  if(!isLoggedIn()) return;
+  const { fresh } = refreshBadges();
+  renderBadgeDot();
+  if(!fresh.length) return;
+  const open = [...document.querySelectorAll('dialog[open]')].filter(d => d.id !== 'weightDialog' && d.id !== 'badgeEarnedDialog');
+  if(open.length || document.getElementById('badgeEarnedDialog').open) return; // shown on a later check
+  badgeQueue = fresh.sort((a, b) => b.tier - a.tier);
+  const st = badgeState();
+  fresh.forEach(x => { st.seen[x.b.id] = x.tier; });
+  saveData();
+  showEarnedBadge();
+}
+function showEarnedBadge(){
+  const x = badgeQueue.shift();
+  if(!x) return;
+  const b = x.b, more = badgeQueue.length;
+  const next = x.tier < b.th.length ? `<div class="be-next">Next: <b>${BADGE_TIERS[x.tier]}</b> at ${escAttr(b.req(b.th[x.tier]))}</div>` : '';
+  const shared = b.cat === 'body' ? 'Only you see this badge.' : b.cat === 'strength' ? 'Buddies who see your weights and PRs see this badge.' : 'Your buddies see this badge in their feed.';
+  document.getElementById('badgeEarnedBody').innerHTML = `
+    <div class="be-confetti" aria-hidden="true">${Array.from({ length: 14 }, (_, i) => `<i style="left:${(i * 37) % 100}%;animation-delay:${(i % 7) * 0.08}s;background:${['#E8B83E', '#E8543E', '#7FD1C7', '#6FCF97', '#B9C2CC'][i % 5]}"></i>`).join('')}</div>
+    ${medalHtml(b, x.tier, 'xl')}
+    <h4 class="be-title">${escAttr(badgeTitle(b, x.tier))}</h4>
+    <p class="be-text">${escAttr(b.req(b.th[x.tier - 1]))}.</p>
+    ${next}
+    <p class="be-share-note">${shared}</p>
+    <div class="update-actions">
+      <button type="button" class="btn primary" onclick="shareBadge('${b.id}')">Share</button>
+      <button type="button" class="btn" onclick="closeEarnedBadge()">${more ? `Nice! (${more} more)` : 'Nice!'}</button>
+    </div>`;
+  const dlg = document.getElementById('badgeEarnedDialog');
+  if(!dlg.open) dlg.showModal();
+  try{ if(navigator.vibrate) navigator.vibrate([60, 40, 60]); }catch(e){}
+}
+function closeEarnedBadge(){
+  if(badgeQueue.length){ showEarnedBadge(); return; }
+  document.getElementById('badgeEarnedDialog').close();
+}
+async function shareBadge(id){
+  const b = BADGE_BY_ID[id], e = badgeState().earned[id];
+  if(!b || !e) return;
+  const text = `I earned ${badgeTitle(b, e.t)} ${b.icon} on Lift Log: ${b.req(b.th[e.t - 1])}.`;
+  if(navigator.share){
+    try{ await navigator.share({ title: 'Lift Log', text, url: NEW_APP_URL }); return; }
+    catch(err){ if(err && err.name === 'AbortError') return; }
+  }
+  try{ await navigator.clipboard.writeText(text + ' ' + NEW_APP_URL); showToast('Copied. Paste it in a message.'); }
+  catch(err){ showAlert(text); }
+}
+
+// ---- Badges screen ----
+let badgeFilter = 'all';
+let badgeDetail = null;
+function openBadges(){
+  badgeDetail = null;
+  const { list } = refreshBadges();
+  const st = badgeState();
+  list.forEach(x => { st.opened[x.b.id] = x.tier; });
+  saveData();
+  renderBadgeDot();
+  renderBadges();
+  document.getElementById('badgesDialog').showModal();
+}
+function setBadgeFilter(f){ badgeFilter = f; renderBadges(); }
+function showBadgeDetail(id){ badgeDetail = id; renderBadges(); const body = document.getElementById('badgesBody'); if(body) body.scrollTop = 0; }
+function nextUpBadges(list){
+  return list.filter(x => !x.b.secret && x.tier < x.b.th.length).map(x => {
+    const n = x.b.th[x.tier];
+    let f = x.b.frac ? x.b.frac(x.value) : null;
+    if(f === null || f === undefined) f = Math.min(0.99, x.value / n);
+    return { ...x, n, f };
+  }).filter(x => x.f > 0).sort((a, b) => b.f - a.f).slice(0, 3);
+}
+function renderBadges(){
+  const body = document.getElementById('badgesBody');
+  if(!body) return;
+  const list = computeBadges();
+  if(badgeDetail){
+    const x = list.find(y => y.b.id === badgeDetail);
+    if(x){ body.innerHTML = badgeDetailHtml(x); return; }
+    badgeDetail = null;
+  }
+  const got = list.filter(x => x.tier > 0);
+  const gold = list.filter(x => x.tier >= 3).length;
+  const c = badgeContext();
+  let run = 0;
+  for(let m = mondayOf(c.today), first = true; ; m = addDaysStr(m, -7), first = false){
+    if(c.weekDays[m]) run++;
+    else if(!first) break;
+  }
+  const next = nextUpBadges(list);
+  let html = `<div class="bdg-stats">
+      <div class="bd-tile"><span class="num">${got.length}</span><span>of ${BADGES.length} badges</span></div>
+      <div class="bd-tile"><span class="num">${gold}</span><span>gold or better</span></div>
+      <div class="bd-tile"><span class="num">${run}</span><span>weeks in a row</span></div>
+    </div>`;
+  if(next.length){
+    html += `<div class="section-title bd-section">Next up</div><div class="bd-card bdg-next">${next.map(x => `
+      <button type="button" class="bdg-next-row" onclick="showBadgeDetail('${x.b.id}')">${medalHtml(x.b, x.b.th.length > 1 ? x.tier + 1 : 0, 'sm')}
+        <span class="bdg-next-main"><b>${escAttr(badgeTitle(x.b, x.b.th.length > 1 ? x.tier + 1 : 0))}</b><span>${escAttr(x.b.prog(x.value, x.n))}</span><span class="bdg-bar"><i style="width:${Math.round(x.f * 100)}%"></i></span></span>
+      </button>`).join('')}</div>`;
+  }
+  html += `<div class="pq-opts bdg-filter">${[{ id: 'all', name: 'All' }, ...BADGE_CATS].map(cat => `<button type="button" class="pq-opt${badgeFilter === cat.id ? ' active' : ''}" onclick="setBadgeFilter('${cat.id}')">${cat.name}</button>`).join('')}</div>`;
+  BADGE_CATS.filter(cat => badgeFilter === 'all' || badgeFilter === cat.id).forEach(cat => {
+    const items = list.filter(x => x.b.cat === cat.id);
+    html += `<div class="section-title bd-section">${cat.name}</div><div class="bdg-grid">${items.map(x => `
+      <button type="button" class="bdg-item" onclick="showBadgeDetail('${x.b.id}')">${medalHtml(x.b, x.tier)}
+        <span class="bdg-name">${escAttr(x.tier === 0 && x.b.secret ? 'Secret' : x.b.name)}</span>
+        <span class="bdg-sub">${escAttr(x.tier === 0 && x.b.secret ? 'Keep training' : x.tier ? (x.b.th.length > 1 ? BADGE_TIERS[x.tier - 1] : 'Earned') : x.b.req(x.b.th[0]))}</span>
+      </button>`).join('')}</div>`;
+  });
+  body.innerHTML = html;
+}
+function badgeDetailHtml(x){
+  const b = x.b, hidden = b.secret && !x.tier;
+  const rows = b.th.map((n, i) => {
+    const done = x.tier > i;
+    const when = done && x.dates[i] ? fmtDate(x.dates[i]) : '';
+    return `<li class="${done ? 'done' : ''}"><span>${b.th.length > 1 ? `<b>${BADGE_TIERS[i]}</b> · ` : ''}${escAttr(hidden ? 'Keep training to find out' : b.req(n))}</span><span>${done ? `✓ ${escAttr(when)}` : ''}</span></li>`;
+  }).join('');
+  const nextN = b.th[x.tier];
+  const prog = !hidden && nextN !== undefined && b.prog(x.value, nextN) ? `<p class="bd-note" style="text-align:center;">${escAttr(b.prog(x.value, nextN))}</p>` : '';
+  const vis = b.cat === 'body' ? 'Only you see this badge.' : b.cat === 'strength' ? 'Buddies see it when you share "+ Weights and PRs" with them.' : 'Your buddies see it when you earn it.';
+  return `<button type="button" class="bd-back" onclick="showBadgeDetail(null)">‹ All badges</button>
+    <div class="bdg-detail">${medalHtml(b, x.tier, 'xl')}
+      <h4 class="be-title">${escAttr(hidden ? 'Secret badge' : badgeTitle(b, x.tier))}</h4>
+      ${x.tier && x.date ? `<p class="bd-meta" style="text-align:center;margin:0 0 .6rem;">Earned ${escAttr(fmtDate(x.date))}</p>` : ''}
+    </div>
+    ${prog}
+    <div class="bd-card"><ul class="bdg-tiers">${rows}</ul></div>
+    <p class="bd-meta">${vis}</p>
+    ${x.tier ? `<button type="button" class="btn" style="width:100%;margin-top:.4rem;" onclick="shareBadge('${b.id}')">Share</button>` : ''}`;
+}
+// Badges of a buddy (from social.php), for the buddy page and the feed.
+function buddyBadgeLine(e){
+  const b = BADGE_BY_ID[e.id];
+  if(!b) return '';
+  const t = Math.min(e.t, b.th.length);
+  return `<div class="bd-badge">${medalHtml(b, t, 'sm')}<span><b>Earned ${escHtml(badgeTitle(b, t))}</b><br><span class="bd-meta">${escHtml(b.req(b.th[t - 1]))}</span></span></div>`;
+}
+function buddyBadgesHtml(b){
+  const list = (b.badges || []).filter(e => BADGE_BY_ID[e.id]);
+  if(!list.length) return '';
+  const mine = Object.keys(badgeState().earned).length;
+  return `<div class="section-title bd-section">Badges</div><div class="bd-card"><div class="bdg-shelf">${list.map(e => medalHtml(BADGE_BY_ID[e.id], Math.min(e.t, BADGE_BY_ID[e.id].th.length), 'sm')).join('')}</div>
+    <div class="bd-meta" style="margin-top:.5rem;">${plural(list.length, 'badge')} · you have ${mine}</div></div>`;
 }
 
 /* ---------- Weight ----------
@@ -2313,6 +2779,7 @@ async function saveWeight(){
   if(input) input.blur();
   renderWeight();
   renderWeightNudge();
+  scheduleBadgeCheck();
 }
 async function deleteWeight(){
   const today = localToday();
@@ -2803,6 +3270,7 @@ if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 // Keep only the 10 most recent versions here, newest first, whenever a new version is published.
 const CHANGELOG = [
+  { version: '3.6.0', notes: ['New: badges. Tap the medal at the top to see them. Badges like Regular, On a Roll, Record Breaker, Heavy Lifter and Step Up have four levels, from Bronze to Platinum, and Next up shows the ones you\'re closest to.', 'Badges are worked out from your training so far, so you may already have quite a few. When you earn a new one, you get a short congratulation after saving.', 'Your buddies see your new badges in their feed and can react to them. Strength badges only show for buddies who see your weights and PRs, and badges about your body weight are never shared.', 'There are a few secret badges too. Keep training to find them.'] },
   { version: '3.5.0', notes: ['Home Rig: a timer for the finisher. Tap Timer on the program card for the EMOM, AMRAP or Tabata of the week, with a beep on every new minute or round. Afterwards you save your score.', 'Mini Cindy has its own 10-minute timer with a round counter, and your scores are listed under the program in Settings → Templates.', 'Choose 2, 3 or 4 workouts a week, at the start or later in Settings → Templates.', 'Share Home Rig with a friend: they open the link and start at their own level. Add each other as buddies to see each other\'s program week and Mini Cindy scores (when you share "+ Exercises" or more).'] },
   { version: '3.4.0', notes: ['New: the Home Rig program, 8 weeks of training at home with a pull-up bar, rings and a dip bar. Start it in Settings → Templates. Three quick questions pick your starting exercises, and two full-body workouts (Home Rig A and B) take turns, 3 a week, each with a short finisher.', 'Every movement is a ladder from easy to hard, for example negative pull-ups, then chin-ups, then pull-ups. When every set reaches the top of the range, the target offers the next exercise. Easier and Harder buttons under the target let you switch any time.', 'A card on the main screen shows the week, which workout is next and how many sets to do. Weeks 4 and 8 are lighter weeks with a short test, Mini Cindy, so you can see how much stronger you got.'] },
   { version: '3.3.0', notes: ['New: Weight. Tap the scale icon at the top to log your weight in a few taps: your last weight is already filled in, adjust it with − and + and tap Save. See your average per week, a chart with your 7-day average over a month up to all time, and set a goal weight to see how far you are and when you get there at your current pace.', 'Import your weight history from a CSV file (a date and a weight per line) and export it again. This is separate from the workout CSV.', 'Quick link: open tiltwick.com/lift-log/?weight to go straight to logging your weight. On Android, press and hold the Lift Log icon and choose Log weight.', 'The main screen shows a small "Log today\'s weight" reminder when you haven\'t weighed in yet today. You can turn it off in Weight.'] },
@@ -2812,7 +3280,6 @@ const CHANGELOG = [
   { version: '3.1.4', notes: ['Forgot your password? Asking for a reset link is no longer blocked by earlier failed login attempts. A successful login also clears those failed attempts.'] },
   { version: '3.1.3', notes: ['Settings → Data: the Dropbox and GitHub backup options are gone, now that your account keeps your training data safe. Any tokens you had entered for them are removed from your phone. CSV export, email and import stay'] },
   { version: '3.1.2', notes: ['Logging in on iPhone: the password manager no longer suggests a new strong password in the login field (which then didn\'t match your account). It now offers your saved password when logging in, and only suggests a new one when you create an account or reset your password'] },
-  { version: '3.1.1', notes: ['Lift Log has a new address: tiltwick.com/lift-log. The old address still works and shows a reminder once a day; log in at the new address with the same account and all your training data is there'] },
 ];
 
 const DEFAULT_EXERCISES = [
@@ -3779,6 +4246,7 @@ function syncProgramStatus(){
   if(!programActive()) return;
   const st = programState(), p = data.program;
   const status = { week: st.week, done: st.done, perWeek: st.per, complete: st.complete };
+  if(noteProgramMilestones(st)) saveData();
   if(JSON.stringify(p.status || null) === JSON.stringify(status)) return;
   p.status = status;
   saveData();
@@ -7155,6 +7623,7 @@ function emailCSV(){
 function render(){
   syncProgramDeload();
   syncProgramStatus();
+  scheduleBadgeCheck();
   renderWeekStrip();
   renderProgramCard();
   renderWeightNudge();
