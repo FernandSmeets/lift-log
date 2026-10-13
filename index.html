@@ -218,7 +218,95 @@
   .bd-note{ font-size:var(--fs-sm); color:var(--text-dim); line-height:1.5; margin:0 0 .6rem; }
   .bd-error{ color:var(--feel-hard); font-size:var(--fs-sm); line-height:1.5; margin:.4rem 0 0; }
   .bd-received{ font-size:var(--fs-sm); padding:.25rem 0; }
+  /* Weight (header button + dialog + main-screen reminder) */
+  #weightDialog{ height:85dvh; }
+  #weightDialog .dialog-body{ height:calc(85dvh - 3.2rem); max-height:none; }
+  @media (max-width:480px){
+    #weightDialog{ height:88dvh; }
+    #weightDialog .dialog-body{ height:calc(88dvh - 3.2rem); }
+  }
+  .wt-entry{ display:flex; flex-direction:column; align-items:stretch; gap:.7rem; margin-bottom:1rem; }
+  .wt-date{ position:relative; align-self:center; display:inline-flex; align-items:center; gap:.3rem; padding:.4rem .85rem;
+    border:1px solid var(--border); border-radius:999px; background:var(--surface-hi); font-size:var(--fs-base); font-weight:500; cursor:pointer; }
+  .wt-date svg{ width:.95rem; height:.95rem; color:var(--text-dim); }
+  .wt-date input{ position:absolute; inset:0; opacity:0; width:100%; height:100%; cursor:pointer; border:none; padding:0; font-size:16px; }
+  .wt-stepper{ display:flex; align-items:stretch; gap:.5rem; }
+  .wt-step{ flex:0 0 auto; width:4.2rem; min-height:4.6rem; border-radius:12px; border:1px solid var(--border);
+    background:var(--surface-hi); color:var(--text); font-size:2rem; font-weight:500; line-height:1; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; padding:0; touch-action:manipulation;
+    -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+  .wt-step:active{ border-color:var(--accent); color:var(--accent); }
+  .wt-val{ flex:1; min-width:0; display:flex; align-items:baseline; justify-content:center; gap:.35rem;
+    border:1px solid var(--border); border-radius:12px; background:var(--surface-hi); padding:0 .5rem; }
+  .wt-val:focus-within{ border-color:var(--accent); }
+  .wt-val input{ width:100%; min-width:0; max-width:7.5rem; background:none; border:none; color:var(--text); text-align:right;
+    font-size:2.6rem; font-weight:600; line-height:4.4rem; padding:0; outline:none; }
+  .wt-val span{ color:var(--text-dim); font-size:var(--fs-base); }
+  .wt-save{ min-height:3.1rem; font-size:var(--fs-strong); width:100%; }
+  .wt-msg{ text-align:center; font-size:var(--fs-sm); color:var(--good); }
+  .wt-link{ background:none; border:none; padding:.3rem 0; font:inherit; font-size:var(--fs-sm); font-weight:600; color:var(--accent); cursor:pointer; align-self:center; }
+  .wt-card{ background:var(--surface-hi); border:1px solid var(--border); border-radius:12px; padding:.75rem .8rem; margin-bottom:.7rem;
+    display:flex; flex-direction:column; gap:.45rem; }
+  .wt-card .section-title{ margin:0; }
+  .wt-card .wt-link{ align-self:flex-start; }
+  .wt-goal-head{ display:flex; justify-content:space-between; gap:.6rem; }
+  .wt-right{ text-align:right; }
+  .wt-big{ font-size:1.5rem; }
+  .wt-bar{ height:.5rem; border-radius:999px; background:var(--surface); overflow:hidden; border:1px solid var(--border); }
+  .wt-bar span{ display:block; height:100%; background:var(--good); border-radius:999px; }
+  .wt-bar-labels{ display:flex; justify-content:space-between; font-size:var(--fs-2xs); color:var(--text-dim); margin-top:-.25rem; }
+  .wt-status, .wt-pace{ font-size:var(--fs-base); line-height:1.45; }
+  .wt-status b{ font-weight:600; }
+  .wt-dim{ color:var(--text-dim); }
+  .wt-hint{ font-size:var(--fs-sm); line-height:1.45; color:var(--feel-medium); }
+  .wt-goal-edit{ display:flex; align-items:center; gap:.5rem; }
+  .wt-goal-edit .plain-input{ margin:0; flex:1; }
+  .wt-ranges{ display:flex; gap:.3rem; margin-bottom:.5rem; }
+  .wt-range{ flex:1; min-height:2.1rem; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text-dim);
+    font:inherit; font-size:var(--fs-sm); cursor:pointer; padding:0; }
+  .wt-range.active{ background:var(--accent-dim); border-color:var(--accent); color:var(--text); }
+  .wt-dot{ fill:var(--text-dim); opacity:.75; }
+  .wt-axis{ font-size:9px; fill:var(--text-dim); font-family:'Inter',sans-serif; }
+  .wt-goal-line{ stroke:var(--good); stroke-width:1.4; stroke-dasharray:4 3; }
+  .wt-cursor{ stroke:var(--text-dim); stroke-width:1; stroke-dasharray:2 2; }
+  .row-label.wt-section{ margin-top:1.4rem; }
+  .wt-week{ border-top:1px solid var(--border); padding:.6rem 0; }
+  .wt-week-head{ display:flex; justify-content:space-between; align-items:baseline; gap:.5rem; font-size:var(--fs-base); }
+  .wt-week-head > span:first-child{ color:var(--text-dim); }
+  .wt-week-head b{ font-size:1.05rem; font-weight:600; }
+  .wt-delta{ display:inline-block; min-width:2.6rem; text-align:right; font-size:var(--fs-sm); color:var(--text-dim); margin-left:.25rem; }
+  .wt-delta.good{ color:var(--good); }
+  .wt-delta.bad{ color:var(--feel-hard); }
+  .wt-days{ display:flex; flex-wrap:wrap; gap:.3rem; margin-top:.4rem; }
+  .wt-day{ border:1px solid var(--border); background:var(--surface-hi); color:var(--text-dim); border-radius:999px; padding:.25rem .6rem;
+    font:inherit; font-size:var(--fs-xs); cursor:pointer; min-height:1.9rem; }
+  .wt-day .num{ color:var(--text); font-size:var(--fs-sm); }
+  .wt-day.active{ border-color:var(--accent); }
+  .wt-empty{ margin-top:.4rem; line-height:1.5; }
+  .wt-tools{ display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; }
+  .wt-tools .btn{ flex:1; }
+  .wt-code{ flex:1 1 12rem; min-width:0; font-size:var(--fs-sm); padding:.55rem .6rem; border-radius:8px; background:var(--surface-hi);
+    border:1px solid var(--border); overflow-wrap:anywhere; }
+  .wt-opt{ margin-top:.9rem; border-top:1px solid var(--border); border-bottom:none; padding-top:.8rem; }
+  .wt-nudge{ display:flex; align-items:stretch; gap:.4rem; margin:0 0 .9rem; }
+  .wt-nudge-main{ flex:1; display:flex; align-items:center; gap:.55rem; min-height:2.8rem; padding:0 .85rem; border-radius:10px;
+    border:1px dashed var(--accent); background:var(--accent-dim); color:var(--text); font:inherit; font-size:var(--fs-base); font-weight:500; cursor:pointer; text-align:left; }
+  .wt-nudge-main svg{ width:1.25rem; height:1.25rem; flex:0 0 auto; color:var(--accent); }
+  .wt-nudge-x{ flex:0 0 auto; width:2.8rem; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text-dim);
+    font-size:var(--fs-base); cursor:pointer; }
   .cog-btn:active{ color:var(--text); border-color:var(--accent); background:var(--surface-hi); }
+  /* Three header buttons: a bit smaller on narrow phones so they never cover the title or week strip. */
+  @media (max-width:400px){
+    .cog-btn{ width:2.6rem; height:2.6rem; }
+    .header-btns{ gap:.3rem; }
+  }
+  @media (max-width:359px){
+    header{ padding-left:calc(1rem + env(safe-area-inset-left)); padding-right:calc(1rem + env(safe-area-inset-right)); }
+    .cog-btn{ width:2.45rem; height:2.45rem; }
+    .header-btns .cog-btn svg{ width:1.25rem; height:1.25rem; }
+    .week-days{ gap:2px; }
+    .week-day{ width:1.12rem; height:1.12rem; font-size:.55rem; }
+  }
   .cog-btn svg{ width:1.4rem; height:1.4rem; }
 
   main{
@@ -912,6 +1000,9 @@
     <div class="week-strip" id="weekStrip" aria-label="This week"></div>
   </div>
   <div class="header-btns">
+  <button class="cog-btn" onclick="openWeight()" aria-label="Weight">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7.2a3 3 0 116 0"/><path d="M5.8 7.2h12.4l3.3 14.3H2.5z"/><text x="12" y="18.2" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="8" font-weight="700" fill="currentColor" stroke="none">kg</text></svg>
+  </button>
   <button class="cog-btn" onclick="openBuddies()" aria-label="Buddies">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
   </button>
@@ -922,6 +1013,7 @@
 </header>
 
 <main>
+  <div id="weightNudge"></div>
   <div class="row-label">Template</div>
   <div class="chip-row" id="templateRow"></div>
 
@@ -1017,6 +1109,12 @@
 <dialog id="buddiesDialog">
   <div class="dialog-head"><h3>Buddies</h3><button class="dialog-close" onclick="document.getElementById('buddiesDialog').close()">✕</button></div>
   <div class="dialog-body" id="buddiesBody"></div>
+</dialog>
+
+<!-- Weight: daily body weight, weekly averages, goal (see openWeight()) -->
+<dialog id="weightDialog">
+  <div class="dialog-head"><h3>Weight</h3><button class="dialog-close" onclick="document.getElementById('weightDialog').close()">✕</button></div>
+  <div class="dialog-body" id="weightBody"></div>
 </dialog>
 
 <!-- Changelog dialog -->
@@ -1117,6 +1215,7 @@
       <li>Your training data: exercises, templates, workouts, weights, reps and settings.</li>
       <li>When you last logged in and the type of browser or phone you use, so you can stay logged in.</li>
       <li>For failed login attempts: your IP address, for at most one day, to block password guessing.</li>
+      <li>If you use Weight: your weigh-ins and your goal weight.</li>
       <li>If you use Buddies: the name you choose, who your buddies are, what you share with each of them and your emoji reactions.</li>
     </ul>
     <h4>Why</h4>
@@ -1167,7 +1266,7 @@
 </dialog>
 
 <script>
-const APP_VERSION = '3.2.0';
+const APP_VERSION = '3.3.0';
 const STORE_KEY = 'liftlog_data_v2';
 
 /* ---------- Account & sync ----------
@@ -1242,6 +1341,7 @@ function refreshAfterDataChange(){
     ensureSelectedExercise();
     render();
     if(document.getElementById('settingsDialog').open) renderSettings();
+    if(document.getElementById('weightDialog').open) renderWeight();
   }catch(e){ console.error('refresh failed', e); }
 }
 
@@ -1477,6 +1577,7 @@ async function submitAuth(){
     refreshAfterDataChange();
     setTimeout(maybeShowMovedNotice, 800);
     setTimeout(openBuddiesForInvite, 900);
+    setTimeout(openWeightFromLink, 400);
   }catch(e){
     authFail('Can\'t reach the Lift Log server. Check your internet connection and try again.');
   }finally{
@@ -1937,10 +2038,639 @@ async function maybeAddInvitedBuddy(){
   if(err) showAlert('That invite link didn\'t work: ' + err);
 }
 
+/* ---------- Weight ----------
+   Body weight, one number per day, kept in data.weights ({ 'YYYY-MM-DD': kg })
+   so it syncs with the rest of your data. data.weightGoal is
+   { kg, startKg, startDate } when a goal is set. Opening the app with ?weight
+   goes straight to the weight screen. */
+const WEIGHT_LINK_KEY = 'liftlog_weight_link';
+const WEIGHT_NUDGE_KEY = 'liftlog_weight_nudge_off'; // date the main-screen reminder was dismissed
+const WEIGHT_MIN = 20, WEIGHT_MAX = 400;
+const WEIGHT_RANGES = [
+  { key: '1M', days: 31 }, { key: '3M', days: 92 }, { key: '6M', days: 183 },
+  { key: '1Y', days: 366 }, { key: 'All', days: 0 }
+];
+let weightDate = '';
+let weightDraft = '';
+let weightMsg = '';
+let weightRange = '3M';
+let weightWeeksShown = 8;
+let editingWeightGoal = false;
+let weightChartPts = [];
+const SCALE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7.2a3 3 0 116 0"/><path d="M5.8 7.2h12.4l3.3 14.3H2.5z"/><text x="12" y="18.2" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="8" font-weight="700" fill="currentColor" stroke="none">kg</text></svg>';
+
+// Weighing happens in the morning, so "today" is the local date (todayStr() is UTC).
+function localToday(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function ensureWeights(){
+  if(!data.weights || typeof data.weights !== 'object' || Array.isArray(data.weights)) data.weights = {};
+}
+function weightEntries(){
+  return Object.entries(data.weights || {})
+    .filter(([d, kg]) => /^\d{4}-\d{2}-\d{2}$/.test(d) && typeof kg === 'number' && isFinite(kg))
+    .map(([date, kg]) => ({ date, kg }))
+    .sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+}
+function fmtBw(n){ return (Math.round(n * 10) / 10).toFixed(1); }
+function fmtBwDelta(n){
+  const r = Math.round(n * 10) / 10;
+  return (r > 0 ? '+' : r < 0 ? '−' : '±') + Math.abs(r).toFixed(1);
+}
+function fmtDateLong(iso){
+  return new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+function weightDayLabel(iso){
+  const today = localToday();
+  if(iso === today) return 'Today';
+  if(iso === addDaysStr(today, -1)) return 'Yesterday';
+  return new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+// Average of the weigh-ins in the 7 days up to and including `date`.
+function weightTrendAt(entries, date){
+  const from = addDaysStr(date, -6);
+  const vals = entries.filter(e => e.date >= from && e.date <= date).map(e => e.kg);
+  return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+}
+function weekAverage(entries, monday){
+  const sunday = addDaysStr(monday, 6);
+  const vals = entries.filter(e => e.date >= monday && e.date <= sunday).map(e => e.kg);
+  return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+}
+// kg per week over the last 4 weeks (least squares), or null with too little data.
+function weightPace(entries){
+  if(entries.length < 4) return null;
+  const last = entries[entries.length - 1].date;
+  const recent = entries.filter(e => e.date >= addDaysStr(last, -27));
+  if(recent.length < 4) return null;
+  const t0 = Date.parse(recent[0].date + 'T00:00:00Z');
+  const xs = recent.map(e => (Date.parse(e.date + 'T00:00:00Z') - t0) / 86400000);
+  if(xs[xs.length - 1] < 10) return null;
+  const n = xs.length;
+  const mx = xs.reduce((a, b) => a + b, 0) / n;
+  const my = recent.reduce((a, e) => a + e.kg, 0) / n;
+  let sxy = 0, sxx = 0;
+  xs.forEach((x, i) => { sxy += (x - mx) * (recent[i].kg - my); sxx += (x - mx) * (x - mx); });
+  return sxx ? (sxy / sxx) * 7 : null;
+}
+function weightGoalDirection(goal){
+  if(!goal) return 0;
+  return goal.kg < goal.startKg - 0.05 ? -1 : goal.kg > goal.startKg + 0.05 ? 1 : 0;
+}
+// Prefill: that day's weight, otherwise the most recent one before it.
+function weightPrefill(date){
+  const w = data.weights || {};
+  if(typeof w[date] === 'number') return fmtBw(w[date]);
+  const before = weightEntries().filter(e => e.date < date);
+  return before.length ? fmtBw(before[before.length - 1].kg) : '';
+}
+
+function openWeight(){
+  ensureWeights();
+  weightDate = localToday();
+  weightDraft = weightPrefill(weightDate);
+  weightMsg = '';
+  weightWeeksShown = 8;
+  editingWeightGoal = false;
+  const dlg = document.getElementById('weightDialog');
+  if(!dlg.open) dlg.showModal();
+  renderWeight();
+  const body = document.getElementById('weightBody');
+  if(body) body.scrollTop = 0;
+}
+function renderWeight(){
+  const el = document.getElementById('weightBody');
+  if(!el) return;
+  const entries = weightEntries();
+  el.innerHTML = weightEntryHtml() + weightGoalHtml(entries) + weightChartHtml(entries) + weightWeeksHtml(entries) + weightToolsHtml();
+}
+
+function weightEntryHtml(){
+  const exists = typeof (data.weights || {})[weightDate] === 'number';
+  return `
+    <div class="wt-entry">
+      <label class="wt-date">
+        <span>${escHtml(weightDayLabel(weightDate))}</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        <input type="date" id="wtDate" value="${weightDate}" max="${localToday()}" onchange="setWeightDate(this.value)" onclick="try{this.showPicker()}catch(e){}" aria-label="Date">
+      </label>
+      <div class="wt-stepper">
+        <button type="button" class="wt-step" aria-label="Minus 0.1 kg" onpointerdown="wtStepStart(event,-1)">−</button>
+        <div class="wt-val">
+          <input type="text" id="wtInput" class="num" inputmode="decimal" autocomplete="off" placeholder="0.0" value="${escAttr(weightDraft)}"
+            oninput="weightDraft=this.value" onkeydown="if(event.key==='Enter'){event.preventDefault();saveWeight();}" aria-label="Weight in kg">
+          <span>kg</span>
+        </div>
+        <button type="button" class="wt-step" aria-label="Plus 0.1 kg" onpointerdown="wtStepStart(event,1)">+</button>
+      </div>
+      <button type="button" class="btn primary wt-save" onclick="saveWeight()">${exists ? 'Update' : 'Save'}</button>
+      ${weightMsg ? `<div class="wt-msg">${escHtml(weightMsg)}</div>` : ''}
+      ${exists ? `<button type="button" class="wt-link" onclick="deleteWeight()">Delete this weigh-in</button>` : ''}
+    </div>`;
+}
+
+function setWeightDate(v){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(v)) return;
+  if(v > localToday()) v = localToday();
+  weightDate = v;
+  weightDraft = weightPrefill(v);
+  weightMsg = '';
+  renderWeight();
+}
+function editWeightDay(date){
+  setWeightDate(date);
+  const body = document.getElementById('weightBody');
+  if(body) body.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// − and +: 0.1 kg per tap; holding the button keeps counting.
+let wtStepTimer = null;
+function wtStep(dir){
+  const input = document.getElementById('wtInput');
+  if(!input) return;
+  let v = parseFloat(String(input.value).replace(',', '.'));
+  if(isNaN(v)){
+    const last = weightEntries().pop();
+    v = last ? last.kg : 80;
+  } else v += dir * 0.1;
+  v = Math.min(WEIGHT_MAX, Math.max(WEIGHT_MIN, v));
+  input.value = weightDraft = fmtBw(v);
+}
+function wtStepStart(evt, dir){
+  evt.preventDefault();
+  wtStepStop();
+  wtStep(dir);
+  let delay = 380;
+  const repeat = () => { wtStep(dir); delay = Math.max(60, delay * 0.8); wtStepTimer = setTimeout(repeat, delay); };
+  wtStepTimer = setTimeout(repeat, delay);
+  const btn = evt.currentTarget;
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => btn.addEventListener(t, wtStepStop, { once: true }));
+}
+function wtStepStop(){ clearTimeout(wtStepTimer); wtStepTimer = null; }
+
+async function saveWeight(){
+  const kg = parseFloat(String(weightDraft).trim().replace(',', '.'));
+  if(isNaN(kg) || kg < WEIGHT_MIN || kg > WEIGHT_MAX){
+    await showAlert(`Enter a weight between ${WEIGHT_MIN} and ${WEIGHT_MAX} kg.`);
+    return;
+  }
+  ensureWeights();
+  data.weights[weightDate] = Math.round(kg * 10) / 10;
+  saveData();
+  const entries = weightEntries();
+  const prevAvg = weekAverage(entries, addDaysStr(mondayOf(weightDate), -7));
+  if(prevAvg !== null){
+    const diff = Math.round((data.weights[weightDate] - prevAvg) * 10) / 10;
+    weightMsg = diff === 0 ? 'Saved. Same as last week\'s average.'
+      : `Saved. ${Math.abs(diff).toFixed(1)} kg ${diff < 0 ? 'below' : 'above'} last week's average.`;
+  } else weightMsg = 'Saved.';
+  weightDraft = fmtBw(data.weights[weightDate]);
+  const input = document.getElementById('wtInput');
+  if(input) input.blur();
+  renderWeight();
+  renderWeightNudge();
+}
+async function deleteWeight(){
+  const today = localToday();
+  const when = weightDate === today ? 'today' : weightDate === addDaysStr(today, -1) ? 'yesterday' : fmtDateLong(weightDate);
+  const ok = await showConfirm(`Delete your weigh-in of ${when}?`, { title: 'Delete weigh-in', ok: 'Delete', cancel: 'Cancel' });
+  if(!ok) return;
+  delete data.weights[weightDate];
+  saveData();
+  weightDraft = weightPrefill(weightDate);
+  weightMsg = 'Deleted.';
+  renderWeight();
+  renderWeightNudge();
+}
+
+// ---- Goal and pace ----
+function weightGoalHtml(entries){
+  const goal = data.weightGoal && typeof data.weightGoal.kg === 'number' ? data.weightGoal : null;
+  const latest = entries.length ? entries[entries.length - 1] : null;
+  const current = latest ? weightTrendAt(entries, latest.date) : null;
+  const pace = weightPace(entries);
+
+  if(editingWeightGoal){
+    return `
+      <div class="wt-card">
+        <div class="section-title">Goal weight</div>
+        <div class="wt-goal-edit">
+          <input type="text" id="wtGoalInput" class="plain-input num" inputmode="decimal" placeholder="${current !== null ? fmtBw(current) : '75.0'}" value="${goal ? fmtBw(goal.kg) : ''}">
+          <span>kg</span>
+        </div>
+        <div class="form-actions">
+          ${goal ? '<button type="button" class="btn" onclick="removeWeightGoal()">Remove goal</button>' : ''}
+          <button type="button" class="btn" onclick="editingWeightGoal=false;renderWeight()">Cancel</button>
+          <button type="button" class="btn primary" onclick="saveWeightGoal()">Save</button>
+        </div>
+      </div>`;
+  }
+
+  let paceHtml = '';
+  if(pace !== null){
+    paceHtml = `<div class="wt-pace">Pace: <b class="num">${fmtBwDelta(pace)}</b> kg per week <span class="wt-dim">(last 4 weeks)</span></div>`;
+    const pct = current ? Math.abs(pace) / current * 100 : 0;
+    if(pace < 0 && pct > 1){
+      paceHtml += `<div class="wt-hint">That's fast. Losing more than 1% of your body weight per week makes it harder to keep your strength.</div>`;
+    } else if(pace > 0 && pct > 0.5){
+      paceHtml += `<div class="wt-hint">That's fast. Gaining more than 0.5% of your body weight per week usually adds more fat than muscle.</div>`;
+    }
+  } else if(entries.length){
+    paceHtml = `<div class="wt-pace wt-dim">Log at least 4 days over two weeks to see your pace.</div>`;
+  }
+
+  if(!goal){
+    if(!entries.length) return '';
+    return `
+      <div class="wt-card">
+        ${paceHtml}
+        <button type="button" class="wt-link" onclick="editingWeightGoal=true;renderWeight()">Set a goal weight</button>
+      </div>`;
+  }
+
+  const dir = weightGoalDirection(goal);
+  let status = '', progress = '';
+  if(current !== null){
+    const toGo = goal.kg - current;
+    const reached = dir < 0 ? current <= goal.kg : dir > 0 ? current >= goal.kg : Math.abs(toGo) <= 0.5;
+    if(dir !== 0){
+      const pct = Math.min(1, Math.max(0, (goal.startKg - current) / (goal.startKg - goal.kg)));
+      progress = `<div class="wt-bar"><span style="width:${(pct * 100).toFixed(0)}%"></span></div>
+        <div class="wt-bar-labels"><span>${fmtBw(goal.startKg)}</span><span>${fmtBw(goal.kg)} kg</span></div>`;
+    }
+    if(reached){
+      status = dir === 0 ? 'You\'re within 0.5 kg of your goal.' : 'Goal reached. Well done!';
+    } else if(dir === 0){
+      status = `${Math.abs(toGo).toFixed(1)} kg ${toGo < 0 ? 'above' : 'below'} your goal.`;
+    } else {
+      status = `${Math.abs(toGo).toFixed(1)} kg to go.`;
+      if(pace !== null && Math.abs(pace) >= 0.05 && Math.sign(pace) === Math.sign(toGo)){
+        const weeks = Math.abs(toGo / pace);
+        if(weeks <= 156){
+          status += ` At this pace you get there around <b>${escHtml(fmtDateLong(addDaysStr(localToday(), Math.round(weeks * 7))))}</b>.`;
+        }
+      } else if(pace !== null && Math.abs(pace) >= 0.05){
+        status += ' Your trend is moving away from your goal.';
+      }
+    }
+  }
+  return `
+    <div class="wt-card">
+      <div class="wt-goal-head">
+        <div><span class="section-title">Goal</span><div><b class="num wt-big">${fmtBw(goal.kg)}</b> kg</div></div>
+        ${current !== null ? `<div class="wt-right"><span class="section-title">7-day average</span><div><b class="num wt-big">${fmtBw(current)}</b> kg</div></div>` : ''}
+      </div>
+      ${progress}
+      ${status ? `<div class="wt-status">${status}</div>` : ''}
+      ${paceHtml}
+      <button type="button" class="wt-link" onclick="editingWeightGoal=true;renderWeight()">Change goal</button>
+    </div>`;
+}
+async function saveWeightGoal(){
+  const input = document.getElementById('wtGoalInput');
+  const kg = parseFloat(String(input ? input.value : '').trim().replace(',', '.'));
+  if(isNaN(kg) || kg < WEIGHT_MIN || kg > WEIGHT_MAX){
+    await showAlert(`Enter a goal between ${WEIGHT_MIN} and ${WEIGHT_MAX} kg.`);
+    return;
+  }
+  const entries = weightEntries();
+  const latest = entries.length ? entries[entries.length - 1] : null;
+  const start = latest ? weightTrendAt(entries, latest.date) : kg;
+  const old = data.weightGoal;
+  // Changing only the target keeps the original starting point for the progress bar.
+  const keepStart = old && typeof old.startKg === 'number' && Math.sign(kg - old.startKg) === Math.sign(old.kg - old.startKg);
+  data.weightGoal = keepStart
+    ? { kg: Math.round(kg * 10) / 10, startKg: old.startKg, startDate: old.startDate }
+    : { kg: Math.round(kg * 10) / 10, startKg: Math.round(start * 10) / 10, startDate: localToday() };
+  saveData();
+  editingWeightGoal = false;
+  renderWeight();
+}
+async function removeWeightGoal(){
+  const ok = await showConfirm('Remove your goal weight? Your weigh-ins stay.', { title: 'Remove goal', ok: 'Remove', cancel: 'Cancel' });
+  if(!ok) return;
+  delete data.weightGoal;
+  saveData();
+  editingWeightGoal = false;
+  renderWeight();
+}
+
+// ---- Chart: weigh-ins as dots, 7-day average as a line ----
+function weightChartHtml(entries){
+  if(!entries.length) return '';
+  const range = WEIGHT_RANGES.find(r => r.key === weightRange) || WEIGHT_RANGES[1];
+  const from = range.days ? addDaysStr(localToday(), -range.days) : '';
+  const pts = entries.filter(e => e.date >= from);
+  const chips = `<div class="wt-ranges">${WEIGHT_RANGES.map(r =>
+    `<button type="button" class="wt-range${r.key === weightRange ? ' active' : ''}" onclick="weightRange='${r.key}';renderWeight()">${r.key}</button>`).join('')}</div>`;
+  if(pts.length < 2){
+    return `<div class="chart-card">${chips}<div class="empty-prev">Log at least 2 days in this period to see a chart.</div></div>`;
+  }
+  const w = 300, h = 150, padL = 30, padR = 8, padT = 10, padB = 8;
+  const trend = pts.map(p => weightTrendAt(entries, p.date));
+  const goal = data.weightGoal && typeof data.weightGoal.kg === 'number' ? data.weightGoal.kg : null;
+  let min = Math.min(...pts.map(p => p.kg)), max = Math.max(...pts.map(p => p.kg));
+  const showGoal = goal !== null && goal >= min - 3 && goal <= max + 3;
+  if(showGoal){ min = Math.min(min, goal); max = Math.max(max, goal); }
+  if(max - min < 1){ const mid = (max + min) / 2; min = mid - .5; max = mid + .5; }
+  const pad = (max - min) * 0.08; min -= pad; max += pad;
+  const t0 = Date.parse(pts[0].date + 'T00:00:00Z');
+  const t1 = Date.parse(pts[pts.length - 1].date + 'T00:00:00Z');
+  const span = Math.max(1, t1 - t0);
+  const X = d => padL + (Date.parse(d + 'T00:00:00Z') - t0) / span * (w - padL - padR);
+  const Y = v => padT + (1 - (v - min) / (max - min)) * (h - padT - padB);
+  weightChartPts = pts.map((p, i) => ({ x: X(p.date), date: p.date, kg: p.kg, avg: trend[i] }));
+  const r = pts.length > 120 ? 1.4 : 2.3;
+  const dots = pts.map(p => `<circle cx="${X(p.date).toFixed(1)}" cy="${Y(p.kg).toFixed(1)}" r="${r}" class="wt-dot"/>`).join('');
+  const line = pts.map((p, i) => (i ? 'L' : 'M') + X(p.date).toFixed(1) + ',' + Y(trend[i]).toFixed(1)).join(' ');
+  const grid = [max - pad, (max + min) / 2, min + pad].map(v =>
+    `<line x1="${padL}" y1="${Y(v).toFixed(1)}" x2="${w - padR}" y2="${Y(v).toFixed(1)}" class="chart-grid"/>
+     <text x="${padL - 4}" y="${(Y(v) + 3.5).toFixed(1)}" text-anchor="end" class="wt-axis">${fmtBw(v)}</text>`).join('');
+  const goalLine = showGoal ? `<line x1="${padL}" y1="${Y(goal).toFixed(1)}" x2="${w - padR}" y2="${Y(goal).toFixed(1)}" class="wt-goal-line"/>` : '';
+  const long = range.days === 0 || range.days > 200;
+  const axisDate = d => new Date(d + 'T00:00:00').toLocaleDateString('en-GB', long ? { month: 'short', year: 'numeric' } : { day: 'numeric', month: 'short' });
+  return `
+    <div class="chart-card">
+      ${chips}
+      <div class="chart-wrap" id="wtChart_wrap">
+        <svg viewBox="0 0 ${w} ${h}" class="chart-svg" onclick="weightChartTap(event)">
+          ${grid}${goalLine}${dots}
+          <path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <line id="wtChartCursor" x1="0" y1="${padT}" x2="0" y2="${h - padB}" class="wt-cursor" style="display:none"/>
+        </svg>
+        <div class="chart-tip" id="wtChart_tip" style="display:none;"></div>
+      </div>
+      <div class="chart-axis-labels" style="padding-left:${(padL / w * 100).toFixed(1)}%"><span>${axisDate(pts[0].date)}</span><span>${axisDate(pts[pts.length - 1].date)}</span></div>
+      <div class="chart-legend">
+        <span class="chart-legend-item"><span class="chart-legend-dot" style="background:var(--text-dim)"></span>Weigh-in</span>
+        <span class="chart-legend-item"><span class="chart-legend-dot" style="background:var(--accent)"></span>7-day average</span>
+        ${showGoal ? '<span class="chart-legend-item"><span class="chart-legend-dot" style="background:var(--good)"></span>Goal</span>' : ''}
+      </div>
+    </div>`;
+}
+function weightChartTap(evt){
+  const svg = evt.currentTarget, wrap = document.getElementById('wtChart_wrap'), tip = document.getElementById('wtChart_tip');
+  if(!weightChartPts.length || !tip) return;
+  const rect = svg.getBoundingClientRect();
+  const x = (evt.clientX - rect.left) / rect.width * 300;
+  let best = weightChartPts[0];
+  weightChartPts.forEach(p => { if(Math.abs(p.x - x) < Math.abs(best.x - x)) best = p; });
+  const cursor = document.getElementById('wtChartCursor');
+  if(cursor){ cursor.setAttribute('x1', best.x); cursor.setAttribute('x2', best.x); cursor.style.display = ''; }
+  const left = Math.min(Math.max(best.x / 300 * rect.width, 70), rect.width - 70);
+  tip.textContent = `${fmtDate(best.date)}: ${fmtBw(best.kg)} kg (avg ${fmtBw(best.avg)})`;
+  tip.style.left = left + 'px';
+  tip.style.top = '18px';
+  tip.style.display = 'block';
+  clearTimeout(tip._hideTimer);
+  tip._hideTimer = setTimeout(() => { tip.style.display = 'none'; if(cursor) cursor.style.display = 'none'; }, 2500);
+}
+
+// ---- Weeks: average per week, with the days underneath ----
+function weightWeeksHtml(entries){
+  if(!entries.length){
+    return `<div class="empty-prev wt-empty">Your weigh-ins and weekly averages show up here. Tip: weigh yourself in the morning, before breakfast, for numbers you can compare.</div>`;
+  }
+  const weeks = {};
+  entries.forEach(e => { (weeks[mondayOf(e.date)] = weeks[mondayOf(e.date)] || []).push(e); });
+  const mondays = Object.keys(weeks).sort().reverse();
+  const thisMonday = mondayOf(localToday());
+  const dir = weightGoalDirection(data.weightGoal && typeof data.weightGoal.kg === 'number' ? data.weightGoal : null);
+  const rows = mondays.slice(0, weightWeeksShown).map(m => {
+    const avg = weekAverage(entries, m);
+    const prev = weekAverage(entries, addDaysStr(m, -7));
+    let delta = '';
+    if(prev !== null){
+      const d = Math.round((avg - prev) * 10) / 10;
+      const cls = !dir || d === 0 ? '' : Math.sign(d) === dir ? ' good' : ' bad';
+      delta = `<span class="wt-delta${cls}">${fmtBwDelta(d)}</span>`;
+    }
+    const label = m === thisMonday ? 'This week' : m === addDaysStr(thisMonday, -7) ? 'Last week'
+      : 'Week of ' + new Date(m + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: m.slice(0, 4) === thisMonday.slice(0, 4) ? undefined : 'numeric' });
+    const days = weeks[m].slice().reverse().map(e =>
+      `<button type="button" class="wt-day${e.date === weightDate ? ' active' : ''}" onclick="editWeightDay('${e.date}')">${new Date(e.date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short' })} <span class="num">${fmtBw(e.kg)}</span></button>`).join('');
+    return `
+      <div class="wt-week">
+        <div class="wt-week-head"><span>${escHtml(label)}</span><span><b class="num">${fmtBw(avg)}</b> kg avg ${delta}</span></div>
+        <div class="wt-days">${days}</div>
+      </div>`;
+  }).join('');
+  const more = mondays.length > weightWeeksShown
+    ? `<button type="button" class="wt-link" onclick="weightWeeksShown+=12;renderWeight()">Show older weeks</button>` : '';
+  return `<div class="row-label wt-section">Weekly average</div>${rows}${more}`;
+}
+
+// ---- Import / export, quick link, reminder setting ----
+function weightQuickLink(){ return appPageUrl().replace(/index\.html$/, '') + '?weight'; }
+function weightToolsHtml(){
+  const nudgeOn = !data.settings || data.settings.weightNudge !== false;
+  const link = weightQuickLink();
+  return `
+    <div class="row-label wt-section">Weight history (CSV)</div>
+    <div class="bd-note">Import weigh-ins from another app or a spreadsheet: a CSV file with a date and a weight in kg per line, for example <span class="num">2026-10-13,82.4</span>. This is separate from the workout CSV in Settings.</div>
+    <div class="wt-tools">
+      <button type="button" class="btn" onclick="document.getElementById('wtImportInput').click()">Import CSV</button>
+      <button type="button" class="btn" onclick="exportWeightCsv()"${weightEntries().length ? '' : ' disabled'}>Export CSV</button>
+    </div>
+    <input type="file" accept=".csv,.txt,text/csv,text/plain" id="wtImportInput" style="display:none" onchange="handleWeightImport(event)">
+    <div class="row-label wt-section">Quick link</div>
+    <div class="bd-note">Open this link to go straight to logging your weight. Save it as a bookmark or use it in a shortcut. On Android you can also press and hold the Lift Log icon and choose Log weight.</div>
+    <div class="wt-tools">
+      <code class="wt-code">${escHtml(link.replace(/^https?:\/\//, ''))}</code>
+      <button type="button" class="btn" onclick="copyWeightLink()">Copy</button>
+    </div>
+    <label class="bd-opt wt-opt">
+      <input type="checkbox" ${nudgeOn ? 'checked' : ''} onchange="setWeightNudge(this.checked)">
+      <span><span class="bd-name">Reminder on the main screen</span><br><span class="bd-meta">Shows "Log today's weight" when you haven't weighed in yet today.</span></span>
+    </label>`;
+}
+async function copyWeightLink(){
+  try{
+    await navigator.clipboard.writeText(weightQuickLink());
+    await showAlert('Link copied.');
+  }catch(e){
+    await showAlert('Copying didn\'t work here. The link is: ' + weightQuickLink());
+  }
+}
+function setWeightNudge(on){
+  ensureSettings();
+  data.settings.weightNudge = !!on;
+  saveData();
+  renderWeightNudge();
+}
+function exportWeightCsv(){
+  const csv = ['date,weight'].concat(weightEntries().map(e => `${e.date},${fmtBw(e.kg)}`)).join('\r\n');
+  try{
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `lift-log-weight-${localToday()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }catch(e){
+    showAlert('Could not save the file.');
+  }
+}
+
+// Reads a date as written in most apps and spreadsheets: 2026-10-13, 2026/10/13,
+// 13-10-2026, 13/10/2026, 13.10.26, with or without a time after it.
+function parseWeightDate(s){
+  s = String(s || '').trim().replace(/^"|"$/g, '').split(/[T ]/)[0];
+  let y, m, d, k;
+  if((k = /^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/.exec(s))){ y = +k[1]; m = +k[2]; d = +k[3]; }
+  else if((k = /^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2}|\d{4})$/.exec(s))){
+    d = +k[1]; m = +k[2]; y = +k[3];
+    if(y < 100) y += 2000;
+    if(m > 12 && d <= 12){ const t = d; d = m; m = t; } // month first (US style)
+  } else return null;
+  const iso = y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+  const t = new Date(iso + 'T00:00:00Z');
+  if(isNaN(t) || t.toISOString().slice(0, 10) !== iso) return null;
+  return iso;
+}
+function splitCsvLine(line, delim){
+  const out = []; let field = '', q = false;
+  for(let i = 0; i < line.length; i++){
+    const c = line[i];
+    if(q){
+      if(c === '"'){ if(line[i + 1] === '"'){ field += '"'; i++; } else q = false; }
+      else field += c;
+    } else if(c === '"') q = true;
+    else if(c === delim){ out.push(field); field = ''; }
+    else field += c;
+  }
+  out.push(field);
+  return out.map(f => f.trim());
+}
+function parseWeightNumber(s){
+  const v = parseFloat(String(s || '').replace(/kg/i, '').trim().replace(',', '.'));
+  return isNaN(v) ? null : v;
+}
+// Returns { found: { date: kg }, skipped }. Several weigh-ins on one day are averaged.
+function parseWeightCsv(text){
+  const lines = String(text).replace(/^﻿/, '').split(/\r\n|\n|\r/).filter(l => l.trim());
+  const sample = lines.slice(0, 5).join('\n');
+  const delim = sample.includes(';') ? ';' : sample.includes('\t') ? '\t' : ',';
+  let iDate = 0, iKg = 1, start = 0, cols = 2;
+  if(lines.length){
+    const first = splitCsvLine(lines[0], delim);
+    if(!parseWeightDate(first[0])){
+      start = 1;
+      cols = first.length;
+      const lower = first.map(h => h.toLowerCase());
+      const di = lower.findIndex(h => /date|datum|day|dag|time|tijd/.test(h));
+      const wi = lower.findIndex(h => /weight|gewicht|kg|mass|massa/.test(h));
+      if(di >= 0) iDate = di;
+      if(wi >= 0) iKg = wi;
+    }
+  }
+  const sums = {}, skippedRef = { n: 0 };
+  const today = localToday();
+  for(let i = start; i < lines.length; i++){
+    let r = splitCsvLine(lines[i], delim);
+    // "2024-01-03,82,4": a comma decimal in a comma-separated file with two columns.
+    if(delim === ',' && cols === 2 && r.length === 3 && /^\d+$/.test(r[1]) && /^\d+$/.test(r[2])) r = [r[0], r[1] + '.' + r[2]];
+    const date = parseWeightDate(r[iDate]);
+    const kg = parseWeightNumber(r[iKg]);
+    if(!date || kg === null || kg < WEIGHT_MIN || kg > WEIGHT_MAX || date > today){ skippedRef.n++; continue; }
+    const s = sums[date] || (sums[date] = { sum: 0, n: 0 });
+    s.sum += kg; s.n++;
+  }
+  const found = {};
+  Object.entries(sums).forEach(([d, s]) => { found[d] = Math.round(s.sum / s.n * 10) / 10; });
+  return { found, skipped: skippedRef.n };
+}
+function handleWeightImport(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    Promise.resolve()
+      .then(() => importWeightCsvText(String(reader.result)))
+      .catch(err => showAlert('Could not read that file: ' + err.message))
+      .finally(() => { evt.target.value = ''; });
+  };
+  reader.onerror = () => showAlert('Could not read that file.');
+  reader.readAsText(file);
+}
+async function importWeightCsvText(text){
+  const { found, skipped } = parseWeightCsv(text);
+  const dates = Object.keys(found).sort();
+  if(!dates.length){
+    await showAlert('No weigh-ins found in that file. Each line needs a date and a weight in kg, for example 2026-10-13,82.4.');
+    return;
+  }
+  ensureWeights();
+  const overlap = dates.filter(d => typeof data.weights[d] === 'number' && data.weights[d] !== found[d]);
+  let msg = `Found ${dates.length} weigh-in${dates.length === 1 ? '' : 's'} from ${fmtDateLong(dates[0])} to ${fmtDateLong(dates[dates.length - 1])}.`;
+  if(skipped) msg += ` ${skipped} line${skipped === 1 ? '' : 's'} couldn't be read and will be skipped.`;
+  if(!await showConfirm(msg, { title: 'Import weight', ok: 'Import', cancel: 'Cancel' })) return;
+  let replace = false;
+  if(overlap.length){
+    replace = await showConfirm(`${overlap.length} of these day${overlap.length === 1 ? ' already has' : 's already have'} a different weight in Lift Log. Which one do you want to keep?`,
+      { title: 'Days already logged', ok: 'Use the file', cancel: 'Keep mine' });
+  }
+  let added = 0;
+  dates.forEach(d => {
+    if(typeof data.weights[d] === 'number' && !replace) return;
+    if(data.weights[d] !== found[d]) added++;
+    data.weights[d] = found[d];
+  });
+  saveData();
+  weightDraft = weightPrefill(weightDate);
+  weightMsg = `Imported ${added} weigh-in${added === 1 ? '' : 's'}.`;
+  weightRange = 'All';
+  renderWeight();
+  renderWeightNudge();
+  const body = document.getElementById('weightBody');
+  if(body) body.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ---- Reminder on the main screen ----
+function renderWeightNudge(){
+  const el = document.getElementById('weightNudge');
+  if(!el) return;
+  let dismissed = '';
+  try{ dismissed = localStorage.getItem(WEIGHT_NUDGE_KEY) || ''; }catch(e){}
+  const today = localToday();
+  const show = (!data.settings || data.settings.weightNudge !== false)
+    && Object.keys(data.weights || {}).length > 0
+    && typeof (data.weights || {})[today] !== 'number'
+    && dismissed !== today;
+  el.innerHTML = show ? `
+    <div class="wt-nudge">
+      <button type="button" class="wt-nudge-main" onclick="openWeight()">${SCALE_ICON}<span>Log today's weight</span></button>
+      <button type="button" class="wt-nudge-x" onclick="dismissWeightNudge()" aria-label="Not today">✕</button>
+    </div>` : '';
+}
+function dismissWeightNudge(){
+  try{ localStorage.setItem(WEIGHT_NUDGE_KEY, localToday()); }catch(e){}
+  renderWeightNudge();
+}
+
+// ---- Quick link: …/lift-log/?weight ----
+function rememberWeightLink(){
+  const params = new URLSearchParams(location.search);
+  if(!params.has('weight')) return;
+  try{ sessionStorage.setItem(WEIGHT_LINK_KEY, '1'); }catch(e){}
+  params.delete('weight');
+  const q = params.toString();
+  history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
+}
+function openWeightFromLink(){
+  let want = false;
+  try{ want = sessionStorage.getItem(WEIGHT_LINK_KEY) === '1'; sessionStorage.removeItem(WEIGHT_LINK_KEY); }catch(e){}
+  if(want && isLoggedIn()) openWeight();
+}
+
 // Startup: a ?reset=… link from the password email opens the new-password screen;
 // without an account the login screen covers the app; otherwise sync quietly.
 async function initAccount(){
   rememberBuddyInvite();
+  rememberWeightLink();
   // Back in the app: fetch changes. Leaving it: send waiting changes right away,
   // because a phone may stop the app before the short save delay is over.
   document.addEventListener('visibilitychange', () => {
@@ -1975,6 +2705,7 @@ async function initAccount(){
   pullFromServer();
   setTimeout(maybeShowMovedNotice, 1200);
   setTimeout(openBuddiesForInvite, 1000);
+  setTimeout(openWeightFromLink, 400);
 }
 
 // Some browsers (notably iOS Safari, especially when added to the home screen)
@@ -1987,6 +2718,7 @@ if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 // Keep only the 10 most recent versions here, newest first, whenever a new version is published.
 const CHANGELOG = [
+  { version: '3.3.0', notes: ['New: Weight. Tap the scale icon at the top to log your weight in a few taps: your last weight is already filled in, adjust it with − and + and tap Save. See your average per week, a chart with your 7-day average over a month up to all time, and set a goal weight to see how far you are and when you get there at your current pace.', 'Import your weight history from a CSV file (a date and a weight per line) and export it again. This is separate from the workout CSV.', 'Quick link: open tiltwick.com/lift-log/?weight to go straight to logging your weight. On Android, press and hold the Lift Log icon and choose Log weight.', 'The main screen shows a small "Log today\'s weight" reminder when you haven\'t weighed in yet today. You can turn it off in Weight.'] },
   { version: '3.2.0', notes: ['New: Buddies. Tap the people icon at the top to add friends with a code or an invite link, see when they train and react with an emoji. You choose per buddy what they see: only the days you trained, also your exercises, or also your weights and PRs. Your buddies see a name you choose, never your email address.', 'Fixed: the OK button on a notice now closes it.'] },
   { version: '3.1.6', notes: ['Sync: an open Lift Log (for example on your computer) now checks your account every minute, so workouts you log on your phone show up without reloading. Changes are also sent right away when you leave the app.'] },
   { version: '3.1.5', notes: ['Behind the scenes: preparation for a separate admin page. Lift Log itself works the same as before.'] },
@@ -1996,7 +2728,6 @@ const CHANGELOG = [
   { version: '3.1.1', notes: ['Lift Log has a new address: tiltwick.com/lift-log. The old address still works and shows a reminder once a day; log in at the new address with the same account and all your training data is there'] },
   { version: '3.1.0', notes: ['New: Lift Log accounts. Create an account (or log in) with your email address and your training data is saved in it: safe if you lose your phone, and the same on all your devices. Training data already on your phone moves into your new account. The app still works offline at the gym; changes are sent to your account as soon as you\'re online. Settings → ••• → Account shows the sync status and lets you log out or delete your account. Forgot your password? Request a reset link on the login screen'] },
   { version: '3.0.26', notes: ['Notifications: when they are blocked, a Check again button (and returning from the Settings app) refreshes the screen, so you don\'t have to close and reopen Lift Log after turning them on'] },
-  { version: '3.0.25', notes: ['Notifications: when they are blocked, the message now lists the steps on iPhone (Settings → Notifications → Lift Log → Allow Notifications) and has an Open iPhone Settings button that tries to jump straight to the Settings app'] },
 ];
 
 const DEFAULT_EXERCISES = [
@@ -5574,6 +6305,7 @@ function emailCSV(){
 
 function render(){
   renderWeekStrip();
+  renderWeightNudge();
   if(typeof restBase !== 'undefined') syncRestToExercise();
   renderTemplateChips();
   renderExerciseChips();
