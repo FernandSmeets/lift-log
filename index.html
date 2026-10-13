@@ -288,6 +288,49 @@
   .wt-code{ flex:1 1 12rem; min-width:0; font-size:var(--fs-sm); padding:.55rem .6rem; border-radius:8px; background:var(--surface-hi);
     border:1px solid var(--border); overflow-wrap:anywhere; }
   .wt-opt{ margin-top:.9rem; border-top:1px solid var(--border); border-bottom:none; padding-top:.8rem; }
+  /* Program (Home Rig): card on the main screen, ladder row in Today, level check */
+  .program-card{ display:block; width:100%; text-align:left; font:inherit; color:var(--text); background:var(--surface); border:1px solid var(--border);
+    border-radius:10px; padding:.7rem .85rem .75rem; margin:0 0 .9rem; cursor:pointer; }
+  .program-card.selected{ border-color:var(--accent); }
+  .program-card.done{ cursor:default; }
+  .pc-head{ display:flex; align-items:baseline; justify-content:space-between; gap:.6rem; flex-wrap:wrap; }
+  .pc-head strong{ font-size:var(--fs-md); font-weight:600; }
+  .pc-head span{ font-size:var(--fs-sm); color:var(--text-dim); }
+  .pc-weeks{ display:grid; grid-template-columns:repeat(8, 1fr); gap:3px; margin:.5rem 0 .45rem; }
+  .pc-weeks i{ height:.38rem; border-radius:3px; background:var(--surface-hi); }
+  .pc-weeks i.dl{ box-shadow:inset 0 0 0 1.5px var(--deload); }
+  .pc-weeks i.done{ background:var(--accent); }
+  .pc-weeks i.done.dl{ background:var(--deload); }
+  .pc-weeks i.cur{ background:var(--accent-dim); box-shadow:inset 0 0 0 1.5px var(--accent); }
+  .pc-line{ font-size:var(--fs-sm); color:var(--text-dim); line-height:1.4; }
+  .pc-fin{ font-size:var(--fs-xs); color:var(--text-dim); line-height:1.45; margin-top:.3rem; }
+  .pc-fin strong{ color:var(--text); font-weight:600; }
+  .pc-actions{ display:flex; gap:.5rem; margin-top:.7rem; }
+  .pc-actions .btn{ flex:1; }
+  .ladder-row{ display:flex; align-items:center; gap:.4rem; margin:-.2rem 0 .6rem; }
+  .ladder-btn{ flex:0 0 auto; min-height:2.2rem; padding:0 .55rem; border-radius:8px; border:1px solid var(--border); background:var(--surface);
+    color:var(--text-dim); font:inherit; font-size:var(--fs-xs); font-weight:600; cursor:pointer; }
+  .ladder-btn:disabled{ opacity:.35; cursor:default; }
+  .ladder-mid{ flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:.2rem; }
+  .ladder-dots{ display:flex; gap:4px; }
+  .ladder-dots i{ width:.5rem; height:.5rem; border-radius:50%; background:var(--surface-hi); box-shadow:inset 0 0 0 1px var(--border); }
+  .ladder-dots i.past{ background:var(--accent-dim); box-shadow:none; }
+  .ladder-dots i.cur{ background:var(--accent); box-shadow:none; }
+  .ladder-label{ font-size:var(--fs-2xs); color:var(--text-dim); white-space:nowrap; }
+  .btn.ladder-up{ width:100%; margin:-.2rem 0 .6rem; }
+  .pq-opts{ display:flex; flex-wrap:wrap; gap:.4rem; margin-bottom:.9rem; }
+  .pq-opt{ min-height:2.6rem; padding:.4rem .8rem; border-radius:9px; border:1px solid var(--border); background:var(--surface);
+    color:var(--text-dim); font:inherit; font-size:var(--fs-base); cursor:pointer; }
+  .pq-opt.active{ background:var(--accent-dim); border-color:var(--accent); color:var(--text); }
+  .pq-hint{ font-size:var(--fs-sm); color:var(--text-dim); margin:.2rem 0 .8rem; line-height:1.45; }
+  .pq-start{ width:100%; }
+  .pq-start:disabled{ opacity:.45; }
+  .program-box{ border:1px solid var(--border); border-radius:10px; padding:.8rem .85rem; margin-bottom:1rem; background:var(--surface); }
+  .pb-head{ display:flex; align-items:baseline; justify-content:space-between; gap:.5rem; }
+  .pb-head strong{ font-weight:600; font-size:var(--fs-strong); }
+  .pb-head span{ font-size:var(--fs-sm); color:var(--text-dim); }
+  .pb-text{ font-size:var(--fs-sm); color:var(--text-dim); line-height:1.5; margin:.35rem 0 .7rem; }
+  .program-box > .btn{ width:100%; }
   .wt-nudge{ display:flex; align-items:stretch; gap:.4rem; margin:0 0 .9rem; }
   .wt-nudge-main{ flex:1; display:flex; align-items:center; gap:.55rem; min-height:2.8rem; padding:0 .85rem; border-radius:10px;
     border:1px dashed var(--accent); background:var(--accent-dim); color:var(--text); font:inherit; font-size:var(--fs-base); font-weight:500; cursor:pointer; text-align:left; }
@@ -1014,6 +1057,7 @@
 
 <main>
   <div id="weightNudge"></div>
+  <div id="programCard"></div>
   <div class="row-label">Template</div>
   <div class="chip-row" id="templateRow"></div>
 
@@ -1144,6 +1188,12 @@
   </div>
 </dialog>
 
+<!-- Program start: level check (see openProgramStart()) -->
+<dialog id="programDialog">
+  <div class="dialog-head"><h3>Home Rig</h3><button class="dialog-close" onclick="document.getElementById('programDialog').close()">✕</button></div>
+  <div class="dialog-body" id="programBody"></div>
+</dialog>
+
 <!-- Deload suggestion (see maybeSuggestDeload()) -->
 <dialog id="deloadDialog">
   <div class="dialog-head"><h3>Time for a deload week?</h3><button class="dialog-close" onclick="deloadChoice('later')">✕</button></div>
@@ -1266,7 +1316,7 @@
 </dialog>
 
 <script>
-const APP_VERSION = '3.3.0';
+const APP_VERSION = '3.4.0';
 const STORE_KEY = 'liftlog_data_v2';
 
 /* ---------- Account & sync ----------
@@ -2718,6 +2768,7 @@ if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 // Keep only the 10 most recent versions here, newest first, whenever a new version is published.
 const CHANGELOG = [
+  { version: '3.4.0', notes: ['New: the Home Rig program, 8 weeks of training at home with a pull-up bar, rings and a dip bar. Start it in Settings → Templates. Three quick questions pick your starting exercises, and two full-body workouts (Home Rig A and B) take turns, 3 a week, each with a short finisher.', 'Every movement is a ladder from easy to hard, for example negative pull-ups, then chin-ups, then pull-ups. When every set reaches the top of the range, the target offers the next exercise. Easier and Harder buttons under the target let you switch any time.', 'A card on the main screen shows the week, which workout is next and how many sets to do. Weeks 4 and 8 are lighter weeks with a short test, Mini Cindy, so you can see how much stronger you got.'] },
   { version: '3.3.0', notes: ['New: Weight. Tap the scale icon at the top to log your weight in a few taps: your last weight is already filled in, adjust it with − and + and tap Save. See your average per week, a chart with your 7-day average over a month up to all time, and set a goal weight to see how far you are and when you get there at your current pace.', 'Import your weight history from a CSV file (a date and a weight per line) and export it again. This is separate from the workout CSV.', 'Quick link: open tiltwick.com/lift-log/?weight to go straight to logging your weight. On Android, press and hold the Lift Log icon and choose Log weight.', 'The main screen shows a small "Log today\'s weight" reminder when you haven\'t weighed in yet today. You can turn it off in Weight.'] },
   { version: '3.2.0', notes: ['New: Buddies. Tap the people icon at the top to add friends with a code or an invite link, see when they train and react with an emoji. You choose per buddy what they see: only the days you trained, also your exercises, or also your weights and PRs. Your buddies see a name you choose, never your email address.', 'Fixed: the OK button on a notice now closes it.'] },
   { version: '3.1.6', notes: ['Sync: an open Lift Log (for example on your computer) now checks your account every minute, so workouts you log on your phone show up without reloading. Changes are also sent right away when you leave the app.'] },
@@ -2727,7 +2778,6 @@ const CHANGELOG = [
   { version: '3.1.2', notes: ['Logging in on iPhone: the password manager no longer suggests a new strong password in the login field (which then didn\'t match your account). It now offers your saved password when logging in, and only suggests a new one when you create an account or reset your password'] },
   { version: '3.1.1', notes: ['Lift Log has a new address: tiltwick.com/lift-log. The old address still works and shows a reminder once a day; log in at the new address with the same account and all your training data is there'] },
   { version: '3.1.0', notes: ['New: Lift Log accounts. Create an account (or log in) with your email address and your training data is saved in it: safe if you lose your phone, and the same on all your devices. Training data already on your phone moves into your new account. The app still works offline at the gym; changes are sent to your account as soon as you\'re online. Settings → ••• → Account shows the sync status and lets you log out or delete your account. Forgot your password? Request a reset link on the login screen'] },
-  { version: '3.0.26', notes: ['Notifications: when they are blocked, a Check again button (and returning from the Settings app) refreshes the screen, so you don\'t have to close and reopen Lift Log after turning them on'] },
 ];
 
 const DEFAULT_EXERCISES = [
@@ -2782,7 +2832,29 @@ const DEFAULT_EXERCISE_METRICS = {
   'Nordic Curls': ['reps'],
   'Hanging Leg Raises': ['reps'],
   'Dragon Flag': ['reps'],
-  'Toes-to-Bar': ['reps']
+  'Toes-to-Bar': ['reps'],
+  'Support Hold': ['duration'],
+  'Ring Support Hold': ['duration'],
+  'Wall Handstand Hold': ['duration'],
+  'Scapular Pulls': ['reps'],
+  'Negative Pull-Ups': ['reps'],
+  'Incline Push-Ups': ['reps'],
+  'Ring Push-Ups': ['reps'],
+  'Archer Push-Ups': ['reps'],
+  'Air Squats': ['reps'],
+  'Split Squats': ['reps'],
+  'Box Pistols': ['reps'],
+  'Hanging Knee Raises': ['reps'],
+  'Incline Ring Rows': ['reps'],
+  'Ring Rows': ['reps'],
+  'Feet-Up Ring Rows': ['reps'],
+  'Archer Ring Rows': ['reps'],
+  'Negative Dips': ['reps'],
+  'Ring Dips': ['reps'],
+  'Elevated Pike Push-Ups': ['reps'],
+  'Single-Leg Glute Bridge': ['reps'],
+  'Nordic Negatives': ['reps'],
+  'Mini Cindy': ['reps']
 };
 const DEFAULT_TEMPLATES = [
   { name:'Chest Day', exercises:['Dumbbell Chest Press','Lateral Raise','Lat Pulldown','Preacher Curl','Tricep Pulldown','Hammer Curls','Dual Cable Fly'] },
@@ -3159,7 +3231,9 @@ function visibleExerciseNames(){
     const tpl = data.templates.find(t => t.name === currentTemplate);
     if(!tpl) return [];
     const visibleSet = new Set(data.exercises.filter(e => !e.hidden).map(e => e.name));
-    return tpl.exercises.filter(n => visibleSet.has(n));
+    const list = tpl.exercises.filter(n => visibleSet.has(n));
+    if(isProgramTemplate(tpl.name) && programShowsCindy() && visibleSet.has(MINI_CINDY) && !list.includes(MINI_CINDY)) list.push(MINI_CINDY);
+    return list;
   }
   return data.exercises.filter(e => !e.hidden).map(e => e.name).sort((a, b) => a.localeCompare(b));
 }
@@ -3253,6 +3327,10 @@ const DEFAULT_TARGET_REPS = 12;
 function exerciseByName(name){ return data.exercises.find(e => e.name === name); }
 function repRangeFor(name){
   const ex = exerciseByName(name);
+  if(!(ex && Number.isFinite(ex.targetReps) && ex.targetReps > 0)){
+    const rung = programRung(name);
+    if(rung) return { min: rung.step.min, max: rung.step.max };
+  }
   const max = (ex && Number.isFinite(ex.targetReps) && ex.targetReps > 0) ? ex.targetReps : DEFAULT_TARGET_REPS;
   return { min: Math.max(1, max - 4), max };
 }
@@ -3298,6 +3376,10 @@ function pickStartupTemplate(){
   const withDates = list.map(t => ({ name: t.name, last: templateLastDone(t) }));
   const doingToday = withDates.find(x => x.last === today);
   if(doingToday) return doingToday.name;
+  if(programRunning()){
+    const name = PROGRAM_TEMPLATES[programState().workout];
+    if(list.some(t => t.name === name)) return name;
+  }
   return withDates.reduce((a, b) => (b.last < a.last ? b : a)).name;
 }
 function showToast(msg, ms){
@@ -3406,6 +3488,7 @@ function startDeload(){
 function endDeload(){
   const t = todayStr(), a = activeDeload();
   if(!a) return;
+  noteProgramDeloadEnded();
   const dd = deloadData();
   if(a.start === t) dd.periods = dd.periods.filter(p => p !== a);
   else a.end = t;
@@ -3456,6 +3539,7 @@ function deloadReason(){
 let deloadDismissedThisSession = false;
 function maybeSuggestDeload(){
   if(!isLoggedIn()) return;
+  if(programRunning()) return;
   if(deloadDismissedThisSession || document.querySelector('dialog[open]')) return;
   const dd = deloadData(), today = todayStr();
   if(dd.snoozeUntil && today < dd.snoozeUntil) return;
@@ -3490,6 +3574,415 @@ function computeDeloadTarget(base, metrics){
   const k = Math.ceil(n / 2);
   const same = metrics.includes('weight') ? 'same weight' : (metrics.includes('reps') ? 'same reps' : 'same time');
   return { sets: sets.slice(0, k), head: `Deload: ${k} of ${n} sets, ${same}`, why: 'Lighter week — no new records expected' };
+}
+
+// ---------- Program: Home Rig ----------
+// An 8-week bodyweight program for at home with a pull-up bar, rings and a
+// dip bar: two full-body workouts (A and B) taken in turns, 3 per week.
+// Each movement is a ladder of exercises from easy to hard; you train the
+// step you're on (data.program.levels) and move up once every set reaches
+// the top of that step's range. The week is counted in workouts, not in
+// calendar weeks (every 3 workouts is a week), so a missed week just
+// pauses the program. Weeks 4 and 8 are lighter weeks (the deload week
+// above starts by itself) with a short test, Mini Cindy.
+// The templates "Home Rig A" and "Home Rig B" hold the current steps;
+// moving a step swaps that exercise in both templates.
+const PROGRAM_ID = 'home-rig';
+const PROGRAM_NAME = 'Home Rig';
+const PROGRAM_WEEKS = 8, PROGRAM_PER_WEEK = 3;
+const PROGRAM_SETS = [3, 3, 4, 2, 4, 4, 5, 2];
+const PROGRAM_TEST_WEEKS = [4, 8];
+const PROGRAM_TEMPLATES = { A: 'Home Rig A', B: 'Home Rig B' };
+const MINI_CINDY = 'Mini Cindy';
+const PROGRAM_TEST_TEXT = 'Mini Cindy, once this week: as many rounds as you can in 10 minutes of 5 pull-ups, 10 push-ups and 15 air squats, each at your own step. Log your rounds under Mini Cindy.';
+const PROGRAM_FINISHERS = [
+  'EMOM 6 min: 5 burpees on odd minutes, a 20 s hollow hold on even minutes',
+  'AMRAP 6 min: 5 burpees, 10 air squats, 15 mountain climbers',
+  'EMOM 8 min: 6 burpees on odd minutes, 10 jump squats on even minutes',
+  '',
+  'Tabata 4 min: burpees, 20 s on and 10 s off, 8 rounds',
+  'AMRAP 8 min: 5 burpees, 10 jump squats, 20 mountain climbers',
+  'EMOM 10 min: 8 burpees on odd minutes, 12 jump squats on even minutes',
+  ''
+];
+// metric: what a set records ('reps' or 'duration' in seconds); min–max is
+// the range to build up in before moving to the next step.
+const PROGRAM_LADDERS = [
+  { id: 'pull', workout: 'A', label: 'Pull-up', tags: ['Back'], steps: [
+    { name: 'Dead Hang', metric: 'duration', min: 15, max: 30 },
+    { name: 'Scapular Pulls', min: 6, max: 10 },
+    { name: 'Negative Pull-Ups', min: 3, max: 6 },
+    { name: 'Chin-Ups', min: 3, max: 8 },
+    { name: 'Pull-Ups', min: 3, max: 8 } ] },
+  { id: 'push', workout: 'A', label: 'Push-up', tags: ['Chest'], steps: [
+    { name: 'Incline Push-Ups', min: 6, max: 12 },
+    { name: 'Push-Ups', min: 6, max: 12 },
+    { name: 'Ring Push-Ups', min: 6, max: 12 },
+    { name: 'Archer Push-Ups', min: 4, max: 8 } ] },
+  { id: 'legs', workout: 'A', label: 'Squat', tags: ['Legs'], steps: [
+    { name: 'Air Squats', min: 10, max: 20 },
+    { name: 'Split Squats', min: 6, max: 12 },
+    { name: 'Bulgarian Split Squats', min: 6, max: 12 },
+    { name: 'Box Pistols', min: 3, max: 8 },
+    { name: 'Pistol Squats', min: 3, max: 8 } ] },
+  { id: 'core', workout: 'A', label: 'Core', tags: ['Core'], rest: 60, steps: [
+    { name: 'Hollow Body Hold', metric: 'duration', min: 15, max: 40 },
+    { name: 'Hanging Knee Raises', min: 6, max: 12 },
+    { name: 'Hanging Leg Raises', min: 5, max: 10 },
+    { name: 'Toes-to-Bar', min: 3, max: 8 } ] },
+  { id: 'row', workout: 'B', label: 'Row', tags: ['Back'], steps: [
+    { name: 'Incline Ring Rows', min: 6, max: 12 },
+    { name: 'Ring Rows', min: 6, max: 12 },
+    { name: 'Feet-Up Ring Rows', min: 6, max: 12 },
+    { name: 'Archer Ring Rows', min: 4, max: 8 } ] },
+  { id: 'dip', workout: 'B', label: 'Dip', tags: ['Chest', 'Triceps'], steps: [
+    { name: 'Support Hold', metric: 'duration', min: 10, max: 30 },
+    { name: 'Negative Dips', min: 3, max: 6 },
+    { name: 'Dips', min: 4, max: 10 },
+    { name: 'Ring Support Hold', metric: 'duration', min: 10, max: 30 },
+    { name: 'Ring Dips', min: 3, max: 8 } ] },
+  { id: 'shoulders', workout: 'B', label: 'Shoulder', tags: ['Shoulders'], steps: [
+    { name: 'Pike Push-Ups', min: 5, max: 10 },
+    { name: 'Elevated Pike Push-Ups', min: 5, max: 10 },
+    { name: 'Wall Handstand Hold', metric: 'duration', min: 15, max: 45 },
+    { name: 'Handstand Push-Ups', min: 2, max: 6 } ] },
+  { id: 'hips', workout: 'B', label: 'Hip', tags: ['Legs'], steps: [
+    { name: 'Glute Bridges', min: 10, max: 20 },
+    { name: 'Single-Leg Glute Bridge', min: 8, max: 15 },
+    { name: 'Nordic Negatives', min: 3, max: 6 } ] }
+];
+const LADDER_BY_NAME = {};
+PROGRAM_LADDERS.forEach(l => l.steps.forEach((step, idx) => { LADDER_BY_NAME[step.name.toLowerCase()] = { ladder: l, idx, step }; }));
+function ladderById(id){ return PROGRAM_LADDERS.find(l => l.id === id); }
+function stepMetric(step){ return step.metric || 'reps'; }
+function stepUnit(step){ return stepMetric(step) === 'duration' ? 'sec' : 'reps'; }
+
+function programActive(){ return !!(data.program && data.program.id === PROGRAM_ID && data.program.start && data.program.levels); }
+// The step a ladder is on, kept within the ladder.
+function programLevel(id){
+  const l = ladderById(id), v = data.program && data.program.levels ? data.program.levels[id] : 0;
+  return Math.max(0, Math.min(l.steps.length - 1, Number.isFinite(v) ? v : 0));
+}
+// The ladder step for this exercise, only while the program runs and only
+// for the step you're on now.
+function programRung(name){
+  if(!programActive() || !name) return null;
+  const r = LADDER_BY_NAME[name.toLowerCase()];
+  return r && programLevel(r.ladder.id) === r.idx ? r : null;
+}
+// Program workouts: days since the start with any ladder exercise saved.
+function programDays(){
+  const start = data.program.start, set = new Set();
+  Object.entries(data.sessions || {}).forEach(([name, list]) => {
+    if(!LADDER_BY_NAME[name.toLowerCase()] || !Array.isArray(list)) return;
+    list.forEach(s => { if(s.date >= start && s.sets && s.sets.length) set.add(s.date); });
+  });
+  return [...set].sort();
+}
+// A or B: whichever workout's ladders were trained most that day.
+function programDayWorkout(d){
+  let a = 0, b = 0;
+  Object.entries(data.sessions || {}).forEach(([name, list]) => {
+    const r = LADDER_BY_NAME[name.toLowerCase()];
+    if(!r || !Array.isArray(list) || !list.some(s => s.date === d)) return;
+    if(r.ladder.workout === 'A') a++; else b++;
+  });
+  return b > a ? 'B' : 'A';
+}
+function programState(){
+  const today = todayStr(), days = programDays();
+  const trainedToday = days.includes(today);
+  const idx = trainedToday ? days.indexOf(today) : days.length;
+  const complete = idx >= PROGRAM_WEEKS * PROGRAM_PER_WEEK;
+  const week = Math.min(PROGRAM_WEEKS, Math.floor(idx / PROGRAM_PER_WEEK) + 1);
+  let workout = 'A';
+  if(trainedToday) workout = programDayWorkout(today);
+  else if(days.length) workout = programDayWorkout(days[days.length - 1]) === 'A' ? 'B' : 'A';
+  const weekStart = days[(week - 1) * PROGRAM_PER_WEEK] || today;
+  return {
+    week, workout, complete, done: days.length, weekStart,
+    inWeek: complete ? PROGRAM_PER_WEEK : (idx % PROGRAM_PER_WEEK) + 1,
+    sets: PROGRAM_SETS[week - 1],
+    test: PROGRAM_TEST_WEEKS.includes(week)
+  };
+}
+function programRunning(){ return programActive() && !programState().complete; }
+// Mini Cindy joins the workout in a test week until it's been logged that week.
+function programShowsCindy(){
+  if(!programRunning()) return false;
+  const st = programState();
+  if(!st.test) return false;
+  const today = todayStr();
+  return !(data.sessions[MINI_CINDY] || []).some(s => s.date >= st.weekStart && s.date !== today);
+}
+function isProgramTemplate(name){ return name === PROGRAM_TEMPLATES.A || name === PROGRAM_TEMPLATES.B; }
+
+// Weeks 4 and 8 run as a deload week; it ends as soon as the next program
+// week starts. Ending it early by hand (Settings → Workout) is respected.
+function syncProgramDeload(){
+  if(!programActive()) return false;
+  const st = programState(), a = activeDeload(), p = data.program, dd = deloadData(), t = todayStr();
+  if(st.test && !st.complete){
+    if(a || p.skipDeload === p.start + ':' + st.week) return false;
+    dd.periods.push({ start: t, end: addDaysStr(t, DELOAD_DAYS), program: true });
+  } else if(a && a.program){
+    if(a.start === t) dd.periods = dd.periods.filter(x => x !== a);
+    else a.end = t;
+  } else return false;
+  saveData();
+  if(selectedExercise && todayUntouched()) loadTodayState(selectedExercise);
+  return true;
+}
+function noteProgramDeloadEnded(){
+  if(!programActive()) return;
+  const st = programState();
+  if(st.test) data.program.skipDeload = data.program.start + ':' + st.week;
+}
+
+// Adds a ladder exercise to the exercise list if it isn't there yet (or
+// shows it again if hidden). Returns the name as saved.
+function ensureProgramExercise(step, ladder){
+  let ex = data.exercises.find(e => e.name.toLowerCase() === step.name.toLowerCase());
+  if(!ex){
+    ex = { name: step.name, hidden: false, builtin: true, tags: ladder.tags.slice(), metrics: [stepMetric(step)], restSeconds: ladder.rest || 90 };
+    data.exercises.push(ex);
+  } else if(ex.hidden) ex.hidden = false;
+  return ex.name;
+}
+function ensureCindyExercise(){
+  let ex = data.exercises.find(e => e.name.toLowerCase() === MINI_CINDY.toLowerCase());
+  if(!ex){ ex = { name: MINI_CINDY, hidden: false, builtin: true, tags: ['Conditioning'], metrics: ['reps'] }; data.exercises.push(ex); }
+  else if(ex.hidden) ex.hidden = false;
+}
+function programTemplateExercises(workout, levels){
+  return PROGRAM_LADDERS.filter(l => l.workout === workout).map(l => ensureProgramExercise(l.steps[levels[l.id]], l));
+}
+
+// ---- Level check and starting ----
+const PROGRAM_QUESTIONS = [
+  { id: 'pull', q: 'How many pull-ups can you do in a row?', opts: [['Can\'t hang 20 s yet', 0], ['None yet', 2], ['1 to 4', 3], ['5 or more', 4]] },
+  { id: 'push', q: 'How many push-ups on the floor?', opts: [['0 to 4', 0], ['5 to 14', 1], ['15 or more', 2]] },
+  { id: 'dip', q: 'On the dip bar, can you…', opts: [['Not hold myself up yet', 0], ['Hold, but not dip yet', 1], ['Do 1 to 7 dips', 2], ['Do 8 or more dips', 3]] }
+];
+let programAnswers = {};
+function programLevelsFrom(a){
+  const score = (a.pull / 4 + a.push / 2 + a.dip / 3) / 3;
+  const tier = score < 0.4 ? 0 : score < 0.75 ? 1 : 2;
+  return { pull: a.pull, push: a.push, dip: a.dip, row: a.pull >= 3 ? 2 : a.pull >= 2 ? 1 : 0,
+    legs: tier, core: tier, shoulders: tier, hips: Math.min(tier, 1) };
+}
+function openProgramStart(){
+  programAnswers = {};
+  renderProgramStart();
+  document.getElementById('programDialog').showModal();
+}
+function answerProgram(id, v){ programAnswers[id] = v; renderProgramStart(); }
+function renderProgramStart(){
+  const ready = PROGRAM_QUESTIONS.every(q => programAnswers[q.id] !== undefined);
+  let preview = '';
+  if(ready){
+    const lv = programLevelsFrom(programAnswers);
+    const list = w => PROGRAM_LADDERS.filter(l => l.workout === w).map(l => escAttr(l.steps[lv[l.id]].name)).join(', ');
+    preview = `<div class="note-box"><strong>Workout A:</strong> ${list('A')}<br><strong>Workout B:</strong> ${list('B')}</div>`;
+  }
+  document.getElementById('programBody').innerHTML = `
+    <p class="update-msg">8 weeks, 3 workouts a week, at home with a pull-up bar, rings and a dip bar. Two full-body workouts take turns, each with a short finisher if you have energy left. Three quick questions find the right starting exercises.</p>
+    ${PROGRAM_QUESTIONS.map(q => `
+      <div class="row-label">${escAttr(q.q)}</div>
+      <div class="pq-opts">${q.opts.map(([label, v]) => `<button type="button" class="pq-opt${programAnswers[q.id] === v ? ' active' : ''}" onclick="answerProgram('${q.id}', ${v})">${escAttr(label)}</button>`).join('')}</div>`).join('')}
+    ${preview}
+    <p class="pq-hint">Too easy or too hard? You can switch to the next or previous exercise at any time.</p>
+    <button type="button" class="btn primary pq-start" onclick="startProgram()" ${ready ? '' : 'disabled'}>Start program</button>`;
+}
+function startProgram(levels){
+  if(!levels){
+    if(!PROGRAM_QUESTIONS.every(q => programAnswers[q.id] !== undefined)) return;
+    levels = programLevelsFrom(programAnswers);
+  }
+  const today = todayStr();
+  const trainedToday = Object.entries(data.sessions || {}).some(([n, l]) => LADDER_BY_NAME[n.toLowerCase()] && (l || []).some(s => s.date === today));
+  const old = activeDeload();
+  if(old && old.program){ deloadData().periods = deloadData().periods.filter(x => x !== old); }
+  data.program = { id: PROGRAM_ID, start: trainedToday && levels === (data.program && data.program.levels) ? addDaysStr(today, 1) : today, levels: { ...levels } };
+  ensureCindyExercise();
+  const names = new Set(Object.values(PROGRAM_TEMPLATES));
+  data.templates = data.templates.filter(t => !names.has(t.name));
+  data.templates.unshift({ name: PROGRAM_TEMPLATES.B, exercises: programTemplateExercises('B', levels) });
+  data.templates.unshift({ name: PROGRAM_TEMPLATES.A, exercises: programTemplateExercises('A', levels) });
+  saveData();
+  const dlg = document.getElementById('programDialog');
+  if(dlg.open) dlg.close();
+  const sd = document.getElementById('settingsDialog');
+  if(sd.open) sd.close();
+  openProgramWorkout();
+  showToast(`${PROGRAM_NAME} started. Week 1, workout ${programState().workout}.`);
+}
+function restartProgram(){ if(programActive()) startProgram(data.program.levels); }
+async function endProgram(){
+  const go = await showConfirm(`End ${PROGRAM_NAME}? Your workouts stay saved, and so do the Home Rig A and B templates.`, { title: 'End program?', ok: 'End program', cancel: 'Keep going' });
+  if(!go) return;
+  const a = activeDeload();
+  if(a && a.program){ if(a.start === todayStr()) deloadData().periods = deloadData().periods.filter(x => x !== a); else a.end = todayStr(); }
+  data.program = null;
+  saveData();
+  if(selectedExercise && todayUntouched()) loadTodayState(selectedExercise);
+  render();
+  if(document.getElementById('settingsDialog').open) renderSettings();
+}
+function openProgramWorkout(){
+  if(!programActive()) return;
+  const name = PROGRAM_TEMPLATES[programState().workout];
+  const tpl = data.templates.find(t => t.name === name);
+  if(!tpl) return;
+  tpl.hidden = false;
+  if(currentTemplate !== name){
+    currentTemplate = name; allExpanded = false; selectedExercise = null;
+  }
+  ensureSelectedExercise();
+  render();
+}
+
+// ---- Moving up or down a ladder ----
+function setLadderLevel(id, idx){
+  if(!programActive()) return;
+  const l = ladderById(id);
+  if(!l || idx < 0 || idx >= l.steps.length) return;
+  const cur = programLevel(id);
+  if(idx === cur) return;
+  const oldName = l.steps[cur].name.toLowerCase();
+  const newName = ensureProgramExercise(l.steps[idx], l);
+  data.program.levels[id] = idx;
+  data.templates.forEach(t => {
+    if(isProgramTemplate(t.name)) t.exercises = t.exercises.map(n => n.toLowerCase() === oldName ? newName : n);
+  });
+  saveData();
+  if(selectedExercise && selectedExercise.toLowerCase() === oldName){
+    selectedExercise = newName; historyOpen = false; editingHistoryIdx = null;
+    loadTodayState(newName);
+  }
+  render();
+}
+function moveLadder(id, dir){ setLadderLevel(id, programLevel(id) + dir); }
+
+// Every set at the top of the range, and it didn't feel Hard.
+function ladderReady(last, rung){
+  const m = stepMetric(rung.step);
+  return last && last.feel !== 'hard' && last.sets.length > 0 && rung.idx < rung.ladder.steps.length - 1 &&
+    last.sets.every(s => (parseFloat(s[m]) || 0) >= rung.step.max);
+}
+function resizeSets(sets, n){
+  if(!sets.length) return sets;
+  const out = sets.slice(0, n);
+  while(out.length < n) out.push({ ...out[out.length - 1] });
+  return out;
+}
+// Applies the program to today's pre-filled sets: the first time on a step
+// starts at the bottom of its range, a full range offers the next step, and
+// the number of sets follows the program week.
+function applyProgramTarget(exerciseName, nLast, nPrev){
+  if(exerciseName === MINI_CINDY && programRunning()){
+    const last = getLastSession(MINI_CINDY);
+    todaySets = [emptySet()];
+    todayTarget = { exercise: exerciseName, cindy: true, head: 'Score: rounds in 10 minutes',
+      why: last ? `Last time: ${last.sets[0] && last.sets[0].reps || 0} rounds. Enter your rounds as reps.` : 'Enter your rounds as reps.',
+      base: [emptySet()], pre: [emptySet()] };
+    return;
+  }
+  const rung = programRung(exerciseName);
+  if(!rung) return;
+  const st = programState();
+  if(st.complete) return;
+  const m = exerciseMetricsByName(exerciseName).includes(stepMetric(rung.step)) ? stepMetric(rung.step) : 'reps';
+  const unit = m === 'duration' ? 'sec' : 'reps';
+  const range = { min: rung.step.min, max: rung.step.max };
+  const weekWhy = `Week ${st.week}: ${st.sets} sets`;
+  if(!nLast){
+    if(!targetsEnabled() && !activeDeload()) return;
+    const s = emptySet(); s[m] = String(range.min);
+    todaySets = resizeSets([s], st.sets);
+    todayTarget = { exercise: exerciseName, program: true, range, rule: 0, unit,
+      head: `Start with ${st.sets} × ${range.min} ${unit}`, why: `Build up to ${range.max} ${unit}, then move to the next step`,
+      base: todaySets.map(x => ({ ...x })), pre: todaySets.map(x => ({ ...x })) };
+    return;
+  }
+  if(!todayTarget) return;
+  if(!todayTarget.deload && targetsEnabled() && todayTarget.rule !== 1 && todayTarget.rule !== 2 && ladderReady(nLast, rung)){
+    const next = rung.ladder.steps[rung.idx + 1];
+    todaySets = nLast.sets.map(x => ({ weight: x.weight || '', reps: x.reps || '', duration: x.duration || '' }));
+    todayTarget = { ...todayTarget, rule: 6, head: `Ready for ${next.name}`, why: `All sets reached ${range.max} ${unit}. Move up, or repeat today`,
+      levelUp: { id: rung.ladder.id, name: next.name } };
+  }
+  todaySets = resizeSets(todaySets, st.sets);
+  todayTarget.pre = todaySets.map(x => ({ ...x }));
+  todayTarget.program = true; todayTarget.range = range; todayTarget.unit = unit;
+  todayTarget.why = todayTarget.why ? `${todayTarget.why} · ${weekWhy}` : weekWhy;
+}
+function programTargetInfoHtml(tgt){
+  if(tgt.cindy) return `<div class="target-info">${escAttr(PROGRAM_TEST_TEXT)} Use the step you're on for each exercise, for example ring rows instead of pull-ups. Compare your score in week 8 with week 4.</div>`;
+  if(tgt.deload) return deloadInfoHtml();
+  const r = tgt.range, u = tgt.unit;
+  const hold = u === 'sec';
+  const rules = [
+    'Last time lower than the time before → match that session first',
+    'Felt Hard → repeat last time',
+    `Every set at ${r.max} ${u} → ready for the next exercise on the ladder`,
+    hold ? 'Felt Easy → +10 sec on every set' : 'Felt Easy → +1 rep on every set',
+    hold ? 'Otherwise → +5 sec per set' : 'Otherwise → +1 rep on the weakest set'
+  ];
+  const hit = { 1: 1, 2: 2, 6: 3, 4: 4, 5: 5 }[tgt.rule] || 0;
+  return `<div class="target-info">
+    ${PROGRAM_NAME}: build up from ${r.min} to ${r.max} ${u} per set. The first rule that fits sets today's target:
+    <ol>${rules.map((x, i) => `<li${hit === i + 1 ? ' class="hit"' : ''}>${escAttr(x)}</li>`).join('')}</ol>
+    The number of sets follows the program week. Change any number if it's too much. <button type="button" onclick="openTargetSettings()">Turn off in settings</button>
+  </div>`;
+}
+function ladderRowHtml(name){
+  const rung = programRung(name);
+  if(!rung) return '';
+  const l = rung.ladder, n = l.steps.length;
+  return `<div class="ladder-row">
+    <button type="button" class="ladder-btn" onclick="moveLadder('${l.id}', -1)" ${rung.idx === 0 ? 'disabled' : ''} aria-label="Easier exercise">‹ Easier</button>
+    <span class="ladder-mid"><span class="ladder-dots" aria-hidden="true">${l.steps.map((_, i) => `<i class="${i < rung.idx ? 'past' : i === rung.idx ? 'cur' : ''}"></i>`).join('')}</span><span class="ladder-label">${escAttr(l.label)} step ${rung.idx + 1} of ${n}</span></span>
+    <button type="button" class="ladder-btn" onclick="moveLadder('${l.id}', 1)" ${rung.idx === n - 1 ? 'disabled' : ''} aria-label="Harder exercise">Harder ›</button>
+  </div>`;
+}
+
+// ---- Card on the main screen ----
+function renderProgramCard(){
+  const el = document.getElementById('programCard');
+  if(!el) return;
+  if(!programActive()){ el.innerHTML = ''; return; }
+  const st = programState();
+  if(st.complete){
+    el.innerHTML = `<div class="program-card done">
+      <div class="pc-head"><strong>${PROGRAM_NAME} complete</strong><span>${st.done} workouts</span></div>
+      <div class="pc-line">You finished all ${PROGRAM_WEEKS} weeks. Start again from the exercises you're on now, or end the program.</div>
+      <div class="pc-actions"><button type="button" class="btn primary" onclick="restartProgram()">Start again</button><button type="button" class="btn" onclick="endProgram()">End program</button></div>
+    </div>`;
+    return;
+  }
+  const weeks = Array.from({ length: PROGRAM_WEEKS }, (_, i) => {
+    const w = i + 1;
+    return `<i class="${w < st.week ? 'done' : w === st.week ? 'cur' : ''}${PROGRAM_TEST_WEEKS.includes(w) ? ' dl' : ''}"></i>`;
+  }).join('');
+  const fin = st.test ? `<strong>Test:</strong> ${escAttr(PROGRAM_TEST_TEXT)}` : `<strong>Finisher:</strong> ${escAttr(PROGRAM_FINISHERS[st.week - 1])}`;
+  const selected = currentTemplate === PROGRAM_TEMPLATES[st.workout];
+  el.innerHTML = `<button type="button" class="program-card${selected ? ' selected' : ''}" onclick="openProgramWorkout()">
+    <div class="pc-head"><strong>${PROGRAM_NAME}</strong><span>Week ${st.week} of ${PROGRAM_WEEKS} · Workout ${st.workout}</span></div>
+    <div class="pc-weeks" aria-hidden="true">${weeks}</div>
+    <div class="pc-line">${st.test ? 'Lighter week: ' : ''}${st.sets} sets per exercise · workout ${st.inWeek} of ${PROGRAM_PER_WEEK} this week</div>
+    <div class="pc-fin">${fin}</div>
+  </button>`;
+}
+function programSettingsHtml(){
+  const intro = `<p class="pb-text">For at home with a pull-up bar, rings and a dip bar. Two full-body workouts, A and B, take turns, 3 a week, with a short finisher. It starts at your level and moves you to harder exercises as you get stronger. Weeks 4 and 8 are lighter, with a short test.</p>`;
+  if(!programActive()){
+    return `<div class="program-box"><div class="pb-head"><strong>Program: ${PROGRAM_NAME}</strong><span>8 weeks</span></div>${intro}
+      <button type="button" class="btn primary" onclick="openProgramStart()">Start program</button></div>`;
+  }
+  const st = programState();
+  return `<div class="program-box"><div class="pb-head"><strong>Program: ${PROGRAM_NAME}</strong><span>${st.complete ? 'Complete' : `Week ${st.week} of ${PROGRAM_WEEKS}`}</span></div>${intro}
+    <div class="pc-actions">${st.complete ? `<button type="button" class="btn primary" onclick="restartProgram()">Start again</button>` : ''}<button type="button" class="btn" onclick="endProgram()">End program</button></div></div>`;
 }
 
 // ---------- Target for today (double progression) ----------
@@ -3618,8 +4111,10 @@ function loadTodayState(exerciseName){
       todayTarget = { exercise: exerciseName, range, rule: t.rule, head: t.head, why: t.why, base: nLast.sets, pre: t.sets.map(s => ({ ...s })) };
       todaySets = t.sets;
     }
+    applyProgramTarget(exerciseName, nLast, nPrev);
   } else {
     todaySets = [emptySet()];
+    applyProgramTarget(exerciseName, null, null);
   }
   todayFeel = '';
   todayNote = '';
@@ -4108,7 +4603,9 @@ function renderContent(){
     ${lastHtml}
     <div class="panel today-panel">
       <h2>Today</h2>
-      ${tgt ? `<div class="target-line${tgt.deload ? ' deload' : ''}${targetInfoOpen ? ' open' : ''}" role="button" aria-expanded="${targetInfoOpen}" onclick="toggleTargetInfo()">${targetIcon}<span><strong>${tgt.deload ? '' : 'Target: '}${escAttr(tgt.head)}</strong>${tgt.why ? `<span class="why">${escAttr(tgt.why)}</span>` : ''}</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>${targetInfoOpen ? (tgt.deload ? deloadInfoHtml() : targetInfoHtml(tgt.rule, tgt.range)) : ''}` : ''}
+      ${tgt ? `<div class="target-line${tgt.deload ? ' deload' : ''}${targetInfoOpen ? ' open' : ''}" role="button" aria-expanded="${targetInfoOpen}" onclick="toggleTargetInfo()">${targetIcon}<span><strong>${tgt.deload || tgt.cindy ? '' : 'Target: '}${escAttr(tgt.head)}</strong>${tgt.why ? `<span class="why">${escAttr(tgt.why)}</span>` : ''}</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>${targetInfoOpen ? (tgt.program || tgt.cindy ? programTargetInfoHtml(tgt) : tgt.deload ? deloadInfoHtml() : targetInfoHtml(tgt.rule, tgt.range)) : ''}` : ''}
+      ${tgt && tgt.levelUp ? `<button type="button" class="btn primary ladder-up" onclick="moveLadder('${tgt.levelUp.id}', 1)">Switch to ${escAttr(tgt.levelUp.name)}</button>` : ''}
+      ${ladderRowHtml(selectedExercise)}
       ${todayRows}
       <button class="add-set-btn" onclick="addSet()">+ Add set</button>
       <div class="row-label" style="margin-top:.9rem;">How did it feel? (optional)</div>
@@ -5259,7 +5756,7 @@ function formatDuration(mins){
 
 function renderTemplateSettings(){
   const el = document.getElementById('tabTemplates');
-  el.innerHTML = `<button class="add-template-btn" onclick="openNewTemplate()">+ New template</button>` +
+  el.innerHTML = programSettingsHtml() + `<button class="add-template-btn" onclick="openNewTemplate()">+ New template</button>` +
     data.templates.map((t, i) => {
       const duration = formatDuration(estimateTemplateMinutes(t));
       return `
@@ -6304,7 +6801,9 @@ function emailCSV(){
 }
 
 function render(){
+  syncProgramDeload();
   renderWeekStrip();
+  renderProgramCard();
   renderWeightNudge();
   if(typeof restBase !== 'undefined') syncRestToExercise();
   renderTemplateChips();
