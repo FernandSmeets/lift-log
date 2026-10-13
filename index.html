@@ -290,7 +290,30 @@
   .wt-opt{ margin-top:.9rem; border-top:1px solid var(--border); border-bottom:none; padding-top:.8rem; }
   /* Program (Home Rig): card on the main screen, ladder row in Today, level check */
   .program-card{ display:block; width:100%; text-align:left; font:inherit; color:var(--text); background:var(--surface); border:1px solid var(--border);
-    border-radius:10px; padding:.7rem .85rem .75rem; margin:0 0 .9rem; cursor:pointer; }
+    border-radius:10px; padding:.7rem .85rem .75rem; margin:0 0 .9rem; }
+  .pc-main{ display:block; width:100%; text-align:left; font:inherit; color:inherit; background:none; border:none; padding:0; cursor:pointer; }
+  .pc-fin-row{ display:flex; align-items:flex-start; gap:.6rem; }
+  .pc-fin-row .pc-fin{ flex:1; min-width:0; }
+  .pc-timer{ flex:0 0 auto; display:flex; align-items:center; gap:.35rem; min-height:2.4rem; margin-top:.3rem; padding:0 .7rem; border-radius:9px;
+    border:1px solid var(--accent); background:var(--accent-dim); color:var(--text); font:inherit; font-size:var(--fs-sm); font-weight:600; cursor:pointer; }
+  .pc-timer svg{ width:1rem; height:1rem; color:var(--accent); }
+  .pb-share{ width:100%; margin-top:.5rem; }
+  .fin-clock{ text-align:center; border-radius:12px; padding:.9rem .6rem 1rem; margin-bottom:.8rem; background:var(--accent-dim); border:1px solid var(--accent); }
+  .fin-clock.rest{ background:var(--deload-dim); border-color:var(--deload); }
+  .fin-label{ font-size:var(--fs-sm); color:var(--text-dim); }
+  .fin-big{ font-size:3.6rem; font-weight:700; line-height:1.1; margin:.15rem 0; font-variant-numeric:tabular-nums; }
+  .fin-sub{ font-size:var(--fs-md); font-weight:600; min-height:1.4em; }
+  .fin-rounds{ display:flex; gap:.5rem; align-items:stretch; margin-bottom:.8rem; }
+  .fin-rounds .stepper-btn{ flex:0 0 auto; width:3.2rem; }
+  .fin-round-btn{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.1rem; min-height:4rem; border-radius:10px;
+    border:1px solid var(--border); background:var(--surface-hi); color:var(--text); font:inherit; cursor:pointer; }
+  .fin-round-btn .num{ font-size:1.8rem; font-weight:700; line-height:1; }
+  .fin-round-btn span:last-child{ font-size:var(--fs-xs); color:var(--text-dim); }
+  .fin-score{ margin-bottom:.7rem; }
+  .fin-scores{ list-style:none; margin:0 0 .6rem; padding:0; font-size:var(--fs-sm); }
+  .fin-scores li{ display:flex; justify-content:space-between; gap:.6rem; padding:.25rem 0; border-bottom:1px solid var(--border); }
+  .fin-scores li:last-child{ border-bottom:none; }
+  .fin-scores b{ font-weight:600; }
   .program-card.selected{ border-color:var(--accent); }
   .program-card.done{ cursor:default; }
   .pc-head{ display:flex; align-items:baseline; justify-content:space-between; gap:.6rem; flex-wrap:wrap; }
@@ -1194,6 +1217,12 @@
   <div class="dialog-body" id="programBody"></div>
 </dialog>
 
+<!-- Finisher / Mini Cindy timer (see openFinisher()) -->
+<dialog id="finisherDialog">
+  <div class="dialog-head"><h3 id="finisherTitle">Finisher</h3><button class="dialog-close" onclick="closeFinisher()">✕</button></div>
+  <div class="dialog-body" id="finisherBody"></div>
+</dialog>
+
 <!-- Deload suggestion (see maybeSuggestDeload()) -->
 <dialog id="deloadDialog">
   <div class="dialog-head"><h3>Time for a deload week?</h3><button class="dialog-close" onclick="deloadChoice('later')">✕</button></div>
@@ -1316,7 +1345,7 @@
 </dialog>
 
 <script>
-const APP_VERSION = '3.4.0';
+const APP_VERSION = '3.5.0';
 const STORE_KEY = 'liftlog_data_v2';
 
 /* ---------- Account & sync ----------
@@ -1628,6 +1657,7 @@ async function submitAuth(){
     setTimeout(maybeShowMovedNotice, 800);
     setTimeout(openBuddiesForInvite, 900);
     setTimeout(openWeightFromLink, 400);
+    setTimeout(openProgramFromLink, 600);
   }catch(e){
     authFail('Can\'t reach the Lift Log server. Check your internet connection and try again.');
   }finally{
@@ -1752,7 +1782,7 @@ function maybeShowMovedNotice(){
 const BUDDY_INVITE_KEY = 'liftlog_buddy_invite';
 const SHARE_LEVELS = [
   { title: 'Only that I trained', text: 'Which days you trained' },
-  { title: '+ Exercises', text: 'Which exercises, no weights' },
+  { title: '+ Exercises', text: 'Which exercises and your Home Rig week and scores, no weights' },
   { title: '+ Weights and PRs', text: 'Everything from your workouts' }
 ];
 let social = null;        // last answer from social.php
@@ -1954,6 +1984,7 @@ function buddyDetailHtml(b){
         ? `<div class="bd-tile"><span class="num">${b.prs_this_month}</span><span>PRs this month</span></div>`
         : `<div class="bd-tile"><span class="num">${b.last_day ? escHtml(dayLabel(b.last_day)) : '–'}</span><span>last workout</span></div>`}
     </div>`;
+    html += buddyProgramHtml(b);
     if(b.they_share >= 2 && b.records.length){
       html += `<div class="section-title bd-section">Personal records</div><div class="bd-card"><ul class="bd-sets" style="margin:0;">${
         b.records.slice(0, 8).map(r => `<li><span>${escHtml(r.name)}</span><b>${topSetText(r)}</b></li>`).join('')}</ul></div>`;
@@ -2077,6 +2108,8 @@ function pendingBuddyInvite(){
   try{ return localStorage.getItem(BUDDY_INVITE_KEY) || ''; }catch(e){ return ''; }
 }
 function openBuddiesForInvite(){
+  const pd = document.getElementById('programDialog');
+  if(pd && pd.open){ pd.addEventListener('close', openBuddiesForInvite, { once: true }); return; }
   if(isLoggedIn() && pendingBuddyInvite() && !document.getElementById('buddiesDialog').open) openBuddies();
 }
 async function maybeAddInvitedBuddy(){
@@ -2721,6 +2754,7 @@ function openWeightFromLink(){
 async function initAccount(){
   rememberBuddyInvite();
   rememberWeightLink();
+  rememberProgramLink();
   // Back in the app: fetch changes. Leaving it: send waiting changes right away,
   // because a phone may stop the app before the short save delay is over.
   document.addEventListener('visibilitychange', () => {
@@ -2756,6 +2790,7 @@ async function initAccount(){
   setTimeout(maybeShowMovedNotice, 1200);
   setTimeout(openBuddiesForInvite, 1000);
   setTimeout(openWeightFromLink, 400);
+  setTimeout(openProgramFromLink, 600);
 }
 
 // Some browsers (notably iOS Safari, especially when added to the home screen)
@@ -2768,6 +2803,7 @@ if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 // Keep only the 10 most recent versions here, newest first, whenever a new version is published.
 const CHANGELOG = [
+  { version: '3.5.0', notes: ['Home Rig: a timer for the finisher. Tap Timer on the program card for the EMOM, AMRAP or Tabata of the week, with a beep on every new minute or round. Afterwards you save your score.', 'Mini Cindy has its own 10-minute timer with a round counter, and your scores are listed under the program in Settings → Templates.', 'Choose 2, 3 or 4 workouts a week, at the start or later in Settings → Templates.', 'Share Home Rig with a friend: they open the link and start at their own level. Add each other as buddies to see each other\'s program week and Mini Cindy scores (when you share "+ Exercises" or more).'] },
   { version: '3.4.0', notes: ['New: the Home Rig program, 8 weeks of training at home with a pull-up bar, rings and a dip bar. Start it in Settings → Templates. Three quick questions pick your starting exercises, and two full-body workouts (Home Rig A and B) take turns, 3 a week, each with a short finisher.', 'Every movement is a ladder from easy to hard, for example negative pull-ups, then chin-ups, then pull-ups. When every set reaches the top of the range, the target offers the next exercise. Easier and Harder buttons under the target let you switch any time.', 'A card on the main screen shows the week, which workout is next and how many sets to do. Weeks 4 and 8 are lighter weeks with a short test, Mini Cindy, so you can see how much stronger you got.'] },
   { version: '3.3.0', notes: ['New: Weight. Tap the scale icon at the top to log your weight in a few taps: your last weight is already filled in, adjust it with − and + and tap Save. See your average per week, a chart with your 7-day average over a month up to all time, and set a goal weight to see how far you are and when you get there at your current pace.', 'Import your weight history from a CSV file (a date and a weight per line) and export it again. This is separate from the workout CSV.', 'Quick link: open tiltwick.com/lift-log/?weight to go straight to logging your weight. On Android, press and hold the Lift Log icon and choose Log weight.', 'The main screen shows a small "Log today\'s weight" reminder when you haven\'t weighed in yet today. You can turn it off in Weight.'] },
   { version: '3.2.0', notes: ['New: Buddies. Tap the people icon at the top to add friends with a code or an invite link, see when they train and react with an emoji. You choose per buddy what they see: only the days you trained, also your exercises, or also your weights and PRs. Your buddies see a name you choose, never your email address.', 'Fixed: the OK button on a notice now closes it.'] },
@@ -2777,7 +2813,6 @@ const CHANGELOG = [
   { version: '3.1.3', notes: ['Settings → Data: the Dropbox and GitHub backup options are gone, now that your account keeps your training data safe. Any tokens you had entered for them are removed from your phone. CSV export, email and import stay'] },
   { version: '3.1.2', notes: ['Logging in on iPhone: the password manager no longer suggests a new strong password in the login field (which then didn\'t match your account). It now offers your saved password when logging in, and only suggests a new one when you create an account or reset your password'] },
   { version: '3.1.1', notes: ['Lift Log has a new address: tiltwick.com/lift-log. The old address still works and shows a reminder once a day; log in at the new address with the same account and all your training data is there'] },
-  { version: '3.1.0', notes: ['New: Lift Log accounts. Create an account (or log in) with your email address and your training data is saved in it: safe if you lose your phone, and the same on all your devices. Training data already on your phone moves into your new account. The app still works offline at the gym; changes are sent to your account as soon as you\'re online. Settings → ••• → Account shows the sync status and lets you log out or delete your account. Forgot your password? Request a reset link on the login screen'] },
 ];
 
 const DEFAULT_EXERCISES = [
@@ -3589,22 +3624,34 @@ function computeDeloadTarget(base, metrics){
 // moving a step swaps that exercise in both templates.
 const PROGRAM_ID = 'home-rig';
 const PROGRAM_NAME = 'Home Rig';
-const PROGRAM_WEEKS = 8, PROGRAM_PER_WEEK = 3;
+const PROGRAM_WEEKS = 8, PROGRAM_PER_WEEK = 3; // default workouts per week (2, 3 or 4 can be chosen)
+const PROGRAM_DAY_OPTIONS = [2, 3, 4];
+const PROGRAM_LINK_KEY = 'liftlog_program_link'; // days per week from a shared ?program= link, until logged in
 const PROGRAM_SETS = [3, 3, 4, 2, 4, 4, 5, 2];
 const PROGRAM_TEST_WEEKS = [4, 8];
 const PROGRAM_TEMPLATES = { A: 'Home Rig A', B: 'Home Rig B' };
 const MINI_CINDY = 'Mini Cindy';
-const PROGRAM_TEST_TEXT = 'Mini Cindy, once this week: as many rounds as you can in 10 minutes of 5 pull-ups, 10 push-ups and 15 air squats, each at your own step. Log your rounds under Mini Cindy.';
+const PROGRAM_TEST_TEXT = 'Mini Cindy, once this week: as many rounds as you can in 10 minutes of 5 pull-ups, 10 push-ups and 15 air squats, each at your own step. Use the timer, or log your rounds under Mini Cindy.';
+// Finisher per program week (weeks 4 and 8 have the Mini Cindy test instead).
+// emom: every minute on the minute, odd and even minutes alternate.
+// amrap: as many rounds as possible. tabata: work/rest rounds.
 const PROGRAM_FINISHERS = [
-  'EMOM 6 min: 5 burpees on odd minutes, a 20 s hollow hold on even minutes',
-  'AMRAP 6 min: 5 burpees, 10 air squats, 15 mountain climbers',
-  'EMOM 8 min: 6 burpees on odd minutes, 10 jump squats on even minutes',
-  '',
-  'Tabata 4 min: burpees, 20 s on and 10 s off, 8 rounds',
-  'AMRAP 8 min: 5 burpees, 10 jump squats, 20 mountain climbers',
-  'EMOM 10 min: 8 burpees on odd minutes, 12 jump squats on even minutes',
-  ''
+  { kind: 'emom', minutes: 6, odd: '5 burpees', even: '20 s hollow hold' },
+  { kind: 'amrap', minutes: 6, items: ['5 burpees', '10 air squats', '15 mountain climbers'] },
+  { kind: 'emom', minutes: 8, odd: '6 burpees', even: '10 jump squats' },
+  null,
+  { kind: 'tabata', rounds: 8, work: 20, rest: 10, move: 'Burpees' },
+  { kind: 'amrap', minutes: 8, items: ['5 burpees', '10 jump squats', '20 mountain climbers'] },
+  { kind: 'emom', minutes: 10, odd: '8 burpees', even: '12 jump squats' },
+  null
 ];
+const CINDY_SPEC = { kind: 'amrap', minutes: 10, cindy: true, items: ['5 pull-ups', '10 push-ups', '15 air squats'] };
+function finisherText(f){
+  if(!f) return '';
+  if(f.kind === 'emom') return `EMOM ${f.minutes} min: ${f.odd} on odd minutes, ${f.even} on even minutes`;
+  if(f.kind === 'amrap') return `AMRAP ${f.minutes} min: ${f.items.join(', ')}`;
+  return `Tabata ${Math.round(f.rounds * (f.work + f.rest) / 60)} min: ${f.move.toLowerCase()}, ${f.work} s on and ${f.rest} s off, ${f.rounds} rounds`;
+}
 // metric: what a set records ('reps' or 'duration' in seconds); min–max is
 // the range to build up in before moving to the next step.
 const PROGRAM_LADDERS = [
@@ -3689,22 +3736,52 @@ function programDayWorkout(d){
   });
   return b > a ? 'B' : 'A';
 }
+function programPerWeek(){
+  const v = data.program && data.program.perWeek;
+  return PROGRAM_DAY_OPTIONS.includes(v) ? v : PROGRAM_PER_WEEK;
+}
+// Workout number idx (0-based) → week. Changing the days per week mid-way
+// re-anchors the count (offsetDays/offsetWeeks) so the current week stays.
 function programState(){
-  const today = todayStr(), days = programDays();
+  const today = todayStr(), days = programDays(), p = data.program, per = programPerWeek();
   const trainedToday = days.includes(today);
   const idx = trainedToday ? days.indexOf(today) : days.length;
-  const complete = idx >= PROGRAM_WEEKS * PROGRAM_PER_WEEK;
-  const week = Math.min(PROGRAM_WEEKS, Math.floor(idx / PROGRAM_PER_WEEK) + 1);
+  const offD = Math.min(idx, p.offsetDays || 0), offW = p.offsetWeeks || 0;
+  const rel = idx - offD;
+  const rawWeek = offW + Math.floor(rel / per) + 1;
+  const complete = rawWeek > PROGRAM_WEEKS;
+  const week = Math.min(PROGRAM_WEEKS, rawWeek);
   let workout = 'A';
   if(trainedToday) workout = programDayWorkout(today);
   else if(days.length) workout = programDayWorkout(days[days.length - 1]) === 'A' ? 'B' : 'A';
-  const weekStart = days[(week - 1) * PROGRAM_PER_WEEK] || today;
+  const weekStart = days[offD + (week - 1 - offW) * per] || today;
   return {
-    week, workout, complete, done: days.length, weekStart,
-    inWeek: complete ? PROGRAM_PER_WEEK : (idx % PROGRAM_PER_WEEK) + 1,
+    week, workout, complete, done: days.length, weekStart, idx, per,
+    inWeek: complete ? per : (rel % per) + 1,
     sets: PROGRAM_SETS[week - 1],
     test: PROGRAM_TEST_WEEKS.includes(week)
   };
+}
+function setProgramDays(n){
+  if(!programActive() || !PROGRAM_DAY_OPTIONS.includes(n) || n === programPerWeek()) return;
+  const st = programState();
+  if(!st.complete){
+    data.program.offsetWeeks = st.week - 1;
+    data.program.offsetDays = st.idx - Math.min(st.inWeek - 1, n - 1);
+  }
+  data.program.perWeek = n;
+  saveData();
+  render();
+  if(document.getElementById('settingsDialog').open) renderSettings();
+}
+// What buddies may see (see social.php): kept up to date as you train.
+function syncProgramStatus(){
+  if(!programActive()) return;
+  const st = programState(), p = data.program;
+  const status = { week: st.week, done: st.done, perWeek: st.per, complete: st.complete };
+  if(JSON.stringify(p.status || null) === JSON.stringify(status)) return;
+  p.status = status;
+  saveData();
 }
 function programRunning(){ return programActive() && !programState().complete; }
 // Mini Cindy joins the workout in a test week until it's been logged that week.
@@ -3762,7 +3839,8 @@ function programTemplateExercises(workout, levels){
 const PROGRAM_QUESTIONS = [
   { id: 'pull', q: 'How many pull-ups can you do in a row?', opts: [['Can\'t hang 20 s yet', 0], ['None yet', 2], ['1 to 4', 3], ['5 or more', 4]] },
   { id: 'push', q: 'How many push-ups on the floor?', opts: [['0 to 4', 0], ['5 to 14', 1], ['15 or more', 2]] },
-  { id: 'dip', q: 'On the dip bar, can you…', opts: [['Not hold myself up yet', 0], ['Hold, but not dip yet', 1], ['Do 1 to 7 dips', 2], ['Do 8 or more dips', 3]] }
+  { id: 'dip', q: 'On the dip bar, can you…', opts: [['Not hold myself up yet', 0], ['Hold, but not dip yet', 1], ['Do 1 to 7 dips', 2], ['Do 8 or more dips', 3]] },
+  { id: 'days', q: 'How many days a week do you want to train?', opts: [['2 days', 2], ['3 days', 3], ['4 days', 4]] }
 ];
 let programAnswers = {};
 function programLevelsFrom(a){
@@ -3771,8 +3849,8 @@ function programLevelsFrom(a){
   return { pull: a.pull, push: a.push, dip: a.dip, row: a.pull >= 3 ? 2 : a.pull >= 2 ? 1 : 0,
     legs: tier, core: tier, shoulders: tier, hips: Math.min(tier, 1) };
 }
-function openProgramStart(){
-  programAnswers = {};
+function openProgramStart(days){
+  programAnswers = { days: PROGRAM_DAY_OPTIONS.includes(days) ? days : PROGRAM_PER_WEEK };
   renderProgramStart();
   document.getElementById('programDialog').showModal();
 }
@@ -3786,7 +3864,7 @@ function renderProgramStart(){
     preview = `<div class="note-box"><strong>Workout A:</strong> ${list('A')}<br><strong>Workout B:</strong> ${list('B')}</div>`;
   }
   document.getElementById('programBody').innerHTML = `
-    <p class="update-msg">8 weeks, 3 workouts a week, at home with a pull-up bar, rings and a dip bar. Two full-body workouts take turns, each with a short finisher if you have energy left. Three quick questions find the right starting exercises.</p>
+    <p class="update-msg">8 weeks at home with a pull-up bar, rings and a dip bar. Two full-body workouts take turns, each with a short finisher if you have energy left. A few quick questions find the right starting exercises.</p>
     ${PROGRAM_QUESTIONS.map(q => `
       <div class="row-label">${escAttr(q.q)}</div>
       <div class="pq-opts">${q.opts.map(([label, v]) => `<button type="button" class="pq-opt${programAnswers[q.id] === v ? ' active' : ''}" onclick="answerProgram('${q.id}', ${v})">${escAttr(label)}</button>`).join('')}</div>`).join('')}
@@ -3803,7 +3881,9 @@ function startProgram(levels){
   const trainedToday = Object.entries(data.sessions || {}).some(([n, l]) => LADDER_BY_NAME[n.toLowerCase()] && (l || []).some(s => s.date === today));
   const old = activeDeload();
   if(old && old.program){ deloadData().periods = deloadData().periods.filter(x => x !== old); }
-  data.program = { id: PROGRAM_ID, start: trainedToday && levels === (data.program && data.program.levels) ? addDaysStr(today, 1) : today, levels: { ...levels } };
+  const restart = !!(data.program && levels === data.program.levels);
+  const perWeek = restart ? programPerWeek() : (PROGRAM_DAY_OPTIONS.includes(programAnswers.days) ? programAnswers.days : PROGRAM_PER_WEEK);
+  data.program = { id: PROGRAM_ID, start: trainedToday && restart ? addDaysStr(today, 1) : today, levels: { ...levels }, perWeek };
   ensureCindyExercise();
   const names = new Set(Object.values(PROGRAM_TEMPLATES));
   data.templates = data.templates.filter(t => !names.has(t.name));
@@ -3918,7 +3998,7 @@ function applyProgramTarget(exerciseName, nLast, nPrev){
   todayTarget.why = todayTarget.why ? `${todayTarget.why} · ${weekWhy}` : weekWhy;
 }
 function programTargetInfoHtml(tgt){
-  if(tgt.cindy) return `<div class="target-info">${escAttr(PROGRAM_TEST_TEXT)} Use the step you're on for each exercise, for example ring rows instead of pull-ups. Compare your score in week 8 with week 4.</div>`;
+  if(tgt.cindy) return `<div class="target-info">${escAttr(PROGRAM_TEST_TEXT)} Use the step you're on for each exercise, for example ring rows instead of pull-ups. Compare your score in week 8 with week 4. <button type="button" onclick="openFinisher()">Open the timer</button></div>`;
   if(tgt.deload) return deloadInfoHtml();
   const r = tgt.range, u = tgt.unit;
   const hold = u === 'sec';
@@ -3965,24 +4045,296 @@ function renderProgramCard(){
     const w = i + 1;
     return `<i class="${w < st.week ? 'done' : w === st.week ? 'cur' : ''}${PROGRAM_TEST_WEEKS.includes(w) ? ' dl' : ''}"></i>`;
   }).join('');
-  const fin = st.test ? `<strong>Test:</strong> ${escAttr(PROGRAM_TEST_TEXT)}` : `<strong>Finisher:</strong> ${escAttr(PROGRAM_FINISHERS[st.week - 1])}`;
+  const fin = st.test ? `<strong>Test:</strong> ${escAttr(PROGRAM_TEST_TEXT)}` : `<strong>Finisher:</strong> ${escAttr(finisherText(PROGRAM_FINISHERS[st.week - 1]))}`;
   const selected = currentTemplate === PROGRAM_TEMPLATES[st.workout];
-  el.innerHTML = `<button type="button" class="program-card${selected ? ' selected' : ''}" onclick="openProgramWorkout()">
-    <div class="pc-head"><strong>${PROGRAM_NAME}</strong><span>Week ${st.week} of ${PROGRAM_WEEKS} · Workout ${st.workout}</span></div>
-    <div class="pc-weeks" aria-hidden="true">${weeks}</div>
-    <div class="pc-line">${st.test ? 'Lighter week: ' : ''}${st.sets} sets per exercise · workout ${st.inWeek} of ${PROGRAM_PER_WEEK} this week</div>
-    <div class="pc-fin">${fin}</div>
-  </button>`;
+  el.innerHTML = `<div class="program-card${selected ? ' selected' : ''}">
+    <button type="button" class="pc-main" onclick="openProgramWorkout()">
+      <div class="pc-head"><strong>${PROGRAM_NAME}</strong><span>Week ${st.week} of ${PROGRAM_WEEKS} · Workout ${st.workout}</span></div>
+      <div class="pc-weeks" aria-hidden="true">${weeks}</div>
+      <div class="pc-line">${st.test ? 'Lighter week: ' : ''}${st.sets} sets per exercise · workout ${st.inWeek} of ${st.per} this week</div>
+    </button>
+    <div class="pc-fin-row"><div class="pc-fin">${fin}</div><button type="button" class="pc-timer" onclick="openFinisher()" aria-label="Open the ${st.test ? 'Mini Cindy' : 'finisher'} timer">${timerIconSvg}<span>Timer</span></button></div>
+  </div>`;
 }
 function programSettingsHtml(){
-  const intro = `<p class="pb-text">For at home with a pull-up bar, rings and a dip bar. Two full-body workouts, A and B, take turns, 3 a week, with a short finisher. It starts at your level and moves you to harder exercises as you get stronger. Weeks 4 and 8 are lighter, with a short test.</p>`;
+  const intro = `<p class="pb-text">For at home with a pull-up bar, rings and a dip bar. Two full-body workouts, A and B, take turns, 2 to 4 times a week, with a short finisher. It starts at your level and moves you to harder exercises as you get stronger. Weeks 4 and 8 are lighter, with a short test.</p>`;
+  const share = `<button type="button" class="btn pb-share" onclick="shareProgram()">Share with a friend</button>`;
   if(!programActive()){
     return `<div class="program-box"><div class="pb-head"><strong>Program: ${PROGRAM_NAME}</strong><span>8 weeks</span></div>${intro}
-      <button type="button" class="btn primary" onclick="openProgramStart()">Start program</button></div>`;
+      <button type="button" class="btn primary" onclick="openProgramStart()">Start program</button>${share}</div>`;
   }
-  const st = programState();
+  const st = programState(), per = programPerWeek();
   return `<div class="program-box"><div class="pb-head"><strong>Program: ${PROGRAM_NAME}</strong><span>${st.complete ? 'Complete' : `Week ${st.week} of ${PROGRAM_WEEKS}`}</span></div>${intro}
-    <div class="pc-actions">${st.complete ? `<button type="button" class="btn primary" onclick="restartProgram()">Start again</button>` : ''}<button type="button" class="btn" onclick="endProgram()">End program</button></div></div>`;
+    <div class="row-label">Workouts per week</div>
+    <div class="pq-opts">${PROGRAM_DAY_OPTIONS.map(n => `<button type="button" class="pq-opt${n === per ? ' active' : ''}" onclick="setProgramDays(${n})">${n} days</button>`).join('')}</div>
+    ${programScoresHtml()}
+    <div class="pc-actions">${st.complete ? `<button type="button" class="btn primary" onclick="restartProgram()">Start again</button>` : ''}<button type="button" class="btn" onclick="endProgram()">End program</button></div>${share}</div>`;
+}
+
+
+// ---- Finisher timer (EMOM / AMRAP / Tabata) and scores ----
+// Works from timestamps like the rest timer, so it keeps the right time when
+// the phone locks for a moment. A 5-second lead-in, a beep on every new
+// minute / round / work-rest switch, and a score to save at the end:
+// Mini Cindy rounds go into the Mini Cindy exercise (so they show in its
+// history and chart), other finishers into data.finisherLog.
+const timerIconSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5"/></svg>`;
+const FIN_LEADIN = 5;
+let fin = null; // { spec, week, startAt, pausedMs, pauseAt, lastKey, rounds, done, score }
+let finTick = null;
+let finWakeLock = null;
+function finSpecNow(){
+  if(!programRunning()) return null;
+  const st = programState();
+  return st.test ? CINDY_SPEC : PROGRAM_FINISHERS[st.week - 1];
+}
+function finTotal(f){ return f.kind === 'tabata' ? f.rounds * (f.work + f.rest) : f.minutes * 60; }
+function finElapsed(){
+  if(!fin || !fin.startAt) return -FIN_LEADIN;
+  const now = fin.pauseAt || Date.now();
+  return (now - fin.startAt - fin.pausedMs) / 1000 - FIN_LEADIN;
+}
+function mmss(sec){ sec = Math.max(0, Math.ceil(sec)); return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`; }
+function finPhase(t, f){
+  if(t < 0) return { key: 'ready', big: String(Math.ceil(-t)), label: 'Get ready', sub: '' };
+  if(t >= finTotal(f)) return { key: 'done', big: '0:00', label: 'Time!', sub: '' };
+  if(f.kind === 'emom'){
+    const m = Math.floor(t / 60);
+    return { key: 'm' + m, big: mmss(60 - (t % 60)), label: `Minute ${m + 1} of ${f.minutes}`, sub: m % 2 === 0 ? f.odd : f.even };
+  }
+  if(f.kind === 'amrap') return { key: 'a', big: mmss(finTotal(f) - t), label: 'As many rounds as you can', sub: f.items.join(' · ') };
+  const cyc = f.work + f.rest, r = Math.floor(t / cyc), inC = t % cyc, work = inC < f.work;
+  return { key: 'r' + r + (work ? 'w' : 'r'), big: mmss(work ? f.work - inC : cyc - inC), label: `Round ${r + 1} of ${f.rounds}`, sub: work ? f.move : 'Rest', rest: !work };
+}
+function finScoreUnit(f){ return f.kind === 'amrap' ? 'rounds' : f.kind === 'emom' ? 'minutes done' : 'total reps'; }
+function finBeep(long){
+  try{
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if(!Ctx) return;
+    const ctx = new Ctx(), osc = ctx.createOscillator(), gain = ctx.createGain();
+    const len = long ? 0.7 : 0.18;
+    osc.type = 'sine'; osc.frequency.value = long ? 660 : 880;
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + len);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + len + 0.02);
+    setTimeout(() => { try{ ctx.close(); }catch(e){} }, 1200);
+  }catch(e){}
+  if(navigator.vibrate){ try{ navigator.vibrate(long ? [300, 100, 300] : 120); }catch(e){} }
+}
+async function finKeepAwake(on){
+  if(on){
+    if(finWakeLock || !('wakeLock' in navigator)) return;
+    try{ finWakeLock = await navigator.wakeLock.request('screen'); finWakeLock.addEventListener('release', () => { finWakeLock = null; }); }catch(e){ finWakeLock = null; }
+  } else if(finWakeLock){ const l = finWakeLock; finWakeLock = null; l.release().catch(() => {}); }
+}
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible' && fin && fin.startAt && !fin.pauseAt && !fin.done) finKeepAwake(true); });
+function openFinisher(){
+  const spec = finSpecNow();
+  if(!spec) return;
+  if(!fin || fin.spec !== spec || fin.saved) fin = { spec, week: programState().week, startAt: 0, pausedMs: 0, pauseAt: 0, lastKey: '', rounds: 0, done: false, score: '' };
+  renderFinisher();
+  document.getElementById('finisherDialog').showModal();
+}
+function closeFinisher(){
+  document.getElementById('finisherDialog').close();
+}
+function finStart(){
+  if(!fin) return;
+  if(fin.pauseAt){ fin.pausedMs += Date.now() - fin.pauseAt; fin.pauseAt = 0; }
+  else if(!fin.startAt){ fin.startAt = Date.now(); finBeep(false); }
+  finKeepAwake(true);
+  clearInterval(finTick);
+  finTick = setInterval(finUpdate, 200);
+  renderFinisher();
+}
+function finPause(){
+  if(!fin || !fin.startAt || fin.pauseAt) return;
+  fin.pauseAt = Date.now();
+  clearInterval(finTick); finTick = null;
+  finKeepAwake(false);
+  renderFinisher();
+}
+function finReset(){
+  clearInterval(finTick); finTick = null;
+  finKeepAwake(false);
+  fin = { spec: fin.spec, week: fin.week, startAt: 0, pausedMs: 0, pauseAt: 0, lastKey: '', rounds: 0, done: false, score: '' };
+  renderFinisher();
+}
+function finFinishNow(){
+  if(!fin) return;
+  clearInterval(finTick); finTick = null;
+  finKeepAwake(false);
+  fin.done = true;
+  if(fin.score === '') fin.score = String(finDefaultScore());
+  renderFinisher();
+}
+function finDefaultScore(){
+  const f = fin.spec;
+  if(f.kind === 'amrap') return fin.rounds;
+  if(f.kind === 'emom') return Math.min(f.minutes, Math.max(0, Math.floor(Math.max(0, finElapsed()) / 60)));
+  return '';
+}
+function finUpdate(){
+  if(!fin || !fin.startAt || fin.pauseAt || fin.done) return;
+  const ph = finPhase(finElapsed(), fin.spec);
+  if(ph.key !== fin.lastKey){
+    if(fin.lastKey) finBeep(ph.key === 'done');
+    fin.lastKey = ph.key;
+  }
+  if(ph.key === 'done'){ finFinishNow(); return; }
+  const set = (id, v) => { const el = document.getElementById(id); if(el && el.textContent !== v) el.textContent = v; };
+  set('finBig', ph.big); set('finLabel', ph.label); set('finSub', ph.sub);
+  const clock = document.getElementById('finClock');
+  if(clock) clock.classList.toggle('rest', !!ph.rest || ph.key === 'ready');
+}
+function finAddRound(d){ if(!fin) return; fin.rounds = Math.max(0, fin.rounds + d); const el = document.getElementById('finRounds'); if(el) el.textContent = fin.rounds; }
+function finSetScore(v){ if(fin) fin.score = v; }
+function finStepScore(d){
+  if(!fin) return;
+  fin.score = String(Math.max(0, (parseInt(fin.score, 10) || 0) + d));
+  const el = document.getElementById('finScoreInput'); if(el) el.value = fin.score;
+}
+function saveFinisherScore(){
+  if(!fin) return;
+  const score = parseInt(fin.score, 10);
+  if(!(score >= 0)){ showAlert('Enter a score first.'); return; }
+  const today = todayStr();
+  if(fin.spec.cindy){
+    ensureCindyExercise();
+    const list = data.sessions[MINI_CINDY] || (data.sessions[MINI_CINDY] = []);
+    const entry = { date: today, sets: [{ weight: '', reps: String(score), duration: '' }], feel: '', note: '' };
+    const i = list.findIndex(s => s.date === today);
+    if(i >= 0) list[i] = { ...list[i], sets: entry.sets }; else list.push(entry);
+  } else {
+    if(!Array.isArray(data.finisherLog)) data.finisherLog = [];
+    const rec = { date: today, week: fin.week, kind: fin.spec.kind, text: finisherText(fin.spec), score, unit: finScoreUnit(fin.spec) };
+    const i = data.finisherLog.findIndex(x => x.date === today && x.week === rec.week);
+    if(i >= 0) data.finisherLog[i] = rec; else data.finisherLog.push(rec);
+  }
+  fin.saved = true;
+  saveData();
+  closeFinisher();
+  if(selectedExercise === MINI_CINDY) loadTodayState(MINI_CINDY);
+  render();
+  showToast(fin.spec.cindy ? `Mini Cindy: ${score} rounds saved.` : `Finisher saved: ${score} ${finScoreUnit(fin.spec)}.`);
+}
+function cindyScores(){
+  return (data.sessions[MINI_CINDY] || []).filter(s => s.sets && s.sets[0] && s.sets[0].reps !== '')
+    .map(s => ({ date: s.date, rounds: parseInt(s.sets[0].reps, 10) || 0 })).sort((a, b) => a.date.localeCompare(b.date));
+}
+function programScoresHtml(){
+  const cindy = cindyScores().slice(-6).reverse();
+  const finLog = (Array.isArray(data.finisherLog) ? data.finisherLog : []).slice(-5).reverse();
+  if(!cindy.length && !finLog.length) return '';
+  return `<div class="row-label">Scores</div><ul class="fin-scores">
+    ${cindy.map(c => `<li><span>Mini Cindy · ${escAttr(fmtDate(c.date))}</span><b>${c.rounds} rounds</b></li>`).join('')}
+    ${finLog.map(x => `<li><span>Week ${x.week} finisher · ${escAttr(fmtDate(x.date))}</span><b>${x.score} ${escAttr(x.unit)}</b></li>`).join('')}
+  </ul>`;
+}
+function renderFinisher(){
+  const body = document.getElementById('finisherBody');
+  if(!body || !fin) return;
+  const f = fin.spec;
+  document.getElementById('finisherTitle').textContent = f.cindy ? 'Mini Cindy' : `Finisher · week ${fin.week}`;
+  let steps = '';
+  if(f.cindy && programActive()){
+    const step = id => ladderById(id).steps[programLevel(id)].name;
+    steps = `<p class="pq-hint" style="margin:.1rem 0 .7rem;">At your steps: ${escAttr(step('pull'))}, ${escAttr(step('push'))} and ${escAttr(step('legs'))}.</p>`;
+  }
+  if(fin.done){
+    const unit = finScoreUnit(f);
+    body.innerHTML = `<p class="update-msg">${escAttr(finisherText(f))}</p>
+      <div class="row-label">Your score (${escAttr(unit)})</div>
+      <div class="stepper fin-score">
+        <button class="stepper-btn" onclick="finStepScore(-1)" aria-label="Lower score">−</button>
+        <input class="field" id="finScoreInput" type="number" inputmode="numeric" value="${escAttr(fin.score)}" oninput="finSetScore(this.value)">
+        <button class="stepper-btn" onclick="finStepScore(1)" aria-label="Higher score">+</button>
+      </div>
+      ${f.cindy ? `<p class="pq-hint">Count only full rounds. Compare your score in week 8 with week 4.</p>` : ''}
+      <div class="pc-actions"><button type="button" class="btn" onclick="finReset()">Start over</button><button type="button" class="btn primary" onclick="saveFinisherScore()">Save score</button></div>
+      ${programScoresHtml()}`;
+    return;
+  }
+  const ph = finPhase(finElapsed(), f);
+  const running = fin.startAt && !fin.pauseAt;
+  body.innerHTML = `<p class="update-msg" style="margin-bottom:.5rem;">${escAttr(finisherText(f))}</p>${steps}
+    <div class="fin-clock${ph.rest || ph.key === 'ready' ? ' rest' : ''}" id="finClock">
+      <div class="fin-label" id="finLabel">${escAttr(ph.label)}</div>
+      <div class="fin-big num" id="finBig">${escAttr(ph.big)}</div>
+      <div class="fin-sub" id="finSub">${escAttr(ph.sub)}</div>
+    </div>
+    ${f.kind === 'amrap' ? `<div class="fin-rounds"><button type="button" class="stepper-btn" onclick="finAddRound(-1)" aria-label="One round less">−</button>
+      <button type="button" class="fin-round-btn" onclick="finAddRound(1)"><span class="num" id="finRounds">${fin.rounds}</span><span>rounds · tap after each round</span></button></div>` : ''}
+    <div class="pc-actions">
+      ${running ? `<button type="button" class="btn" onclick="finPause()">Pause</button>` : `<button type="button" class="btn primary" onclick="finStart()">${fin.startAt ? 'Resume' : 'Start'}</button>`}
+      ${fin.startAt ? `<button type="button" class="btn" onclick="finFinishNow()">Finish</button>` : ''}
+    </div>
+    ${fin.startAt ? `<button type="button" class="update-later" style="width:100%;" onclick="finReset()">Reset</button>` : ''}
+    ${programScoresHtml()}`;
+}
+
+// ---- Sharing the program ----
+// …/lift-log/?program=home-rig&days=3 opens the level check (after logging
+// in); &buddy=CODE adds the sender as a buddy too (see rememberBuddyInvite()).
+async function shareProgram(){
+  let code = social && social.me ? social.me.code : '';
+  if(!code && isLoggedIn()){
+    try{ const res = await api('social.php', 'GET'); if(res.status === 200){ social = res.body; code = social.me.code; } }catch(e){}
+  }
+  let withBuddy = false;
+  if(code) withBuddy = await showConfirm('Also add each other as buddies? Then you can see each other\'s program week and Mini Cindy scores.', { title: 'Share Home Rig', ok: 'Yes, as buddies', cancel: 'Only the program' });
+  const url = NEW_APP_URL + '?program=' + PROGRAM_ID + '&days=' + programPerWeek() + (withBuddy ? '&buddy=' + code : '');
+  const text = `Train with me on Lift Log: ${PROGRAM_NAME}, 8 weeks at home with a pull-up bar, rings and a dip bar. Open this link to start at your own level:`;
+  if(navigator.share){
+    try{ await navigator.share({ title: 'Lift Log', text, url }); return; }
+    catch(e){ if(e && e.name === 'AbortError') return; }
+  }
+  try{
+    await navigator.clipboard.writeText(text + ' ' + url);
+    showAlert('Link copied. Paste it in a message to your friend.');
+  }catch(e){
+    showAlert(text + '\n\n' + url);
+  }
+}
+function rememberProgramLink(){
+  const params = new URLSearchParams(location.search);
+  if(params.get('program') !== PROGRAM_ID) return;
+  const days = parseInt(params.get('days'), 10);
+  try{ localStorage.setItem(PROGRAM_LINK_KEY, String(PROGRAM_DAY_OPTIONS.includes(days) ? days : PROGRAM_PER_WEEK)); }catch(e){}
+  params.delete('program'); params.delete('days');
+  const q = params.toString();
+  history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
+}
+function openProgramFromLink(){
+  if(!isLoggedIn()) return;
+  let days = '';
+  try{ days = localStorage.getItem(PROGRAM_LINK_KEY) || ''; localStorage.removeItem(PROGRAM_LINK_KEY); }catch(e){}
+  if(!days) return;
+  if(programRunning()){ showToast(`You're already doing ${PROGRAM_NAME}.`); return; }
+  document.querySelectorAll('dialog[open]').forEach(d => { if(d.id !== 'buddiesDialog') d.close(); });
+  openProgramStart(parseInt(days, 10));
+}
+function buddyProgramHtml(b){
+  if(!b.program && !(b.cindy && b.cindy.length)) return '';
+  const name = escHtml(b.name);
+  let html = `<div class="section-title bd-section">${PROGRAM_NAME}</div><div class="bd-card">`;
+  if(b.program){
+    html += b.program.complete
+      ? `<div><b>${name} finished all ${PROGRAM_WEEKS} weeks.</b></div>`
+      : `<div>${name} is in <b>week ${b.program.week} of ${PROGRAM_WEEKS}</b> (${b.program.per_week} workouts a week).</div>`;
+    if(programActive()){
+      const me = programState();
+      html += `<div class="bd-meta" style="margin-top:.2rem;">You: ${me.complete ? 'finished' : `week ${me.week} of ${PROGRAM_WEEKS}`}</div>`;
+    }
+  }
+  if(b.cindy && b.cindy.length){
+    const mine = cindyScores();
+    html += `<ul class="bd-sets">${b.cindy.slice(0, 4).map(c => `<li><span>Mini Cindy · ${escHtml(dayLabel(c.date))}</span><b>${c.rounds} rounds</b></li>`).join('')}</ul>`;
+    if(mine.length) html += `<div class="bd-meta">Your last Mini Cindy: ${mine[mine.length - 1].rounds} rounds</div>`;
+  }
+  return html + '</div>';
 }
 
 // ---------- Target for today (double progression) ----------
@@ -6802,6 +7154,7 @@ function emailCSV(){
 
 function render(){
   syncProgramDeload();
+  syncProgramStatus();
   renderWeekStrip();
   renderProgramCard();
   renderWeightNudge();

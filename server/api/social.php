@@ -129,6 +129,27 @@ function summarize(?string $json, int $level, string $today): array {
         'last_day' => $days ? array_key_first($days) : null,
         'workouts' => $workouts,
     ];
+    // Home Rig program: the week you're in and your Mini Cindy scores (rounds).
+    if ($level >= 1 && is_array($data)) {
+        $prog = $data['program'] ?? null;
+        $st = is_array($prog) ? ($prog['status'] ?? null) : null;
+        if (is_array($prog) && ($prog['id'] ?? '') === 'home-rig' && is_array($st)) {
+            $out['program'] = [
+                'week' => max(1, min(8, (int)($st['week'] ?? 1))),
+                'per_week' => max(2, min(4, (int)($st['perWeek'] ?? 3))),
+                'complete' => !empty($st['complete']),
+            ];
+        }
+        $cindy = [];
+        foreach ((array)($data['sessions']['Mini Cindy'] ?? []) as $s) {
+            $date = substr((string)($s['date'] ?? ''), 0, 10);
+            $set = is_array($s['sets'] ?? null) ? ($s['sets'][0] ?? null) : null;
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || $date > $today || !is_array($set)) continue;
+            $cindy[] = ['date' => $date, 'rounds' => (int)num($set['reps'] ?? '')];
+        }
+        usort($cindy, fn($a, $b) => strcmp($b['date'], $a['date']));
+        if ($cindy) $out['cindy'] = array_slice($cindy, 0, 6);
+    }
     if ($level >= 2) {
         $month = substr($today, 0, 7);
         $out['prs_this_month'] = array_sum(array_map(
