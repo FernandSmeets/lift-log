@@ -1107,7 +1107,7 @@
 </dialog>
 
 <script>
-const APP_VERSION = '3.1.5';
+const APP_VERSION = '3.1.6';
 const STORE_KEY = 'liftlog_data_v2';
 
 /* ---------- Account & sync ----------
@@ -1123,6 +1123,7 @@ const API_BASE = 'https://tiltwick.com/lift-log/api/';
 const AUTH_KEY = 'liftlog_auth_v1';            // { token, email, revision, dirty, lastSync }
 const BACKUP_KEY = 'liftlog_data_backup_v1';   // last local copy replaced by a sync
 const SYNC_DELAY_MS = 1500;
+const SYNC_POLL_MS = 60000; // while the app is open, check the account for changes from other devices
 
 function readAuth(){
   try{ return JSON.parse(localStorage.getItem(AUTH_KEY) || 'null') || {}; }catch(e){ return {}; }
@@ -1229,10 +1230,12 @@ async function pullFromServer(){
   syncBusy = true;
   let needPush = false;
   try{
-    const res = await api('data.php', 'GET');
+    const res = await api('data.php' + (auth.revision ? '?known=' + auth.revision : ''), 'GET');
     if(res.status === 200){
       syncError = '';
-      if(res.body.data && res.body.revision > (auth.revision || 0)){
+      if(res.body.unchanged){
+        auth.lastSync = Date.now(); writeAuth();
+      } else if(res.body.data && res.body.revision > (auth.revision || 0)){
         applyServerData(res.body.data, res.body.revision);
       } else if(!res.body.data){
         auth.revision = 0; auth.dirty = true; writeAuth();
@@ -1532,10 +1535,23 @@ function maybeShowMovedNotice(){
 // Startup: a ?reset=… link from the password email opens the new-password screen;
 // without an account the login screen covers the app; otherwise sync quietly.
 async function initAccount(){
+  // Back in the app: fetch changes. Leaving it: send waiting changes right away,
+  // because a phone may stop the app before the short save delay is over.
   document.addEventListener('visibilitychange', () => {
     if(document.visibilityState === 'visible') pullFromServer();
+    else if(auth.dirty){ clearTimeout(syncTimer); pushToServer(); }
   });
+  window.addEventListener('focus', () => pullFromServer());
   window.addEventListener('online', () => { if(auth.dirty) pushToServer(); else pullFromServer(); });
+  // An app left open (a desktop tab) also picks up changes from other devices,
+  // but not while someone is typing in a field.
+  setInterval(() => {
+    if(document.visibilityState !== 'visible') return;
+    const el = document.activeElement;
+    if(el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
+    if(document.querySelector('dialog[open]')) return;
+    pullFromServer();
+  }, SYNC_POLL_MS);
   const params = new URLSearchParams(location.search);
   if(params.has('reset')){
     resetToken = params.get('reset') || '';
@@ -1564,6 +1580,7 @@ if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 // Keep only the 10 most recent versions here, newest first, whenever a new version is published.
 const CHANGELOG = [
+  { version: '3.1.6', notes: ['Sync: an open Lift Log (for example on your computer) now checks your account every minute, so workouts you log on your phone show up without reloading. Changes are also sent right away when you leave the app.'] },
   { version: '3.1.5', notes: ['Behind the scenes: preparation for a separate admin page. Lift Log itself works the same as before.'] },
   { version: '3.1.4', notes: ['Forgot your password? Asking for a reset link is no longer blocked by earlier failed login attempts. A successful login also clears those failed attempts.'] },
   { version: '3.1.3', notes: ['Settings → Data: the Dropbox and GitHub backup options are gone, now that your account keeps your training data safe. Any tokens you had entered for them are removed from your phone. CSV export, email and import stay'] },
@@ -1573,7 +1590,6 @@ const CHANGELOG = [
   { version: '3.0.26', notes: ['Notifications: when they are blocked, a Check again button (and returning from the Settings app) refreshes the screen, so you don\'t have to close and reopen Lift Log after turning them on'] },
   { version: '3.0.25', notes: ['Notifications: when they are blocked, the message now lists the steps on iPhone (Settings → Notifications → Lift Log → Allow Notifications) and has an Open iPhone Settings button that tries to jump straight to the Settings app'] },
   { version: '3.0.24', notes: ['New: Settings → ••• → Notifications. Allow notifications for Lift Log, send yourself a test, and choose the days and time for a training reminder. On iPhone this only works once Lift Log is on your Home Screen. The reminders themselves are sent by the Lift Log server, which is not connected yet, so for now only the test notification works. Needs the new sw.js file next to index.html'] },
-  { version: '3.0.23', notes: ['The workout summary no longer pops up by itself when you save the last exercise of a template, so you can do the exercises in any order. Instead, a "Finish workout" button now sits under the last exercise. If an exercise is still open, the app asks whether to finish anyway or go back to the workout'] },
 ];
 
 const DEFAULT_EXERCISES = [

@@ -1,5 +1,6 @@
 <?php
 // GET -> {ok, data, revision, updated_at}  (data is null and revision 0 when nothing is saved yet)
+// GET ?known=N -> {ok, unchanged: true, revision} without the data when revision N is still the latest.
 // PUT {data, base_revision} -> {ok, revision, updated_at}
 //   409 {error: 'conflict', data, revision} when another device saved first.
 require __DIR__ . '/lib.php';
@@ -16,6 +17,10 @@ function current_row(PDO $pdo, int $userId, bool $lock = false): ?array {
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $row = current_row($pdo, (int)$user['id']);
+    $known = (int)($_GET['known'] ?? 0);
+    if ($row && $known > 0 && $known === (int)$row['revision']) {
+        respond(['ok' => true, 'unchanged' => true, 'revision' => $known, 'updated_at' => $row['updated_at']]);
+    }
     respond([
         'ok' => true,
         'data' => $row ? json_decode($row['data'], true) : null,
