@@ -1366,7 +1366,7 @@
       <li>If you use Buddies: the name you choose, who your buddies are, what you share with each of them and your emoji reactions.</li>
     </ul>
     <h4>Why</h4>
-    <p>Only to give you an account, keep your training data safe and make it available on your other devices. We don't use your data for advertising, don't sell it and don't share it with others.</p>
+    <p>To give you an account, keep your training data safe and make it available on your other devices. We also look at which exercises and templates are used and which ones people add themselves, to make Lift Log better. We don't use your data for advertising, don't sell it and don't share it with others.</p>
     <h4>Buddies</h4>
     <p>Buddies only see something from you after you've added each other with a code. Per buddy, you choose what they see: only the days you trained, also which exercises, or also your weights and PRs. They see your chosen name, never your email address. You can pause sharing or remove a buddy at any time in Buddies.</p>
     <h4>Where</h4>
@@ -1413,7 +1413,7 @@
 </dialog>
 
 <script>
-const APP_VERSION = '3.6.1';
+const APP_VERSION = '3.6.2';
 const STORE_KEY = 'liftlog_data_v2';
 
 /* ---------- Account & sync ----------
@@ -3296,6 +3296,7 @@ if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 // Keep only the 10 most recent versions here, newest first, whenever a new version is published.
 const CHANGELOG = [
+  { version: '3.6.2', notes: ['Privacy statement: we now mention that we look at which exercises and templates are used and which ones people add themselves, to make Lift Log better.'] },
   { version: '3.6.1', notes: ['For the owner: Settings → ••• → Account has a button to open the admin page. Only admin accounts see it.'] },
   { version: '3.6.0', notes: ['New: badges. Tap the medal at the top to see them. Badges like Regular, On a Roll, Record Breaker, Heavy Lifter and Step Up have four levels, from Bronze to Platinum, and Next up shows the ones you\'re closest to.', 'Badges are worked out from your training so far, so you may already have quite a few. When you earn a new one, you get a short congratulation after saving.', 'Your buddies see your new badges in their feed and can react to them. Strength badges only show for buddies who see your weights and PRs, and badges about your body weight are never shared.', 'There are a few secret badges too. Keep training to find them.'] },
   { version: '3.5.0', notes: ['Home Rig: a timer for the finisher. Tap Timer on the program card for the EMOM, AMRAP or Tabata of the week, with a beep on every new minute or round. Afterwards you save your score.', 'Mini Cindy has its own 10-minute timer with a round counter, and your scores are listed under the program in Settings → Templates.', 'Choose 2, 3 or 4 workouts a week, at the start or later in Settings → Templates.', 'Share Home Rig with a friend: they open the link and start at their own level. Add each other as buddies to see each other\'s program week and Mini Cindy scores (when you share "+ Exercises" or more).'] },
@@ -3305,7 +3306,6 @@ const CHANGELOG = [
   { version: '3.1.6', notes: ['Sync: an open Lift Log (for example on your computer) now checks your account every minute, so workouts you log on your phone show up without reloading. Changes are also sent right away when you leave the app.'] },
   { version: '3.1.5', notes: ['Behind the scenes: preparation for a separate admin page. Lift Log itself works the same as before.'] },
   { version: '3.1.4', notes: ['Forgot your password? Asking for a reset link is no longer blocked by earlier failed login attempts. A successful login also clears those failed attempts.'] },
-  { version: '3.1.3', notes: ['Settings → Data: the Dropbox and GitHub backup options are gone, now that your account keeps your training data safe. Any tokens you had entered for them are removed from your phone. CSV export, email and import stay'] },
 ];
 
 const DEFAULT_EXERCISES = [
@@ -3389,6 +3389,8 @@ const DEFAULT_TEMPLATES = [
   { name:'Leg Day', exercises:['Squat','Deadlift','Leg Press','Leg Curl','Calf Raise'] }
 ];
 
+// Template names here, in DEFAULT_TEMPLATES and PROGRAM_TEMPLATES are also listed in
+// server/api/admin-usage.php (BUILTIN_TEMPLATES), so the admin page can tell them apart.
 // Suggested extra templates, merged into every user's data automatically (see
 // ensureSuggestedLibrary() below) — added hidden by default, revealed per-template
 // from Settings → Templates. Exercise names are kept to 25 characters or fewer;

@@ -77,6 +77,22 @@
     td .sub{display:inline;margin-left:6px}
     td.num{text-align:right}
   }
+  .tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+  .tab,.chip{font:600 .86rem Inter,sans-serif;border-radius:999px;padding:8px 14px;border:1px solid var(--border);
+    background:var(--surface);color:var(--text-dim);cursor:pointer}
+  .tab.on,.chip.on{background:var(--accent-dim);border-color:var(--accent);color:var(--text)}
+  .chip{padding:6px 12px;font-size:.8rem}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  tbody tr.click{cursor:pointer}
+  tbody tr.click:hover td{background:var(--surface-hi)}
+  .tag{display:inline-block;font-size:.7rem;font-weight:600;border-radius:6px;padding:2px 7px;background:var(--surface-hi);color:var(--text-dim)}
+  .tag.custom{background:var(--accent-dim);color:var(--text)}
+  .back{margin-bottom:12px}
+  .detail h2{font:600 1.4rem Oswald,sans-serif;margin:0 0 4px}
+  .detail .lead{color:var(--text-dim);font-size:.86rem;margin:0 0 14px}
+  .detail h3{font:600 .8rem Inter,sans-serif;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;margin:18px 0 8px}
+  .exlist{font-size:.8rem;color:var(--text-dim)}
+  a.link{color:var(--accent);cursor:pointer;text-decoration:none}
   [hidden]{display:none !important}
 </style>
 </head>
@@ -96,10 +112,16 @@
 
   <main id="main" hidden>
     <header>
-      <h1>Accounts <small id="who"></small></h1>
+      <h1>Lift Log admin <small id="who"></small></h1>
       <button class="btn" id="refreshBtn" type="button">Refresh</button>
       <button class="btn" id="logoutBtn" type="button">Log out</button>
     </header>
+    <nav class="tabs" id="tabs">
+      <button class="tab on" type="button" data-view="accounts">Accounts</button>
+      <button class="tab" type="button" data-view="exercises">Exercises</button>
+      <button class="tab" type="button" data-view="templates">Templates</button>
+    </nav>
+    <section id="vAccounts">
     <div class="tiles">
       <div class="card tile"><div class="n" id="tTotal">0</div><div class="l">accounts</div></div>
       <div class="card tile"><div class="n" id="tNew">0</div><div class="l">new in the last 7 days</div></div>
@@ -115,8 +137,30 @@
         <tbody id="rows"></tbody>
       </table>
     </div>
-    <div class="err" id="mainErr"></div>
     <div class="meta" id="meta"></div>
+    </section>
+
+    <section id="vUsage" hidden>
+      <div class="tiles" id="uTiles"></div>
+      <div class="tools">
+        <input id="uSearch" type="search" placeholder="Search" autocomplete="off">
+        <div class="chips" id="uChips"></div>
+      </div>
+      <div class="card tablecard">
+        <table>
+          <thead><tr id="uHead"></tr></thead>
+          <tbody id="uRows"></tbody>
+        </table>
+      </div>
+      <div class="meta" id="uMeta"></div>
+    </section>
+
+    <section id="vDetail" class="detail" hidden>
+      <button class="btn back" id="backBtn" type="button">← Back</button>
+      <div id="detail"></div>
+    </section>
+
+    <div class="err" id="mainErr"></div>
   </main>
 
 </div>
@@ -229,7 +273,7 @@ function render() {
   });
 
   $('rows').innerHTML = list.length ? list.map(u => `
-    <tr>
+    <tr class="click" data-email="${esc(u.email)}">
       <td class="first"><span class="dot ${within(u.last_training ? u.last_training + ' 23:59:59' : null, 7) ? 'on' : ''}"></span><span class="email">${esc(u.email)}</span>${u.name ? `<span class="sub">${esc(u.name)}</span>` : ''}</td>
       <td data-label="Created"><span>${fmtDate(u.created_at)}<span class="sub">${ago(u.created_at)}</span></span></td>
       <td data-label="Last login"><span>${fmtDate(u.last_login_at, true)}<span class="sub">${ago(u.last_login_at)}</span></span></td>
@@ -241,7 +285,186 @@ function render() {
       <td data-label="Devices" class="num">${u.devices}</td>
     </tr>`).join('') : `<tr><td class="empty first" colspan="${COLS.length}">${q ? 'No accounts match your search.' : 'No accounts yet.'}</td></tr>`;
 
-  $('meta').textContent = `Showing ${list.length} of ${users.length} accounts. Devices = devices that are logged in. The green dot means a workout in the last 7 days.`;
+  $('meta').textContent = `Showing ${list.length} of ${users.length} accounts. Devices = devices that are logged in. The green dot means a workout in the last 7 days. Tap an account to see its exercises and templates.`;
+}
+
+/* ---------- Exercises and templates ----------
+   From admin-usage.php: groups of the same name (case-insensitive), each with the
+   people who have it. Tap a row for the details, or an account for its own lists. */
+let usage = null, usageLoading = null;
+let view = 'accounts', detailFrom = 'accounts';
+const uState = {
+  exercises: { filter: 'all', sortKey: 'trained_by', sortDir: -1 },
+  templates: { filter: 'custom', sortKey: 'users', sortDir: -1 }
+};
+const U_COLS = {
+  exercises: [
+    { key: 'name', label: 'Exercise' },
+    { key: 'builtin', label: 'Type' },
+    { key: 'users', label: 'Accounts', num: true },
+    { key: 'trained_by', label: 'Trained by', num: true },
+    { key: 'workouts', label: 'Workouts', num: true },
+    { key: 'sets', label: 'Sets', num: true },
+    { key: 'last', label: 'Last done' }
+  ],
+  templates: [
+    { key: 'name', label: 'Template' },
+    { key: 'builtin', label: 'Type' },
+    { key: 'users', label: 'Accounts', num: true },
+    { key: 'visible_for', label: 'Shown for', num: true },
+    { key: 'used_by', label: 'Used by', num: true },
+    { key: 'last', label: 'Last used' }
+  ]
+};
+const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
+const typeTag = builtin => builtin ? '<span class="tag">Built-in</span>' : '<span class="tag custom">Custom</span>';
+const who = p => p.name ? `${esc(p.name)}<span class="sub">${esc(p.email)}</span>` : `<span class="email">${esc(p.email)}</span>`;
+
+async function loadUsage(force) {
+  if (usage && !force) return usage;
+  if (!usageLoading) {
+    usageLoading = api('admin-usage.php').then(res => {
+      if (res.status === 401) { saveToken(null); showLogin('Please log in again.'); return null; }
+      if (res.status !== 200 || !res.body.ok) throw new Error(res.body.message || 'Could not load exercises and templates.');
+      usage = res.body;
+      return usage;
+    }).finally(() => { usageLoading = null; });
+  }
+  return usageLoading;
+}
+
+function show(v) {
+  view = v;
+  $('vAccounts').hidden = v !== 'accounts';
+  $('vUsage').hidden = v !== 'exercises' && v !== 'templates';
+  $('vDetail').hidden = v !== 'detail';
+  $('tabs').querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.view === (v === 'detail' ? detailFrom : v)));
+  window.scrollTo(0, 0);
+}
+
+async function openView(v) {
+  $('mainErr').textContent = '';
+  if (v === 'accounts') { show('accounts'); return; }
+  show(v);
+  if (!usage) $('uRows').innerHTML = '<tr><td class="empty first">Loading…</td></tr>';
+  try { await loadUsage(); } catch (e) { $('mainErr').textContent = e.message || 'No connection. Please try again.'; return; }
+  if (usage) renderUsage();
+}
+
+function renderUsage() {
+  const kind = view, st = uState[kind], all = usage[kind];
+  const custom = all.filter(g => !g.builtin);
+  const tiles = kind === 'exercises' ? [
+    [all.length, 'different exercises'],
+    [custom.length, 'made by people themselves'],
+    [all.filter(g => g.trained_by > 0).length, 'trained at least once'],
+    [all.filter(g => g.builtin && g.trained_by === 0).length, 'built-in, never trained']
+  ] : [
+    [all.length, 'different templates'],
+    [custom.length, 'made by people themselves'],
+    [all.filter(g => g.used_by > 0).length, 'used at least once'],
+    [all.filter(g => g.builtin && g.visible_for === 0).length, 'built-in, hidden by everyone']
+  ];
+  $('uTiles').innerHTML = tiles.map(([n, l]) => `<div class="card tile"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+  $('uChips').innerHTML = [['all', 'All'], ['custom', 'Custom'], ['builtin', 'Built-in']].map(([k, l]) =>
+    `<button type="button" class="chip ${st.filter === k ? 'on' : ''}" data-filter="${k}">${l}</button>`).join('');
+  const cols = U_COLS[kind];
+  $('uHead').innerHTML = cols.map(c =>
+    `<th data-key="${c.key}" class="${c.num ? 'num' : ''} ${c.key === st.sortKey ? 'sorted' : ''}">${c.label}${c.key === st.sortKey ? (st.sortDir < 0 ? ' ↓' : ' ↑') : ''}</th>`
+  ).join('');
+
+  const q = $('uSearch').value.trim().toLowerCase();
+  const list = all.filter(g =>
+    (st.filter === 'all' || (st.filter === 'custom') === !g.builtin) &&
+    (!q || g.variants.some(v => v.toLowerCase().includes(q)))
+  ).sort((a, b) => {
+    let x = a[st.sortKey], y = b[st.sortKey];
+    if (typeof x === 'string') { x = x.toLowerCase(); y = (y || '').toLowerCase(); }
+    if (x === y) return a.name.localeCompare(b.name);
+    if (x === null || x === undefined) return 1;
+    if (y === null || y === undefined) return -1;
+    return (x < y ? -1 : 1) * st.sortDir;
+  });
+
+  const label = kind === 'exercises' ? 'exercises' : 'templates';
+  $('uRows').innerHTML = list.length ? list.map(g => `
+    <tr class="click" data-key="${esc(g.key)}">
+      <td class="first"><span class="email">${esc(g.name)}</span>${g.variants.length > 1 ? `<span class="sub">also: ${g.variants.slice(1).map(esc).join(', ')}</span>` : ''}</td>
+      <td data-label="Type">${typeTag(g.builtin)}</td>
+      <td data-label="Accounts" class="num">${g.users}</td>
+      ${kind === 'exercises' ? `
+      <td data-label="Trained by" class="num">${g.trained_by}</td>
+      <td data-label="Workouts" class="num">${g.workouts}</td>
+      <td data-label="Sets" class="num">${g.sets}</td>` : `
+      <td data-label="Shown for" class="num">${g.visible_for}</td>
+      <td data-label="Used by" class="num">${g.used_by}</td>`}
+      <td data-label="${kind === 'exercises' ? 'Last done' : 'Last used'}"><span>${g.last ? fmtDate(g.last) : '–'}<span class="sub">${daysAgo(g.last)}</span></span></td>
+    </tr>`).join('') : `<tr><td class="empty first" colspan="${cols.length}">No ${label} match.</td></tr>`;
+
+  $('uMeta').textContent = kind === 'exercises'
+    ? `Showing ${list.length} of ${all.length} exercises. Accounts = in their exercise list (or still has logged workouts). Workouts = days with at least one set. Names that differ only in capitals count as one. Tap a row for details.`
+    : `Showing ${list.length} of ${all.length} templates. Shown for = not hidden in Settings → Templates. Used by = saved a workout from this template at least once. Tap a row for details.`;
+}
+
+function openGroup(kind, key) {
+  const g = usage[kind].find(x => x.key === key);
+  if (!g) return;
+  detailFrom = kind;
+  const people = g.people.slice().sort((a, b) => (b.last || '').localeCompare(a.last || '') || a.email.localeCompare(b.email));
+  let html = `<h2>${esc(g.name)} ${typeTag(g.builtin)}</h2>`;
+  if (kind === 'exercises') {
+    html += `<p class="lead">In the list of ${g.users} account${g.users === 1 ? '' : 's'}, trained by ${g.trained_by}: ${g.workouts} workouts, ${g.sets} sets.${g.variants.length > 1 ? ' Written as: ' + g.variants.map(esc).join(', ') + '.' : ''}</p>
+      <div class="card tablecard"><table><thead><tr><th>Account</th><th>Status</th><th class="num">Workouts</th><th class="num">Sets</th><th>Last done</th></tr></thead><tbody>
+      ${people.map(p => `<tr class="click" data-email="${esc(p.email)}">
+        <td class="first">${who(p)}${p.as !== g.name ? `<span class="sub">as “${esc(p.as)}”</span>` : ''}</td>
+        <td data-label="Status">${!p.in_list ? 'Deleted, has history' : p.hidden ? 'Hidden' : 'Shown'}${!g.builtin || p.builtin ? '' : ' <span class="tag custom">made by hand</span>'}</td>
+        <td data-label="Workouts" class="num">${p.workouts}</td>
+        <td data-label="Sets" class="num">${p.sets}</td>
+        <td data-label="Last done"><span>${p.last ? fmtDate(p.last) : '–'}<span class="sub">${daysAgo(p.last)}</span></span></td>
+      </tr>`).join('')}</tbody></table></div>`;
+  } else {
+    html += `<p class="lead">In the list of ${g.users} account${g.users === 1 ? '' : 's'}, shown for ${g.visible_for}, used by ${g.used_by}.${g.variants.length > 1 ? ' Written as: ' + g.variants.map(esc).join(', ') + '.' : ''}</p>
+      <div class="card tablecard"><table><thead><tr><th>Account</th><th>Status</th><th>Exercises in it</th><th>Last used</th></tr></thead><tbody>
+      ${people.map(p => `<tr class="click" data-email="${esc(p.email)}">
+        <td class="first">${who(p)}${p.as !== g.name ? `<span class="sub">as “${esc(p.as)}”</span>` : ''}</td>
+        <td data-label="Status">${p.hidden ? 'Hidden' : 'Shown'}</td>
+        <td data-label="Exercises"><span class="exlist">${p.exercises.length ? p.exercises.map(esc).join(', ') : '–'}</span></td>
+        <td data-label="Last used"><span>${p.last ? fmtDate(p.last) : '–'}<span class="sub">${daysAgo(p.last)}</span></span></td>
+      </tr>`).join('')}</tbody></table></div>`;
+  }
+  $('detail').innerHTML = html;
+  show('detail');
+}
+
+async function openAccount(email) {
+  if (view === 'accounts') detailFrom = 'accounts';
+  try { await loadUsage(); } catch (e) { $('mainErr').textContent = e.message || 'No connection. Please try again.'; return; }
+  if (!usage) return;
+  const u = users.find(x => x.email === email) || { email };
+  const exs = [], tpls = [];
+  usage.exercises.forEach(g => g.people.forEach(p => { if (p.email === email) exs.push({ g, p }); }));
+  usage.templates.forEach(g => g.people.forEach(p => { if (p.email === email) tpls.push({ g, p }); }));
+  exs.sort((a, b) => b.p.workouts - a.p.workouts || a.p.as.localeCompare(b.p.as));
+  const customEx = exs.filter(x => !x.g.builtin || !x.p.builtin && x.p.in_list);
+  const customTpl = tpls.filter(x => !x.g.builtin);
+  const link = (kind, g, text) => `<a class="link" data-kind="${kind}" data-key="${esc(g.key)}">${esc(text)}</a>`;
+  $('detail').innerHTML = `
+    <h2>${esc(u.name || u.email)}</h2>
+    <p class="lead">${esc(u.email)}${u.created_at ? ' · account since ' + fmtDate(u.created_at) : ''} · ${exs.filter(x => x.p.workouts).length} exercises trained, ${customEx.length} made by hand, ${customTpl.length} own template${customTpl.length === 1 ? '' : 's'}.</p>
+    <h3>Exercises made by hand</h3>
+    ${customEx.length ? `<div class="card tablecard"><table><tbody>${customEx.map(({ g, p }) => `<tr>
+      <td class="first">${link('exercises', g, p.as)}<span class="sub">${g.users > 1 ? 'also in ' + (g.users - 1) + ' other account' + (g.users === 2 ? '' : 's') : 'only this account'}</span></td>
+      <td data-label="Workouts" class="num">${plural(p.workouts, 'workout')} · ${plural(p.sets, 'set')}</td></tr>`).join('')}</tbody></table></div>` : '<p class="exlist">None.</p>'}
+    <h3>Own templates</h3>
+    ${customTpl.length ? `<div class="card tablecard"><table><tbody>${customTpl.map(({ g, p }) => `<tr>
+      <td class="first">${link('templates', g, p.as)}<span class="sub">${p.exercises.map(esc).join(', ') || 'no exercises'}</span></td>
+      <td data-label="Last used">${p.last ? fmtDate(p.last) : 'never used'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="exlist">None.</p>'}
+    <h3>All exercises trained</h3>
+    ${exs.some(x => x.p.workouts) ? `<div class="card tablecard"><table><tbody>${exs.filter(x => x.p.workouts).map(({ g, p }) => `<tr>
+      <td class="first">${link('exercises', g, p.as)} ${typeTag(g.builtin && (p.builtin || !p.in_list))}</td>
+      <td data-label="Workouts" class="num">${plural(p.workouts, 'workout')} · ${plural(p.sets, 'set')}</td>
+      <td data-label="Last done">${fmtDate(p.last)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="exlist">No workouts yet.</p>'}`;
+  show('detail');
 }
 
 async function load() {
@@ -257,6 +480,8 @@ async function load() {
       return;
     }
     users = res.body.users;
+    usage = null;
+    if (view !== 'accounts') openView(view === 'detail' ? detailFrom : view);
     serverNow = parse(res.body.server_time) || new Date();
     $('who').textContent = res.body.email;
     $('login').hidden = true;
@@ -275,6 +500,7 @@ async function logout() {
   if (token) { try { await api('logout.php', 'POST', {}); } catch (e) {} }
   saveToken(null);
   users = [];
+  usage = null;
 }
 
 $('login').addEventListener('submit', async ev => {
@@ -302,6 +528,40 @@ $('login').addEventListener('submit', async ev => {
 $('refreshBtn').addEventListener('click', load);
 $('logoutBtn').addEventListener('click', async () => { await logout(); showLogin(''); });
 $('search').addEventListener('input', render);
+$('tabs').addEventListener('click', ev => {
+  const t = ev.target.closest('.tab');
+  if (t) openView(t.dataset.view);
+});
+$('rows').addEventListener('click', ev => {
+  const tr = ev.target.closest('tr[data-email]');
+  if (tr) openAccount(tr.dataset.email);
+});
+$('uSearch').addEventListener('input', renderUsage);
+$('uChips').addEventListener('click', ev => {
+  const c = ev.target.closest('.chip');
+  if (!c) return;
+  uState[view].filter = c.dataset.filter;
+  renderUsage();
+});
+$('uHead').addEventListener('click', ev => {
+  const th = ev.target.closest('th');
+  if (!th) return;
+  const st = uState[view], key = th.dataset.key;
+  if (key === st.sortKey) st.sortDir = -st.sortDir;
+  else { st.sortKey = key; st.sortDir = key === 'name' ? 1 : -1; }
+  renderUsage();
+});
+$('uRows').addEventListener('click', ev => {
+  const tr = ev.target.closest('tr[data-key]');
+  if (tr) openGroup(view, tr.dataset.key);
+});
+$('detail').addEventListener('click', ev => {
+  const a = ev.target.closest('a.link');
+  if (a) return openGroup(a.dataset.kind, a.dataset.key);
+  const tr = ev.target.closest('tr[data-email]');
+  if (tr) openAccount(tr.dataset.email);
+});
+$('backBtn').addEventListener('click', () => openView(detailFrom));
 $('head').addEventListener('click', ev => {
   const th = ev.target.closest('th');
   if (!th) return;
