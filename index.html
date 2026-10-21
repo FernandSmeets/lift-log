@@ -1413,7 +1413,7 @@
 </dialog>
 
 <script>
-const APP_VERSION = '3.6.0';
+const APP_VERSION = '3.6.1';
 const STORE_KEY = 'liftlog_data_v2';
 
 /* ---------- Account & sync ----------
@@ -1766,8 +1766,34 @@ function renderAccountSettings(){
       <button type="button" class="btn" onclick="logOut()">Log out</button>
       <button type="button" class="btn" onclick="openPrivacy()">Privacy statement</button>
       <button type="button" class="btn danger" onclick="openDeleteAccount()">Delete account</button>
-    </div>`;
+    </div>
+    <div id="accountAdmin"></div>`;
   renderAccountStatus();
+  renderAdminLink();
+  checkAdmin();
+}
+/* Admin page link: only shown for accounts the server lists as admin (ADMIN_EMAILS).
+   The admin page itself checks this again on the server; this is just a shortcut. */
+const ADMIN_URL = 'https://tiltwick.com/lift-log/beheer/';
+function renderAdminLink(){
+  const el = document.getElementById('accountAdmin');
+  if(!el) return;
+  el.innerHTML = auth.admin ? `
+    <div class="section-title" style="margin-top:1.4rem;">Admin</div>
+    <button type="button" class="btn" style="width:100%;" onclick="window.open(ADMIN_URL, '_blank', 'noopener')">Open admin page</button>` : '';
+}
+async function checkAdmin(){
+  if(!isLoggedIn()) return;
+  try{
+    const res = await api('me.php');
+    if(res.status !== 200 || !res.body.ok) return;
+    const admin = res.body.admin === true;
+    if(admin !== !!auth.admin){
+      auth.admin = admin;
+      writeAuth();
+      renderAdminLink();
+    }
+  }catch(e){}
 }
 async function syncNow(){
   syncError = '';
@@ -3270,6 +3296,7 @@ if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }
 
 // Keep only the 10 most recent versions here, newest first, whenever a new version is published.
 const CHANGELOG = [
+  { version: '3.6.1', notes: ['For the owner: Settings → ••• → Account has a button to open the admin page. Only admin accounts see it.'] },
   { version: '3.6.0', notes: ['New: badges. Tap the medal at the top to see them. Badges like Regular, On a Roll, Record Breaker, Heavy Lifter and Step Up have four levels, from Bronze to Platinum, and Next up shows the ones you\'re closest to.', 'Badges are worked out from your training so far, so you may already have quite a few. When you earn a new one, you get a short congratulation after saving.', 'Your buddies see your new badges in their feed and can react to them. Strength badges only show for buddies who see your weights and PRs, and badges about your body weight are never shared.', 'There are a few secret badges too. Keep training to find them.'] },
   { version: '3.5.0', notes: ['Home Rig: a timer for the finisher. Tap Timer on the program card for the EMOM, AMRAP or Tabata of the week, with a beep on every new minute or round. Afterwards you save your score.', 'Mini Cindy has its own 10-minute timer with a round counter, and your scores are listed under the program in Settings → Templates.', 'Choose 2, 3 or 4 workouts a week, at the start or later in Settings → Templates.', 'Share Home Rig with a friend: they open the link and start at their own level. Add each other as buddies to see each other\'s program week and Mini Cindy scores (when you share "+ Exercises" or more).'] },
   { version: '3.4.0', notes: ['New: the Home Rig program, 8 weeks of training at home with a pull-up bar, rings and a dip bar. Start it in Settings → Templates. Three quick questions pick your starting exercises, and two full-body workouts (Home Rig A and B) take turns, 3 a week, each with a short finisher.', 'Every movement is a ladder from easy to hard, for example negative pull-ups, then chin-ups, then pull-ups. When every set reaches the top of the range, the target offers the next exercise. Easier and Harder buttons under the target let you switch any time.', 'A card on the main screen shows the week, which workout is next and how many sets to do. Weeks 4 and 8 are lighter weeks with a short test, Mini Cindy, so you can see how much stronger you got.'] },
@@ -3279,7 +3306,6 @@ const CHANGELOG = [
   { version: '3.1.5', notes: ['Behind the scenes: preparation for a separate admin page. Lift Log itself works the same as before.'] },
   { version: '3.1.4', notes: ['Forgot your password? Asking for a reset link is no longer blocked by earlier failed login attempts. A successful login also clears those failed attempts.'] },
   { version: '3.1.3', notes: ['Settings → Data: the Dropbox and GitHub backup options are gone, now that your account keeps your training data safe. Any tokens you had entered for them are removed from your phone. CSV export, email and import stay'] },
-  { version: '3.1.2', notes: ['Logging in on iPhone: the password manager no longer suggests a new strong password in the login field (which then didn\'t match your account). It now offers your saved password when logging in, and only suggests a new one when you create an account or reset your password'] },
 ];
 
 const DEFAULT_EXERCISES = [

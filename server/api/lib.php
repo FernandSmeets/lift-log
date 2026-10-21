@@ -143,3 +143,12 @@ function require_user(): array {
         ->execute([$user['session_id']]);
     return $user;
 }
+
+// Admins are the email addresses in config 'admin_emails' (Actions variable ADMIN_EMAILS).
+function is_admin(array $user): bool {
+    $admins = array_filter(array_map(
+        fn($e) => strtolower(trim($e)),
+        explode(',', (string)(config()['admin_emails'] ?? ''))
+    ));
+    return in_array(strtolower($user['email']), $admins, true);
+}

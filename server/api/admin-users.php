@@ -5,11 +5,7 @@ require __DIR__ . '/lib.php';
 start(['GET']);
 
 $user = require_user();
-$admins = array_filter(array_map(
-    fn($e) => strtolower(trim($e)),
-    explode(',', (string)(config()['admin_emails'] ?? ''))
-));
-if (!in_array($user['email'], $admins, true)) {
+if (!is_admin($user)) {
     fail(403, 'not_admin', 'This account has no access to the admin page.');
 }
 
